@@ -35,7 +35,7 @@ st.markdown("""
         font-weight: 700;
     }
 
-    /* RESPONSIVE ANIMATED HEADER */
+    /* RESPONSIVE ANIMATED HEADER WITH SWEEPING LIGHT EFFECT */
     @keyframes sweepLight {
         0% { background-position: -200% 0; }
         100% { background-position: 200% 0; }
@@ -53,28 +53,35 @@ st.markdown("""
         );
         background-size: 200% 100%;
         animation: sweepLight 4s linear infinite;
-        padding: clamp(12px, 3vw, 24px);
+        padding: clamp(14px, 3.5vw, 28px);
         border-radius: 12px;
         text-align: center;
-        margin-bottom: 20px;
+        margin-bottom: 22px;
         color: white !important;
         box-shadow: 0 4px 15px rgba(0,0,0,0.12);
     }
     
     .brand-title {
         color: #FFFFFF !important;
-        font-size: clamp(1.4rem, 5vw, 2.5rem);
+        font-size: clamp(1.5rem, 5.5vw, 2.7rem);
         font-weight: 900;
-        letter-spacing: 1px;
+        letter-spacing: 1.5px;
         margin: 0;
         text-shadow: 2px 2px 5px rgba(0,0,0,0.4);
+    }
+
+    .brand-icons {
+        font-size: clamp(1.2rem, 3.5vw, 2rem);
+        margin-top: 6px;
+        letter-spacing: 8px;
     }
 
     .brand-subtext {
         color: #F4F7F4;
         font-size: clamp(0.8rem, 2.5vw, 1.05rem);
         font-weight: 600;
-        margin-top: 6px;
+        margin-top: 8px;
+        text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
     }
 
     /* CARD CONTAINERS FOR MOBILE & DESKTOP */
@@ -116,7 +123,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Shared Categories
+# Shared Agricultural Categories
 AGRI_CATEGORIES = [
     "🌾 Crop Farming (Rice, Beans, Maize, Raw Grains)",
     "🏭 Agro-Processing & Packaged Goods (Flour, Oils, Branded Foods)",
@@ -191,7 +198,7 @@ if "listings" not in st.session_state:
         }
     ]
 
-# Transactions Log for Founder Revenue Tracking
+# Transactions Log for Founder Revenue Tracking across all categories
 if "transactions" not in st.session_state:
     st.session_state.transactions = [
         {"id": "TX-901", "category": "🐂 Livestock Farming", "item": "Boran Bull Cattle Herd", "amount": 6500000, "commission": 650000, "date": "2026-08-15", "buyer": "Lagos Meat Processing Co."},
@@ -200,24 +207,25 @@ if "transactions" not in st.session_state:
         {"id": "TX-904", "category": "🐓 Poultry Farming", "item": "Day-Old Chicks (1,000 Batch)", "amount": 850000, "commission": 85000, "date": "2026-09-01", "buyer": "Sunrise Poultry"}
     ]
 
-# Helper function: Basic image verification
+# Helper function: Image verification to enforce real farm photo uploads
 def verify_farm_photo(image):
     try:
         img = image.convert("RGB")
         stat = ImageStat.Stat(img)
-        # Check standard deviation to prevent completely blank or plain monochromatic images
+        # Check standard deviation to block plain monochrome graphics or empty images
         if sum(stat.stddev) / len(stat.stddev) < 12:
-            return False, "Image appears blank or featureless. PLEASE UPLOAD REAL PICTURE OF FARM PRODUCTS."
+            return False, "Image appears blank or non-product graphic. PLEASE UPLOAD REAL PICTURE OF FARM PRODUCTS."
         return True, "Valid photo"
     except Exception:
-        return False, "Invalid image format. PLEASE UPLOAD REAL PICTURE OF FARM PRODUCTS."
+        return False, "Invalid image file format. PLEASE UPLOAD REAL PICTURE OF FARM PRODUCTS."
 
 # ==========================================
-# 3. HEADER BANNER
+# 3. ANIMATED HEADER BANNER WITH EMOJIS
 # ==========================================
 st.markdown("""
 <div class="brand-header">
     <h1 class="brand-title">FEED THE NATIONS</h1>
+    <div class="brand-icons">🌾 🌽 🐂 🐟 🐓</div>
     <p class="brand-subtext">Direct Farm-to-Buyer Marketplace • Zero Middlemen • Escrow Protection</p>
 </div>
 """, unsafe_allow_html=True)
@@ -296,7 +304,6 @@ if navigation == "📈 Founder Revenue Dashboard":
     
     df_tx = pd.DataFrame(st.session_state.transactions)
     
-    # Overview Metrics
     total_gmv = df_tx["amount"].sum()
     total_commission = df_tx["commission"].sum()
     total_orders = len(df_tx)
@@ -309,7 +316,6 @@ if navigation == "📈 Founder Revenue Dashboard":
     st.divider()
     st.markdown("### 📂 Revenue Breakdown by Agricultural Category")
     
-    # Calculate performance per category
     category_summary = []
     for cat in AGRI_CATEGORIES:
         cat_txs = df_tx[df_tx["category"] == cat]
