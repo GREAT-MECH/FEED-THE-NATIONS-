@@ -141,6 +141,17 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+# Shared Agricultural Categories List across Registration & Listing forms
+AGRI_CATEGORIES = [
+    "🌾 Crop Farming (Rice, Beans, Maize, Raw Grains)",
+    "🏭 Agro-Processing & Packaged Goods (Flour, Oils, Branded Foods)",
+    "🐂 Livestock Farming",
+    "🐓 Poultry Farming",
+    "🐟 Fishery / Aquaculture",
+    "🍎 Horticulture (Fruits & Vegetables)",
+    "🥛 Dairy Farming"
+]
+
 # ==========================================
 # 2. SESSION STATE MANAGEMENT & DB SIMULATION
 # ==========================================
@@ -176,18 +187,31 @@ if "listings" not in st.session_state:
         {
             "id": "FTN-102",
             "seller": "Green Harvest Co-op",
-            "category": "🌾 Crop Farming",
-            "item": "Organic Yellow Maize (Bulk 500 Bags)",
+            "category": "🌾 Crop Farming (Rice, Beans, Maize, Raw Grains)",
+            "item": "Raw Harvested Brown Beans (Bulk 500 Bags)",
             "scale": "Large Scale / Commercial Wholesale",
             "quantity": 500,
             "location": "Benue State",
-            "price_ngn": 16000000,
+            "price_ngn": 18000000,
             "image_obj": None,
             "verified_health": True,
             "pre_order": False
         },
         {
             "id": "FTN-103",
+            "seller": "Golden Grain Mills",
+            "category": "🏭 Agro-Processing & Packaged Goods (Flour, Oils, Branded Foods)",
+            "item": "Premium Packaged Parboiled Rice (50kg Bag)",
+            "scale": "Large Scale / Commercial Wholesale",
+            "quantity": 200,
+            "location": "Kebbi State",
+            "price_ngn": 10400000,
+            "image_obj": None,
+            "verified_health": True,
+            "pre_order": False
+        },
+        {
+            "id": "FTN-104",
             "seller": "Smallholder Poultry Hub",
             "category": "🐓 Poultry Farming",
             "item": "Fresh Farm Eggs (20 Crate Batch)",
@@ -242,14 +266,7 @@ def render_login_portal():
             
             farming_cat = None
             if "Farmer" in selected_role:
-                farming_cat = st.selectbox("Select Your Farming Category", [
-                    "🌾 Crop Farming",
-                    "🐂 Livestock Farming",
-                    "🐓 Poultry Farming",
-                    "🐟 Fishery / Aquaculture",
-                    "🍎 Horticulture (Fruits & Vegetables)",
-                    "🥛 Dairy Farming"
-                ])
+                farming_cat = st.selectbox("Select Your Primary Category", AGRI_CATEGORIES)
                 
             phone = st.text_input("Phone Number")
             
@@ -315,9 +332,9 @@ navigation = st.sidebar.radio("Navigation", nav_options)
 if navigation in ["🛒 Browse Marketplace", "📦 My Orders & Escrow"]:
     st.subheader("🛒 Direct Farm Produce & Livestock Market")
     
-    # 1. NEW FILTERS: SCALE & AGRICULTURE CATEGORY INTEREST
+    # 1. SOURCING & BUYING FILTERS
     st.markdown("#### 🎯 Sourcing & Buying Filters")
-    c_filter1, c_filter2, c_filter3, c_filter4 = st.columns([1.2, 1.2, 1, 1.2])
+    c_filter1, c_filter2, c_filter3, c_filter4 = st.columns([1.2, 1.4, 1, 1.2])
     
     with c_filter1:
         buying_scale = st.selectbox("Buying Scale", [
@@ -327,15 +344,7 @@ if navigation in ["🛒 Browse Marketplace", "📦 My Orders & Escrow"]:
         ])
         
     with c_filter2:
-        category_filter = st.selectbox("Agricultural Interest Category", [
-            "All Agriculture Types", 
-            "🌾 Crop Farming", 
-            "🐂 Livestock Farming", 
-            "🐓 Poultry Farming", 
-            "🐟 Fishery / Aquaculture", 
-            "🍎 Horticulture (Fruits & Vegetables)", 
-            "🥛 Dairy Farming"
-        ])
+        category_filter = st.selectbox("Agricultural Interest Category", ["All Categories"] + AGRI_CATEGORIES)
         
     with c_filter3:
         dest_state = st.text_input("Delivery State", value="Lagos State")
@@ -356,7 +365,7 @@ if navigation in ["🛒 Browse Marketplace", "📦 My Orders & Escrow"]:
             continue
             
         # Agriculture Category Check
-        if category_filter != "All Agriculture Types" and category_filter.split(" ")[1] not in item.get("category", ""):
+        if category_filter != "All Categories" and category_filter != item.get("category"):
             continue
 
         matching_items += 1
@@ -446,21 +455,14 @@ elif navigation == "➕ Add New Product":
     st.subheader("🚜 Publish Product Listing")
     
     with st.form("new_listing_form"):
-        farming_cat = st.selectbox("Select Agriculture Category", [
-            "🌾 Crop Farming",
-            "🐂 Livestock Farming",
-            "🐓 Poultry Farming",
-            "🐟 Fishery / Aquaculture",
-            "🍎 Horticulture (Fruits & Vegetables)",
-            "🥛 Dairy Farming"
-        ])
+        farming_cat = st.selectbox("Select Agriculture Category", AGRI_CATEGORIES)
         
         prod_scale = st.selectbox("Supply Scale Category", [
             "Large Scale / Commercial Wholesale",
             "Small Scale / Retail"
         ])
         
-        title = st.text_input("Product Title (e.g., Commercial Herd of Cattle, 500 Bags Yellow Maize)")
+        title = st.text_input("Product Title (e.g., Packaged Rice 50kg Bags, Commercial Cattle Herd)")
         
         c1, c2 = st.columns(2)
         with c1:
@@ -475,7 +477,7 @@ elif navigation == "➕ Add New Product":
         harvest_date = st.date_input("Expected Harvest Date", datetime.date.today()) if pre_order_check else None
         
         st.markdown("#### 📷 Upload Product Photo")
-        uploaded_file = st.file_uploader("Upload actual photo of livestock/crop", type=["jpg", "jpeg", "png"])
+        uploaded_file = st.file_uploader("Upload actual photo of livestock/crop/packaged product", type=["jpg", "jpeg", "png"])
         
         submitted = st.form_submit_button("Publish Product Listing")
         
