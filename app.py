@@ -221,6 +221,8 @@ if "username" not in st.session_state:
     st.session_state.username = ""
 if "email" not in st.session_state:
     st.session_state.email = ""
+if "phone_number" not in st.session_state:
+    st.session_state.phone_number = ""
 
 # ==============================================================================
 # 4. ANIMATED BRAND HEADER
@@ -244,12 +246,13 @@ if not st.session_state.authenticated:
     password_input = st.text_input("Password", type="password")
     
     if auth_mode == "Register Account":
+        phone_input = st.text_input("Phone Number (e.g., 08012345678 or +2348012345678)")
         selected_role = st.selectbox("Account Type", ["Buyer (Wholesaler, Hotel, Processor)", "Farmer / Producer", "Platform Admin"])
         full_name = st.text_input("Full Name / Farm Name")
         farming_cat = st.selectbox("Primary Agricultural Category", AGRI_CATEGORIES) if "Farmer" in selected_role else "All Categories"
         
         if st.button("Create Account", use_container_width=True):
-            if email_input and password_input and full_name:
+            if email_input and password_input and full_name and phone_input:
                 try:
                     if "Farmer" in selected_role:
                         assigned_role = "Farmer"
@@ -265,6 +268,7 @@ if not st.session_state.authenticated:
                         "options": {
                             "data": {
                                 "full_name": full_name,
+                                "phone_number": phone_input,
                                 "role": assigned_role,
                                 "category": farming_cat
                             }
@@ -276,6 +280,7 @@ if not st.session_state.authenticated:
                         profile_data = {
                             "id": res.user.id,
                             "email": email_input,
+                            "phone_number": phone_input,
                             "full_name": full_name,
                             "role": assigned_role,
                             "category": farming_cat
@@ -286,7 +291,7 @@ if not st.session_state.authenticated:
                 except Exception as e:
                     st.error(f"Error creating account: {str(e)}")
             else:
-                st.error("Please fill out all required fields.")
+                st.error("Please fill out all required fields including Phone Number.")
     else:
         if st.button("LOG IN ➔", use_container_width=True):
             if email_input and password_input:
@@ -300,6 +305,7 @@ if not st.session_state.authenticated:
                     st.session_state.user_role = user_metadata.get("role", "Buyer")
                     st.session_state.username = user_metadata.get("full_name", email_input)
                     st.session_state.email = email_input
+                    st.session_state.phone_number = user_metadata.get("phone_number", "")
                     st.rerun()
                 except Exception as e:
                     st.error(f"Login failed: {str(e)}")
@@ -312,6 +318,8 @@ if not st.session_state.authenticated:
 # ==============================================================================
 st.sidebar.markdown(f"### 👤 {st.session_state.username}")
 st.sidebar.markdown(f"**Role:** `{st.session_state.user_role}`")
+if st.session_state.phone_number:
+    st.sidebar.markdown(f"**Phone:** `{st.session_state.phone_number}`")
 
 if st.sidebar.button("Log Out"):
     supabase.auth.sign_out()
@@ -319,6 +327,7 @@ if st.sidebar.button("Log Out"):
     st.session_state.user_role = None
     st.session_state.username = ""
     st.session_state.email = ""
+    st.session_state.phone_number = ""
     st.rerun()
 
 st.sidebar.divider()
