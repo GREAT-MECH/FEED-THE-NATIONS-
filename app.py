@@ -203,7 +203,7 @@ def initialize_paystack_payment(email, amount_ngn, reference):
     }
     data = {
         "email": email,
-        "amount": int(amount_ngn * 100),  # Paystack expects kobo
+        "amount": int(amount_ngn * 100),  # Paystack expects amount in Kobo
         "reference": reference,
         "callback_url": PAYSTACK_CALLBACK_URL
     }
@@ -258,7 +258,7 @@ if not st.session_state.authenticated:
                     else:
                         assigned_role = "Buyer"
 
-                    # 1. Sign up user in Supabase Auth
+                    # 1. Register account in Supabase Auth
                     res = supabase.auth.sign_up({
                         "email": email_input,
                         "password": password_input,
@@ -271,7 +271,7 @@ if not st.session_state.authenticated:
                         }
                     })
 
-                    # 2. Sync profile into custom 'profiles' table
+                    # 2. Sync profile into 'profiles' table
                     if res.user:
                         profile_data = {
                             "id": res.user.id,
@@ -282,7 +282,7 @@ if not st.session_state.authenticated:
                         }
                         supabase.table("profiles").insert(profile_data).execute()
 
-                    st.success("🎉 Account created successfully! Please proceed to Log In.")
+                    st.success("🎉 Account created successfully! Please switch to Login above.")
                 except Exception as e:
                     st.error(f"Error creating account: {str(e)}")
             else:
@@ -449,7 +449,7 @@ elif navigation in ["🛒 Browse Marketplace", "📦 My Orders & Escrow"]:
                 if st.button("PAY VIA PAYSTACK ESCROW 💳", key=f"pay_{item['id']}"):
                     ref = f"FTN-TX-{random.randint(100000, 999999)}"
                     
-                    # 1. Insert Escrow record to Supabase
+                    # 1. Insert transaction record to Supabase
                     tx_record = {
                         "id": ref,
                         "listing_id": item["id"],
@@ -465,7 +465,7 @@ elif navigation in ["🛒 Browse Marketplace", "📦 My Orders & Escrow"]:
                     }
                     supabase.table("transactions").insert(tx_record).execute()
                     
-                    # 2. Trigger Paystack payment link
+                    # 2. Generate Paystack payment gateway URL
                     pay_resp = initialize_paystack_payment(st.session_state.email, final_total, ref)
                     
                     if pay_resp.get("status"):
@@ -473,7 +473,7 @@ elif navigation in ["🛒 Browse Marketplace", "📦 My Orders & Escrow"]:
                         st.success("🔒 Escrow order initiated! Proceed below to complete payment.")
                         st.markdown(f'<a href="{auth_url}" target="_blank" style="display:inline-block; background: linear-gradient(135deg, #008751 0%, #11998e 100%); color:white; padding:12px 20px; border-radius:8px; text-decoration:none; font-family: Montserrat, sans-serif; font-weight:bold;">Open Paystack Gateway ➔</a>', unsafe_allow_html=True)
                     else:
-                        st.error("Failed to initialize Paystack gateway. Please check your API secret key at the top of the file.")
+                        st.error("Failed to initialize Paystack gateway.")
                     
             st.markdown('</div>', unsafe_allow_html=True)
     except Exception as e:
@@ -526,7 +526,7 @@ elif navigation == "➕ Add New Product":
                         "quantity": quantity
                     }
                     supabase.table("listings").insert(product_data).execute()
-                    st.success("🎉 Product published and saved directly to your Supabase database!")
+                    st.success("🎉 Product published and saved to Supabase!")
 
 elif navigation == "📦 My Active Products":
     st.subheader("🚜 My Active Listings")
