@@ -5,7 +5,7 @@ import random
 
 # ==========================================
 # 1. PAGE CONFIG & CUSTOM THEMING (UI/UX)
-# Green White Green, Rich Earth Brown, Crimson Red
+# Light Clean Background, Earth Brown, Agri Green
 # ==========================================
 st.set_page_config(
     page_title="FEED THE NATIONS - Direct Agri Marketplace",
@@ -21,10 +21,11 @@ st.markdown("""
         --primary-green: #008751;   /* Agriculture Green */
         --accent-red: #D90429;      /* Escrow / Alerts */
         --earth-brown: #5C3D2E;     /* Soil / Earth */
-        --light-bg: #F4F7F4;        /* Soft White */
+        --light-bg: #F4F7F4;        /* Soft White / Light Grey */
         --dark-text: #1B2021;
     }
 
+    /* Restored Soft Light Background */
     .stApp {
         background-color: var(--light-bg);
         color: var(--dark-text);
@@ -35,7 +36,7 @@ st.markdown("""
         font-weight: 700;
     }
 
-    /* Custom Brand Header */
+    /* Custom Header Banner */
     .brand-header {
         background: linear-gradient(135deg, #008751 0%, #2A7B4C 50%, #5C3D2E 100%);
         padding: 24px;
@@ -43,7 +44,7 @@ st.markdown("""
         text-align: center;
         margin-bottom: 25px;
         color: white !important;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
     }
     
     .brand-title {
@@ -91,11 +92,19 @@ st.markdown("""
 
     .listing-card {
         background-color: white;
-        border-radius: 10px;
-        padding: 18px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-        border-top: 4px solid var(--earth-brown);
-        margin-bottom: 20px;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+        border-top: 5px solid var(--earth-brown);
+        margin-bottom: 25px;
+    }
+    
+    .price-breakdown {
+        background-color: #F9FBF9;
+        border: 1px solid #E0E7E0;
+        border-radius: 8px;
+        padding: 12px;
+        margin-top: 8px;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -110,10 +119,9 @@ if "user_role" not in st.session_state:
 if "username" not in st.session_state:
     st.session_state.username = ""
 if "user_db" not in st.session_state:
-    # Simulated Supabase User Table mapping email -> {password, role, name}
     st.session_state.user_db = {
-        "farmer@ftn.com": {"password": "password123", "role": "Farmer", "name": "Musa Adamu"},
-        "buyer@ftn.com": {"password": "password123", "role": "Buyer", "name": "Bisi Akande (Hotels)"},
+        "farmer@ftn.com": {"password": "password123", "role": "Farmer", "name": "Musa Adamu", "category": "🐂 Livestock Farming"},
+        "buyer@ftn.com": {"password": "password123", "role": "Buyer", "name": "Bisi Akande (Wholesalers)"},
         "admin@ftn.com": {"password": "adminsecret", "role": "Admin", "name": "Founder / Admin"}
     }
 
@@ -122,41 +130,51 @@ if "listings" not in st.session_state:
         {
             "id": "FTN-101",
             "seller": "Musa Adamu",
-            "category": "Livestock",
-            "item": "Boran Cattle (Bull)",
+            "category": "🐂 Livestock Farming",
+            "item": "Boran Bull Cattle (Male)",
             "weight_kg": 420,
-            "location": "Kano, Nigeria",
+            "location": "Kano State",
             "price_ngn": 650000,
+            "image_url": "https://images.unsplash.com/photo-1570042225831-d98fa7577f1e?w=600",
             "verified_health": True,
             "pre_order": False
         },
         {
             "id": "FTN-102",
             "seller": "Green Harvest Co-op",
-            "category": "Crop Produce",
+            "category": "🌾 Crop Farming",
             "item": "Organic Yellow Maize (50kg Bags)",
             "quantity": 100,
-            "location": "Benue, Nigeria",
+            "location": "Benue State",
             "price_ngn": 32000,
+            "image_url": "https://images.unsplash.com/photo-1551754655-cd27e38d2076?w=600",
             "verified_health": True,
             "pre_order": False
         },
         {
             "id": "FTN-103",
-            "seller": "Musa Adamu",
-            "category": "Crop Produce",
-            "item": "Fresh Plum Tomatoes (Pre-Harvest)",
-            "quantity": 500,
-            "location": "Oyo, Nigeria",
+            "seller": "Oyo Farms Ltd",
+            "category": "🍎 Horticulture",
+            "item": "Fresh Roma Tomatoes (Crater)",
+            "quantity": 250,
+            "location": "Oyo State",
             "price_ngn": 18000,
+            "image_url": "https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=600",
             "verified_health": True,
             "pre_order": True,
             "harvest_date": "2026-10-15"
         }
     ]
 
+# Third-party logistics partner pricing table (per unit/item based on delivery distance)
+LOGISTICS_RATES = {
+    "Local / Same State": 5000,
+    "Inter-State (Neighboring)": 15000,
+    "Long Distance Nationwide": 35000
+}
+
 # ==========================================
-# 3. HEADER BANNER (NO NG FLAG + AGRI ICONS)
+# 3. HEADER BANNER
 # ==========================================
 st.markdown("""
 <div class="brand-header">
@@ -174,17 +192,30 @@ st.markdown("""
 def render_login_portal():
     st.subheader("🔑 Access Portal")
     
-    col1, col2 = st.columns([1, 1])
+    col_center, _ = st.columns([2, 1])
     
-    with col1:
+    with col_center:
         auth_mode = st.radio("Choose Action", ["Login", "Register Account"], horizontal=True)
         
         email = st.text_input("Email Address").strip().lower()
         password = st.text_input("Password", type="password")
         
         if auth_mode == "Register Account":
-            selected_role = st.selectbox("Account Type", ["Buyer (Wholesaler, Hotel, Processor)", "Farmer / Livestock Producer"])
+            selected_role = st.selectbox("Account Type", ["Buyer (Wholesaler, Hotel, Processor)", "Farmer / Producer"])
             full_name = st.text_input("Full Name / Farm Name")
+            
+            # Farming Specialization Dropdown (For Farmers)
+            farming_cat = None
+            if "Farmer" in selected_role:
+                farming_cat = st.selectbox("Select Your Farming Category", [
+                    "🌾 Crop Farming",
+                    "🐂 Livestock Farming",
+                    "🐓 Poultry Farming",
+                    "🐟 Fishery / Aquaculture",
+                    "🍎 Horticulture (Fruits & Vegetables)",
+                    "🥛 Dairy Farming"
+                ])
+                
             phone = st.text_input("Phone Number")
             
             if st.button("Create Account", use_container_width=True):
@@ -193,11 +224,11 @@ def render_login_portal():
                         st.error("Account already exists with this email! Please log in.")
                     else:
                         assigned_role = "Farmer" if "Farmer" in selected_role else "Buyer"
-                        # Supabase Integration Point: supabase.auth.sign_up(...)
                         st.session_state.user_db[email] = {
                             "password": password,
                             "role": assigned_role,
-                            "name": full_name
+                            "name": full_name,
+                            "category": farming_cat if assigned_role == "Farmer" else "Buyer"
                         }
                         st.success(f"Account created successfully as {assigned_role}! Please log in.")
                 else:
@@ -214,21 +245,6 @@ def render_login_portal():
                     st.rerun()
                 else:
                     st.error("Invalid email or password.")
-                    
-        st.divider()
-        st.caption("💡 **Demo Credentials:**")
-        st.caption("• **Farmer:** `farmer@ftn.com` | Password: `password123`")
-        st.caption("• **Buyer:** `buyer@ftn.com` | Password: `password123`")
-        st.caption("• **Founder/Admin:** `admin@ftn.com` | Password: `adminsecret`")
-
-    with col2:
-        st.info("### Platform Value Proposition")
-        st.markdown("""
-        * 🛡️ **Escrow Protection:** Payment stays locked safely in escrow until quality is verified on arrival.
-        * 🐂 **Livestock Health Proof:** Certified video & veterinary inspections before purchase.
-        * 🌾 **Direct Farm Prices:** Eliminates market middleman markups.
-        * 🤝 **Forward Contracting:** Reserve future harvests ahead of time.
-        """)
 
 if not st.session_state.authenticated:
     render_login_portal()
@@ -249,9 +265,8 @@ if st.sidebar.button("Log Out"):
 
 st.sidebar.divider()
 
-# Role-Based Menu Options
 if st.session_state.user_role == "Farmer":
-    nav_options = ["➕ My Produce & Listings", "➕ Add New Product", "🤝 Direct Buyer Requests"]
+    nav_options = ["➕ My Active Products & Media", "➕ Add New Product", "🤝 Direct Buyer Requests"]
 elif st.session_state.user_role == "Buyer":
     nav_options = ["🛒 Browse Marketplace", "🤝 Pre-Order Forward Contracts", "📦 My Orders & Escrow"]
 elif st.session_state.user_role == "Admin":
@@ -260,115 +275,158 @@ elif st.session_state.user_role == "Admin":
 navigation = st.sidebar.radio("Navigation", nav_options)
 
 # --------------------------------------------------
-# BUYER VIEW: MARKETPLACE
+# BUYER VIEW: RE-ORGANIZED MARKETPLACE
 # --------------------------------------------------
 if navigation in ["🛒 Browse Marketplace", "📦 My Orders & Escrow"]:
-    st.subheader("🌾 Direct Farm Produce & Livestock Market")
+    st.subheader("🛒 Direct Farm Produce & Livestock Market")
     
-    category_filter = st.selectbox("Filter Category", ["All", "Livestock", "Crop Produce"])
+    c_filter1, c_filter2 = st.columns([1, 1])
+    with c_filter1:
+        category_filter = st.selectbox("Filter Category", [
+            "All", "🌾 Crop Farming", "🐂 Livestock Farming", "🐓 Poultry Farming", 
+            "🐟 Fishery / Aquaculture", "🍎 Horticulture", "🥛 Dairy Farming"
+        ])
+    with c_filter2:
+        delivery_dest = st.selectbox("Select Delivery Destination Distance", list(LOGISTICS_RATES.keys()))
+        
+    logistics_fee = LOGISTICS_RATES[delivery_dest]
     
+    st.divider()
+
     for item in st.session_state.listings:
-        if category_filter != "All" and item["category"] != category_filter:
+        if category_filter != "All" and category_filter not in item.get("category", ""):
             continue
             
         st.markdown('<div class="listing-card">', unsafe_allow_html=True)
-        col_img, col_info, col_pay = st.columns([1, 2, 1.5])
+        col_media, col_details, col_pricing = st.columns([1.2, 1.8, 1.5])
         
-        with col_img:
-            if item["category"] == "Livestock":
-                st.markdown("### 🐂 Livestock")
-                st.caption(f"Estimated Wt: **{item.get('weight_kg', 'N/A')} kg**")
+        with col_media:
+            if item.get("image_url"):
+                st.image(item["image_url"], use_column_width=True, caption=f"Product Media ({item['item']})")
             else:
-                st.markdown("### 🌽 Crop Produce")
-                st.caption(f"Quantity: **{item.get('quantity', 'N/A')} Units**")
-            
-            if item.get("verified_health"):
-                st.success("✅ Vet Checked")
-
-        with col_info:
-            st.markdown(f"### {item['item']}")
-            st.write(f"**Seller:** {item['seller']} | 📍 **Location:** {item['location']}")
-            if item.get("pre_order"):
-                st.warning(f"⏳ Pre-Order (Expected Harvest: {item['harvest_date']})")
+                st.info("📷 No Image Uploaded")
                 
-        with col_pay:
+            if item.get("verified_health"):
+                st.success("✅ Vet Checked / Quality Inspected")
+
+        with col_details:
+            st.markdown(f"### {item['item']}")
+            st.markdown(f"**Category:** `{item.get('category', 'Agri Produce')}`")
+            st.markdown(f"**Farmer / Supplier:** {item['seller']}")
+            st.markdown(f"📍 **Origin Farm Location:** {item['location']}")
+            
+            if "weight_kg" in item:
+                st.write(f"⚖️ **Estimated Weight:** {item['weight_kg']} kg")
+            if "quantity" in item:
+                st.write(f"📦 **Available Quantity:** {item['quantity']} Units")
+                
+            if item.get("pre_order"):
+                st.warning(f"⏳ Pre-Order Forward Contract (Expected Harvest: {item['harvest_date']})")
+
+        with col_pricing:
             raw_price = item['price_ngn']
-            platform_fee = raw_price * 0.10  # 10% Platform Fee
-            total_price = raw_price + platform_fee
+            platform_fee = raw_price * 0.10  # 10% Platform Revenue
+            total_price = raw_price + platform_fee + logistics_fee
             
-            st.markdown(f"**Farm Price:** ₦{raw_price:,.2f}")
-            st.markdown(f"<span style='color:#D90429; font-weight:bold;'>+ 10% Escrow & Delivery Fee: ₦{platform_fee:,.2f}</span>", unsafe_allow_html=True)
-            st.markdown(f"### **Total: ₦{total_price:,.2f}**")
+            st.markdown('<div class="price-breakdown">', unsafe_allow_html=True)
+            st.markdown(f"**Base Farm Price:** ₦{raw_price:,.2f}")
+            st.markdown(f"<span style='color:#008751;'>+ 10% Platform Fee: ₦{platform_fee:,.2f}</span>", unsafe_allow_html=True)
+            st.markdown(f"<span style='color:#5C3D2E;'>+ 🚚 Logistics Partner Fee ({delivery_dest}): ₦{logistics_fee:,.2f}</span>", unsafe_allow_html=True)
+            st.divider()
+            st.markdown(f"### **Total Payable: ₦{total_price:,.2f}**")
+            st.markdown('</div>', unsafe_allow_html=True)
             
-            if st.button("Pay with Paystack 💳", key=f"pay_{item['id']}"):
+            if st.button("Pay via Paystack Escrow 💳", key=f"pay_{item['id']}"):
                 st.markdown("""
                 <div class="escrow-box">
-                    <strong>🔒 Paystack Escrow Activated:</strong><br>
-                    Payment locked safely. Funds are released to the farmer only upon physical delivery confirmation.
+                    <strong>🔒 Escrow Protection Active:</strong><br>
+                    Your total payment is safely locked in escrow. Funds will only be released to the farmer and logistics provider after you inspect and accept delivery!
                 </div>
                 """, unsafe_allow_html=True)
                 
         st.markdown('</div>', unsafe_allow_html=True)
 
 # --------------------------------------------------
-# FARMER VIEW: LISTINGS MANAGEMENT
+# FARMER VIEW: ACTIVE INVENTORY & MEDIA
 # --------------------------------------------------
-elif navigation == "➕ My Produce & Listings":
-    st.subheader("🚜 Farmer Dashboard: Active Inventory")
+elif navigation == "➕ My Active Products & Media":
+    st.subheader("🚜 Farmer Dashboard: My Inventory & Product Media")
     
     my_items = [i for i in st.session_state.listings if i["seller"] == st.session_state.username]
     
     if my_items:
         for item in my_items:
-            st.markdown(f"• **{item['item']}** | Price: ₦{item['price_ngn']:,.2f} | Location: {item['location']}")
+            st.markdown('<div class="listing-card">', unsafe_allow_html=True)
+            c1, c2 = st.columns([1, 2])
+            with c1:
+                if item.get("image_url"):
+                    st.image(item["image_url"], width=250, caption=f"Active Media View")
+                else:
+                    st.warning("No media added")
+            with c2:
+                st.markdown(f"### {item['item']}")
+                st.write(f"Category: `{item.get('category', 'General')}` | Base Price: **₦{item['price_ngn']:,.2f}**")
+                st.write(f"📍 Location: {item['location']}")
+                if item.get("pre_order"):
+                    st.caption(f"Pre-Harvest Date: {item['harvest_date']}")
+            st.markdown('</div>', unsafe_allow_html=True)
     else:
         st.info("You haven't posted any produce listings yet. Click 'Add New Product' in the sidebar to publish your first item!")
 
 elif navigation == "➕ Add New Product":
-    st.subheader("🚜 Publish Direct Listing")
+    st.subheader("🚜 Publish Product Listing")
     
     with st.form("new_listing_form"):
-        prod_type = st.selectbox("Product Category", ["Crop Produce", "Livestock"])
-        title = st.text_input("Product Title (e.g., Sokoto Red Goats, Yellow Maize)")
+        farming_cat = st.selectbox("Select Category", [
+            "🌾 Crop Farming",
+            "🐂 Livestock Farming",
+            "🐓 Poultry Farming",
+            "🐟 Fishery / Aquaculture",
+            "🍎 Horticulture",
+            "🥛 Dairy Farming"
+        ])
+        
+        title = st.text_input("Product Title (e.g., Sokoto Red Goats, Yellow Maize Bags)")
         
         c1, c2 = st.columns(2)
         with c1:
             price = st.number_input("Base Farm Price (₦)", min_value=1000, value=50000, step=1000)
             location = st.text_input("Farm Location", value="Ogun State")
         with c2:
-            if prod_type == "Livestock":
-                weight = st.number_input("Estimated Weight (kg)", value=50)
+            if "Livestock" in farming_cat or "Poultry" in farming_cat or "Dairy" in farming_cat:
+                weight = st.number_input("Estimated Weight per Unit (kg)", value=50)
             else:
-                quantity = st.number_input("Available Units/Bags", value=10)
+                quantity = st.number_input("Available Units / Bags / Crates", value=10)
                 
         pre_order_check = st.checkbox("List as Pre-Harvest Contract")
         harvest_date = st.date_input("Expected Harvest Date", datetime.date.today()) if pre_order_check else None
         
-        st.markdown("#### 📹 Digital Health Audit")
-        uploaded_file = st.file_uploader("Upload Inspection Photo / Video")
+        st.markdown("#### 📷 Upload Product Photo / Video Link")
+        image_url_input = st.text_input("Product Image URL (e.g., Unsplash/Cloudinary link)", value="https://images.unsplash.com/photo-1500595046743-cd271d694d30?w=600")
         
-        submitted = st.form_submit_button("Publish Product")
+        submitted = st.form_submit_button("Publish Product Listing")
         
         if submitted:
             new_id = f"FTN-{random.randint(200, 999)}"
             new_item = {
                 "id": new_id,
                 "seller": st.session_state.username,
-                "category": prod_type,
+                "category": farming_cat,
                 "item": title,
                 "location": location,
                 "price_ngn": price,
+                "image_url": image_url_input,
                 "verified_health": True,
                 "pre_order": pre_order_check,
                 "harvest_date": str(harvest_date) if harvest_date else None
             }
-            if prod_type == "Livestock":
+            if "weight" in locals():
                 new_item["weight_kg"] = weight
-            else:
+            if "quantity" in locals():
                 new_item["quantity"] = quantity
                 
             st.session_state.listings.append(new_item)
-            st.success("🎉 Listing successfully published!")
+            st.success("🎉 Product listing with media successfully published!")
 
 # --------------------------------------------------
 # BUYER VIEW: PRE-ORDER CONTRACTS
