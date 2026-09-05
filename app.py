@@ -1,554 +1,214 @@
-import streamlit as st
-import pandas as pd
-import random
+import os
 import requests
-from PIL import Image, ImageStat
+from flask import Flask, render_template, request, flash, redirect, url_for, session, jsonify
 from supabase import create_client, Client
 
-# ==============================================================================
-# 🗝️ CONFIGURATION & API KEYS
-# ==============================================================================
-SUPABASE_URL = "https://rewewstbknigolxiozwp.supabase.co"
-SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJld2V3c3Ria25pZ29seGlvendwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgzNDU5MTUsImV4cCI6MjEwMzkyMTkxNX0.s1reBkT9vmYSKGM0yPJTJiAWxT0xxdO446GVOI6ib3U"
+app = Flask(__name__)
 
-PAYSTACK_SECRET_KEY = "sk_live_5d70f03c20eea14b71be5b116e453e6a6848eebe"
-PAYSTACK_CALLBACK_URL = "https://feed-the-nations.onrender.com"
+# Flask Session Key
+app.secret_key = os.environ.get("FLASK_SECRET_KEY", "feed-the-nations-secret-key-change-me")
 
-# ==============================================================================
-# 1. PAGE CONFIG & MOBILE-RESPONSIVE STYLING
-# ==============================================================================
-st.set_page_config(
-    page_title="FEED THE NATIONS - Direct Agri Marketplace",
-    page_icon="🌾",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
+# Supabase Configurations
+SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://your-supabase-url.supabase.co")
+SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJld2V3c3Ria25pZ29seGlvendwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgzNDU5MTUsImV4cCI6MjEwMzkyMTkxNX0.s1reBkT9vmYSKGM0yPJTJiAWxT0xxdO446GVOI6ib3U
+")
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-# Custom CSS with Animated Brand Header & Distinct Colorful Custom Button Styling
-st.markdown("""
-<style>
-    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&family=Poppins:wght@600;700;800&display=swap');
+# Paystack Configurations
+PAYSTACK_SECRET_KEY = os.environ.get("PAYSTACK_SECRET_KEY", "sk_live_5d70f03c20eea14b71be5b116e453e6a6848eebe")
+PAYSTACK_INITIALIZE_URL = "https://api.paystack.co/transaction/initialize"
+PAYSTACK_VERIFY_URL = "https://api.paystack.co/transaction/verify/"
 
-    :root {
-        --primary-green: #008751;
-        --accent-red: #D90429;
-        --earth-brown: #5C3D2E;
-        --light-bg: #F8FAF8;
-        --dark-text: #1B2021;
-    }
 
-    .stApp {
-        background-color: var(--light-bg);
-        color: var(--dark-text);
-        font-family: 'Poppins', sans-serif;
-    }
+# -------------------------------------------------------------------
+# Core Routes & Vision
+# -------------------------------------------------------------------
 
-    h1, h2, h3 {
-        color: var(--primary-green) !important;
-        font-family: 'Montserrat', sans-serif;
-        font-weight: 700;
-    }
+@app.route("/")
+def home():
+    user = session.get("user")
+    return render_template("index.html", user=user)
 
-    /* ANIMATED SWEEPING LIGHT EFFECT FOR HEADER */
-    @keyframes sweepLight {
-        0% { background-position: -200% 0; }
-        100% { background-position: 200% 0; }
-    }
 
-    /* BRAND HEADER */
-    .brand-header {
-        position: relative;
-        background: linear-gradient(
-            110deg, 
-            #008751 0%, 
-            #2A7B4C 35%, 
-            #ffffff 50%, 
-            #2A7B4C 65%, 
-            #5C3D2E 100%
-        );
-        background-size: 200% 100%;
-        animation: sweepLight 4s linear infinite;
-        padding: clamp(14px, 3.5vw, 28px);
-        border-radius: 12px;
-        text-align: center;
-        margin-bottom: 22px;
-        color: white !important;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.12);
-    }
-    
-    .brand-title {
-        color: #FFFFFF !important;
-        font-family: 'Montserrat', sans-serif;
-        font-size: clamp(1.5rem, 5.5vw, 2.7rem);
-        font-weight: 900;
-        letter-spacing: 2px;
-        margin: 0;
-        text-shadow: 2px 2px 5px rgba(0,0,0,0.4);
-    }
+@app.route("/about")
+def about():
+    """FEED THE NATIONS Vision & Mission"""
+    return render_template("about.html")
 
-    .brand-icons {
-        font-size: clamp(1.2rem, 3.5vw, 2rem);
-        margin-top: 6px;
-        letter-spacing: 8px;
-    }
 
-    .brand-subtext {
-        color: #F4F7F4;
-        font-size: clamp(0.8rem, 2.5vw, 1.05rem);
-        font-weight: 600;
-        margin-top: 8px;
-        text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
-    }
+# -------------------------------------------------------------------
+# Authentication (Supabase)
+# -------------------------------------------------------------------
 
-    /* COLORFUL LOG IN & ACTION BUTTONS WITH SPECIAL FONT */
-    div.stButton > button {
-        background: linear-gradient(135deg, #008751 0%, #11998e 50%, #38ef7d 100%) !important;
-        color: #FFFFFF !important;
-        font-family: 'Montserrat', sans-serif !important;
-        font-weight: 800 !important;
-        font-size: 1.15rem !important;
-        letter-spacing: 1.2px !important;
-        text-transform: uppercase !important;
-        border: None !important;
-        border-radius: 10px !important;
-        padding: 14px 28px !important;
-        width: 100% !important;
-        box-shadow: 0 4px 15px rgba(0, 135, 81, 0.35) !important;
-        transition: all 0.3s ease-in-out !important;
-    }
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    if request.method == "POST":
+        email = request.form.get("email", "").strip()
+        password = request.form.get("password", "").strip()
 
-    div.stButton > button:hover {
-        background: linear-gradient(135deg, #00b066 0%, #11998e 50%, #28c76f 100%) !important;
-        transform: translateY(-2px) scale(1.01) !important;
-        box-shadow: 0 6px 20px rgba(0, 135, 81, 0.45) !important;
-        color: #FFFFFF !important;
-    }
+        if not email or not password:
+            flash("Please provide both an email and a password.", "error")
+            return render_template("register.html")
 
-    div.stButton > button:active {
-        transform: translateY(1px) scale(0.99) !important;
-    }
+        try:
+            # Trigger registration via Supabase Auth
+            response = supabase.auth.sign_up({
+                "email": email,
+                "password": password
+            })
 
-    /* CARDS & UI CONTAINERS */
-    .listing-card {
-        background-color: white;
-        border-radius: 12px;
-        padding: clamp(12px, 2.5vw, 20px);
-        box-shadow: 0 3px 10px rgba(0,0,0,0.05);
-        border-top: 4px solid var(--primary-green);
-        margin-bottom: 20px;
-    }
-
-    .escrow-box {
-        background-color: #FFF8F8;
-        border-left: 4px solid var(--accent-red);
-        padding: 10px 14px;
-        border-radius: 6px;
-        margin-top: 10px;
-        font-size: 0.9rem;
-    }
-
-    .negotiate-box {
-        background-color: #F0F7F2;
-        border: 1px solid #C2E2C8;
-        border-radius: 8px;
-        padding: 12px;
-        margin-top: 10px;
-    }
-</style>
-""", unsafe_allow_html=True)
-
-# ==============================================================================
-# 2. SUPABASE & PAYSTACK INITIALIZATION
-# ==============================================================================
-@st.cache_resource
-def init_supabase() -> Client:
-    return create_client(SUPABASE_URL, SUPABASE_KEY)
-
-supabase = init_supabase()
-
-AGRI_CATEGORIES = [
-    "🌾 Crop Farming (Rice, Beans, Maize, Raw Grains)",
-    "🏭 Agro-Processing & Packaged Goods (Flour, Oils, Branded Foods)",
-    "🐂 Livestock Farming",
-    "🐓 Poultry Farming",
-    "🐟 Fishery / Aquaculture",
-    "🍎 Horticulture (Fruits & Vegetables)",
-    "🥛 Dairy Farming"
-]
-
-LOGISTICS_PARTNERS = {
-    "GIG Logistics (Agri-Freight Division)": {"phone": "+2348130001122", "display": "+234 813 000 1122"},
-    "Kwik Delivery (Heavy Haulage)": {"phone": "+2348092223344", "display": "+234 809 222 3344"},
-    "Max.ng Freight & Inter-State": {"phone": "+2347008009000", "display": "+234 700 800 9000"},
-    "Farmers Union Local Transport": {"phone": "+2348023334455", "display": "+234 802 333 4455"}
-}
-
-# Image verification function
-def verify_farm_photo(image):
-    try:
-        img = image.convert("RGB")
-        stat = ImageStat.Stat(img)
-        if sum(stat.stddev) / len(stat.stddev) < 12:
-            return False, "Image appears blank or non-product graphic. PLEASE UPLOAD REAL PICTURE OF FARM PRODUCTS."
-        return True, "Valid photo"
-    except Exception:
-        return False, "Invalid image file format. PLEASE UPLOAD REAL PICTURE OF FARM PRODUCTS."
-
-# Paystack Payment Gateway Initializer
-def initialize_paystack_payment(email, amount_ngn, reference):
-    url = "https://api.paystack.co/transaction/initialize"
-    headers = {
-        "Authorization": f"Bearer {PAYSTACK_SECRET_KEY}",
-        "Content-Type": "application/json"
-    }
-    data = {
-        "email": email,
-        "amount": int(amount_ngn * 100),  # Paystack expects amount in Kobo
-        "reference": reference,
-        "callback_url": PAYSTACK_CALLBACK_URL
-    }
-    response = requests.post(url, json=data, headers=headers)
-    return response.json()
-
-# ==============================================================================
-# 3. SESSION STATE MANAGEMENT
-# ==============================================================================
-if "authenticated" not in st.session_state:
-    st.session_state.authenticated = False
-if "user_role" not in st.session_state:
-    st.session_state.user_role = None
-if "username" not in st.session_state:
-    st.session_state.username = ""
-if "email" not in st.session_state:
-    st.session_state.email = ""
-if "phone_number" not in st.session_state:
-    st.session_state.phone_number = ""
-
-# ==============================================================================
-# 4. ANIMATED BRAND HEADER
-# ==============================================================================
-st.markdown("""
-<div class="brand-header">
-    <h1 class="brand-title">FEED THE NATIONS</h1>
-    <div class="brand-icons">🌾 🌽 🐂 🐟 🐓</div>
-    <p class="brand-subtext">Direct Farm-to-Buyer Marketplace • Zero Middlemen • Escrow Protection</p>
-</div>
-""", unsafe_allow_html=True)
-
-# ==============================================================================
-# 5. USER AUTHENTICATION (SUPABASE AUTH + PROFILES SYNC)
-# ==============================================================================
-if not st.session_state.authenticated:
-    st.subheader("🔑 Access Portal")
-    auth_mode = st.radio("Choose Action", ["Login", "Register Account"], horizontal=True)
-    
-    email_input = st.text_input("Email Address").strip().lower()
-    password_input = st.text_input("Password", type="password")
-    
-    if auth_mode == "Register Account":
-        phone_input = st.text_input("Phone Number (e.g., 08012345678 or +2348012345678)")
-        selected_role = st.selectbox("Account Type", ["Buyer (Wholesaler, Hotel, Processor)", "Farmer / Producer", "Platform Admin"])
-        full_name = st.text_input("Full Name / Farm Name")
-        farming_cat = st.selectbox("Primary Agricultural Category", AGRI_CATEGORIES) if "Farmer" in selected_role else "All Categories"
-        
-        if st.button("Create Account", use_container_width=True):
-            if email_input and password_input and full_name and phone_input:
-                try:
-                    if "Farmer" in selected_role:
-                        assigned_role = "Farmer"
-                    elif "Admin" in selected_role:
-                        assigned_role = "Admin"
-                    else:
-                        assigned_role = "Buyer"
-
-                    # 1. Register account in Supabase Auth
-                    res = supabase.auth.sign_up({
-                        "email": email_input,
-                        "password": password_input,
-                        "options": {
-                            "data": {
-                                "full_name": full_name,
-                                "phone_number": phone_input,
-                                "role": assigned_role,
-                                "category": farming_cat
-                            }
-                        }
-                    })
-
-                    # 2. Sync profile into 'profiles' table
-                    if res.user:
-                        profile_data = {
-                            "id": res.user.id,
-                            "email": email_input,
-                            "phone_number": phone_input,
-                            "full_name": full_name,
-                            "role": assigned_role,
-                            "category": farming_cat
-                        }
-                        supabase.table("profiles").insert(profile_data).execute()
-
-                    st.success("🎉 Account created successfully! Please switch to Login above.")
-                except Exception as e:
-                    st.error(f"Error creating account: {str(e)}")
-            else:
-                st.error("Please fill out all required fields including Phone Number.")
-    else:
-        if st.button("LOG IN ➔", use_container_width=True):
-            if email_input and password_input:
-                try:
-                    res = supabase.auth.sign_in_with_password({
-                        "email": email_input,
-                        "password": password_input
-                    })
-                    user_metadata = res.user.user_metadata
-                    st.session_state.authenticated = True
-                    st.session_state.user_role = user_metadata.get("role", "Buyer")
-                    st.session_state.username = user_metadata.get("full_name", email_input)
-                    st.session_state.email = email_input
-                    st.session_state.phone_number = user_metadata.get("phone_number", "")
-                    st.rerun()
-                except Exception as e:
-                    st.error(f"Login failed: {str(e)}")
-            else:
-                st.error("Please enter email and password.")
-    st.stop()
-
-# ==============================================================================
-# 6. SIDEBAR NAVIGATION
-# ==============================================================================
-st.sidebar.markdown(f"### 👤 {st.session_state.username}")
-st.sidebar.markdown(f"**Role:** `{st.session_state.user_role}`")
-if st.session_state.phone_number:
-    st.sidebar.markdown(f"**Phone:** `{st.session_state.phone_number}`")
-
-if st.sidebar.button("Log Out"):
-    supabase.auth.sign_out()
-    st.session_state.authenticated = False
-    st.session_state.user_role = None
-    st.session_state.username = ""
-    st.session_state.email = ""
-    st.session_state.phone_number = ""
-    st.rerun()
-
-st.sidebar.divider()
-
-if st.session_state.user_role == "Farmer":
-    nav_options = ["📦 My Active Products", "➕ Add New Product"]
-elif st.session_state.user_role == "Buyer":
-    nav_options = ["🛒 Browse Marketplace", "📦 My Orders & Escrow"]
-elif st.session_state.user_role == "Admin":
-    nav_options = ["📈 Founder Revenue Dashboard", "🛒 Browse Marketplace"]
-
-navigation = st.sidebar.radio("Navigation", nav_options)
-
-# ==============================================================================
-# 7. FOUNDER REVENUE DASHBOARD (ADMIN VIEW)
-# ==============================================================================
-if navigation == "📈 Founder Revenue Dashboard":
-    st.subheader("📊 Founder Revenue & Category Growth Analytics")
-    st.caption("Live transaction volumes and 10% platform commissions pulled directly from Supabase.")
-    
-    try:
-        response = supabase.table("transactions").select("*").execute()
-        tx_data = response.data
-        
-        if tx_data:
-            df_tx = pd.DataFrame(tx_data)
-            total_gmv = df_tx["amount"].sum()
-            total_commission = df_tx["commission"].sum()
-            total_orders = len(df_tx)
-            
-            m1, m2, m3 = st.columns(3)
-            m1.metric("Gross Merchandise Value (GMV)", f"₦{total_gmv:,.2f}")
-            m2.metric("Founder Revenue (10%)", f"₦{total_commission:,.2f}")
-            m3.metric("Completed Transactions", total_orders)
-            
-            st.divider()
-            st.markdown("### 📂 Revenue Breakdown by Category")
-            
-            category_summary = []
-            for cat in AGRI_CATEGORIES:
-                cat_txs = df_tx[df_tx["category"] == cat]
-                cat_gmv = cat_txs["amount"].sum() if not cat_txs.empty else 0
-                cat_comm = cat_txs["commission"].sum() if not cat_txs.empty else 0
-                
-                category_summary.append({
-                    "Category": cat,
-                    "Total Sales (GMV)": f"₦{cat_gmv:,.2f}",
-                    "Platform Revenue (10%)": f"₦{cat_comm:,.2f}",
-                    "Orders": len(cat_txs)
-                })
-                
-            st.table(pd.DataFrame(category_summary))
-            st.markdown("### 📜 Real-Time Transaction Logs")
-            st.dataframe(df_tx, use_container_width=True)
-        else:
-            st.info("No completed transactions recorded in Supabase yet.")
-    except Exception as e:
-        st.error(f"Error fetching revenue records: {str(e)}")
-
-# ==============================================================================
-# 8. BUYER MARKETPLACE & PAYSTACK ESCROW PAYMENT
-# ==============================================================================
-elif navigation in ["🛒 Browse Marketplace", "📦 My Orders & Escrow"]:
-    st.subheader("🛒 Direct Farm Produce Marketplace")
-    
-    c_f1, c_f2 = st.columns(2)
-    with c_f1:
-        buying_scale = st.selectbox("Buying Scale", ["All Scales", "Large Scale / Commercial Wholesale", "Small Scale / Retail"])
-    with c_f2:
-        category_filter = st.selectbox("Agricultural Category", ["All Categories"] + AGRI_CATEGORIES)
-        
-    st.divider()
-
-    try:
-        query = supabase.table("listings").select("*")
-        if buying_scale != "All Scales":
-            query = query.eq("scale", buying_scale)
-        if category_filter != "All Categories":
-            query = query.eq("category", category_filter)
-            
-        listings = query.execute().data
-
-        if not listings:
-            st.info("No products currently listed matching your criteria.")
-
-        for item in listings:
-            st.markdown('<div class="listing-card">', unsafe_allow_html=True)
-            col1, col2 = st.columns([1, 2])
-            
-            with col1:
-                if item.get("image_url"):
-                    st.image(item["image_url"], use_container_width=True)
-                else:
-                    st.info("📷 Photo Verified")
-                st.caption(f"Scale: **{item.get('scale', 'General')}**")
-
-            with col2:
-                st.markdown(f"### {item['item']}")
-                st.write(f"**Category:** `{item.get('category')}`")
-                st.write(f"**Farmer:** {item['seller']} | 📍 **Location:** {item['location']}")
-                
-                raw_price = float(item['price_ngn'])
-                platform_fee = raw_price * 0.10
-                
-                st.markdown(f"**Base Produce Price:** ₦{raw_price:,.2f}")
-                st.markdown(f"**Platform Commission (10%):** ₦{platform_fee:,.2f}")
-                
-                st.markdown("#### 🚚 Direct Logistics Bargaining & Delivery")
-                selected_partner = st.selectbox(f"Logistics Partner for {item['id']}", list(LOGISTICS_PARTNERS.keys()))
-                partner_info = LOGISTICS_PARTNERS[selected_partner]
-                
-                agreed_freight = st.number_input(
-                    f"Agreed Delivery Fee (₦) after bargaining", 
-                    min_value=0, value=25000, step=5000, key=f"freight_{item['id']}"
+            if response.user:
+                # Inform user about email confirmation requirement
+                flash(
+                    "Registration successful! Please check your inbox and click the verification link sent to your email to activate your account.",
+                    "success"
                 )
-                
-                st.markdown(f"""
-                <div class="negotiate-box">
-                    <strong>🤝 Bargain Directly with {selected_partner}:</strong><br>
-                    Contact via WhatsApp/Call: <code>{partner_info['display']}</code><br>
-                    <a href="https://wa.me/{partner_info['phone']}" target="_blank" style="color:#008751; font-weight:bold;">💬 Click to Negotiate Freight Rate</a>
-                </div>
-                """, unsafe_allow_html=True)
-                
-                final_total = raw_price + platform_fee + agreed_freight
-                st.markdown(f"### **Total Payable: ₦{final_total:,.2f}**")
-                
-                if st.button("PAY VIA PAYSTACK ESCROW 💳", key=f"pay_{item['id']}"):
-                    ref = f"FTN-TX-{random.randint(100000, 999999)}"
-                    
-                    # 1. Insert transaction record to Supabase
-                    tx_record = {
-                        "id": ref,
-                        "listing_id": item["id"],
-                        "category": item["category"],
-                        "item": item["item"],
-                        "amount": raw_price,
-                        "commission": platform_fee,
-                        "freight": agreed_freight,
-                        "total_paid": final_total,
-                        "buyer": st.session_state.username,
-                        "status": "ESCROW_HELD",
-                        "paystack_ref": ref
-                    }
-                    supabase.table("transactions").insert(tx_record).execute()
-                    
-                    # 2. Generate Paystack payment gateway URL
-                    pay_resp = initialize_paystack_payment(st.session_state.email, final_total, ref)
-                    
-                    if pay_resp.get("status"):
-                        auth_url = pay_resp["data"]["authorization_url"]
-                        st.success("🔒 Escrow order initiated! Proceed below to complete payment.")
-                        st.markdown(f'<a href="{auth_url}" target="_blank" style="display:inline-block; background: linear-gradient(135deg, #008751 0%, #11998e 100%); color:white; padding:12px 20px; border-radius:8px; text-decoration:none; font-family: Montserrat, sans-serif; font-weight:bold;">Open Paystack Gateway ➔</a>', unsafe_allow_html=True)
-                    else:
-                        st.error("Failed to initialize Paystack gateway.")
-                    
-            st.markdown('</div>', unsafe_allow_html=True)
-    except Exception as e:
-        st.error(f"Marketplace error: {str(e)}")
-
-# ==============================================================================
-# 9. FARMER PRODUCT UPLOAD & ACTIVE PRODUCTS
-# ==============================================================================
-elif navigation == "➕ Add New Product":
-    st.subheader("🚜 Publish Product Listing")
-    
-    with st.form("add_product_form"):
-        farming_cat = st.selectbox("Select Agriculture Category", AGRI_CATEGORIES)
-        prod_scale = st.selectbox("Supply Scale Category", ["Large Scale / Commercial Wholesale", "Small Scale / Retail"])
-        title = st.text_input("Product Title")
-        
-        c1, c2 = st.columns(2)
-        with c1:
-            price = st.number_input("Base Farm Price (₦)", min_value=1000, value=500000, step=10000)
-            location = st.text_input("Farm Location / State", value="Ogun State")
-        with c2:
-            quantity = st.number_input("Available Units / Bags / Crates / Animals", value=50)
-            
-        st.markdown("#### 📷 Upload Product Photo")
-        uploaded_file = st.file_uploader("Upload actual photo of farm products", type=["jpg", "jpeg", "png"])
-        
-        submitted = st.form_submit_button("PUBLISH PRODUCT LISTING 🚀")
-        
-        if submitted:
-            if not uploaded_file:
-                st.error("⚠️ PLEASE UPLOAD REAL PICTURE OF FARM PRODUCTS")
+                return redirect(url_for("login"))
             else:
-                img = Image.open(uploaded_file)
-                is_valid, msg = verify_farm_photo(img)
-                
-                if not is_valid:
-                    st.error(f"⚠️ {msg}")
-                elif not title:
-                    st.error("Please enter a product title.")
-                else:
-                    new_id = f"FTN-{random.randint(100, 999)}"
-                    product_data = {
-                        "id": new_id,
-                        "seller": st.session_state.username,
-                        "category": farming_cat,
-                        "scale": prod_scale,
-                        "item": title,
-                        "location": location,
-                        "price_ngn": price,
-                        "quantity": quantity
-                    }
-                    supabase.table("listings").insert(product_data).execute()
-                    st.success("🎉 Product published and saved to Supabase!")
+                flash("Could not complete registration. Please try again.", "error")
 
-elif navigation == "📦 My Active Products":
-    st.subheader("🚜 My Active Listings")
+        except Exception as e:
+            error_msg = str(e)
+            if "User already registered" in error_msg:
+                flash("An account with this email already exists. Please log in.", "error")
+            else:
+                flash(f"Sign-up error: {error_msg}", "error")
+
+    return render_template("register.html")
+
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        email = request.form.get("email", "").strip()
+        password = request.form.get("password", "").strip()
+
+        try:
+            response = supabase.auth.sign_in_with_password({
+                "email": email,
+                "password": password
+            })
+
+            session["user"] = {
+                "id": response.user.id,
+                "email": response.user.email
+            }
+            flash("Welcome back to FEED THE NATIONS!", "success")
+            return redirect(url_for("dashboard"))
+
+        except Exception:
+            flash("Login failed. Check your credentials or ensure your email has been confirmed.", "error")
+
+    return render_template("login.html")
+
+
+@app.route("/logout")
+def logout():
     try:
-        my_items = supabase.table("listings").select("*").eq("seller", st.session_state.username).execute().data
-        
-        if my_items:
-            for item in my_items:
-                st.markdown('<div class="listing-card">', unsafe_allow_html=True)
-                st.markdown(f"### {item['item']}")
-                st.write(f"Category: `{item.get('category')}` | Base Price: **₦{item['price_ngn']:,.2f}**")
-                st.markdown('</div>', unsafe_allow_html=True)
+        supabase.auth.sign_out()
+    except Exception:
+        pass
+    session.clear()
+    flash("You have been logged out.", "success")
+    return redirect(url_for("home"))
+
+
+@app.route("/dashboard")
+def dashboard():
+    user = session.get("user")
+    if not user:
+        flash("Please log in to access your dashboard.", "error")
+        return redirect(url_for("login"))
+    return render_template("dashboard.html", user=user)
+
+
+# -------------------------------------------------------------------
+# Paystack Revenue & Donation System
+# -------------------------------------------------------------------
+
+@app.route("/donate", methods=["GET", "POST"])
+def donate():
+    user = session.get("user")
+    
+    if request.method == "POST":
+        email = request.form.get("email", user.get("email") if user else "").strip()
+        amount = request.form.get("amount", "").strip()
+
+        if not email or not amount:
+            flash("Please enter a valid email and donation amount.", "error")
+            return render_template("donate.html")
+
+        # Convert amount to kobo (Paystack expects amounts in smallest currency unit)
+        amount_in_kobo = int(float(amount) * 100)
+
+        headers = {
+            "Authorization": f"Bearer {PAYSTACK_SECRET_KEY}",
+            "Content-Type": "application/json"
+        }
+
+        payload = {
+            "email": email,
+            "amount": amount_in_kobo,
+            "callback_url": url_for("paystack_callback", _external=True)
+        }
+
+        try:
+            paystack_res = requests.post(PAYSTACK_INITIALIZE_URL, json=payload, headers=headers)
+            res_data = paystack_res.json()
+
+            if res_data.get("status"):
+                # Redirect user to Paystack payment authorization URL
+                authorization_url = res_data["data"]["authorization_url"]
+                return redirect(authorization_url)
+            else:
+                flash("Could not initiate transaction. Please try again.", "error")
+
+        except Exception as e:
+            flash(f"Payment gateway error: {str(e)}", "error")
+
+    return render_template("donate.html", user=user)
+
+
+@app.route("/paystack/callback")
+def paystack_callback():
+    reference = request.args.get("reference")
+    if not reference:
+        flash("Invalid transaction reference.", "error")
+        return redirect(url_for("home"))
+
+    headers = {
+        "Authorization": f"Bearer {PAYSTACK_SECRET_KEY}"
+    }
+
+    try:
+        verify_res = requests.get(f"{PAYSTACK_VERIFY_URL}{reference}", headers=headers)
+        res_data = verify_res.json()
+
+        if res_data.get("status") and res_data["data"]["status"] == "success":
+            payment_data = res_data["data"]
+            amount_paid = payment_data["amount"] / 100  # Convert back from kobo
+            
+            # Record transaction in Supabase DB (Optional)
+            try:
+                supabase.table("donations").insert({
+                    "email": payment_data["customer"]["email"],
+                    "amount": amount_paid,
+                    "reference": reference,
+                    "status": "success"
+                }).execute()
+            except Exception:
+                pass  # Continue even if table logging fails
+
+            flash(f"Thank you for your donation of ₦{amount_paid:,.2f}! Your support powers the FEED THE NATIONS mission.", "success")
+            return redirect(url_for("dashboard"))
         else:
-            st.info("No active listings found in Supabase. Click 'Add New Product' to get started!")
+            flash("Payment verification failed. Please contact support if debited.", "error")
+
     except Exception as e:
-        st.error(f"Error fetching active listings: {str(e)}")
+        flash(f"Verification error: {str(e)}", "error")
+
+    return redirect(url_for("home"))
+
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)), debug=True)
