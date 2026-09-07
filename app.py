@@ -257,7 +257,7 @@ st.markdown(
 )
 
 # ==============================================================================
-# 5. USER AUTHENTICATION & SUPABASE PROFILES SYNC
+# 5. USER AUTHENTICATION & SUPABASE PROFILES SYNC (USING UPSERT TO PREVENT 23505 ERROR)
 # ==============================================================================
 if not st.session_state.authenticated:
     st.subheader("🔑 Access Portal")
@@ -309,7 +309,7 @@ if not st.session_state.authenticated:
                         }
                     )
 
-                    # 2. Sync profile into custom 'profiles' table
+                    # 2. Use UPSERT to write/update profile without triggering duplicate primary key violations
                     if res.user:
                         profile_data = {
                             "id": res.user.id,
@@ -318,12 +318,12 @@ if not st.session_state.authenticated:
                             "role": assigned_role,
                             "category": farming_cat,
                         }
-                        supabase.table("profiles").insert(
+                        supabase.table("profiles").upsert(
                             profile_data
                         ).execute()
 
                     st.success(
-                        "🎉 Account created successfully! Please check your email address for complete registration setup before logging in."
+                        "🎉 Account created successfully! Switch to 'Login' above to enter your dashboard."
                     )
                 except Exception as e:
                     st.error(f"Error creating account: {str(e)}")
@@ -554,7 +554,7 @@ elif navigation in ["🛒 Browse Marketplace", "📦 My Orders & Escrow"]:
                         )
                     else:
                         st.error(
-                            "Failed to initialize Paystack gateway. Please check your API secret key at the top of the file."
+                            "Failed to initialize Paystack gateway. Please check your API secret key."
                         )
 
             st.markdown("</div>", unsafe_allow_html=True)
