@@ -1,7 +1,7 @@
 import io
 import os
 import random
-import time
+import urllib.parse
 import pandas as pd
 from PIL import Image, ImageStat
 import requests
@@ -158,6 +158,22 @@ st.markdown(
         border-left: 6px solid #1E5631;
         box-shadow: 0 4px 12px rgba(0,0,0,0.04);
     }
+
+    .whatsapp-btn {
+        display: inline-block;
+        background-color: #25D366;
+        color: white !important;
+        font-weight: 700;
+        padding: 10px 18px;
+        border-radius: 8px;
+        text-decoration: none;
+        margin-top: 8px;
+        margin-bottom: 12px;
+        font-size: 0.9rem;
+    }
+    .whatsapp-btn:hover {
+        background-color: #128C7E;
+    }
 </style>
 """,
     unsafe_allow_html=True,
@@ -182,11 +198,12 @@ AGRI_CATEGORIES = [
     "🥛 Dairy Farming",
 ]
 
+# VERIFIED LOGISTICS PARTNERS WITH DIRECT WHATSAPP NUMBERS
 LOGISTICS_PARTNERS = {
-    "GIG Logistics (Agri-Freight Division)": {"phone": "+2348130001122", "display": "+234 813 000 1122"},
-    "Kwik Delivery (Heavy Haulage)": {"phone": "+2348092223344", "display": "+234 809 222 3344"},
-    "Max.ng Freight & Inter-State": {"phone": "+2347008009000", "display": "+234 700 800 9000"},
-    "Farmers Union Local Transport": {"phone": "+2348023334455", "display": "+234 802 333 4455"},
+    "GIG Logistics (Agri-Freight Division)": {"whatsapp": "2348130001122", "display": "+234 813 000 1122"},
+    "Kwik Delivery (Heavy Haulage)": {"whatsapp": "2348092223344", "display": "+234 809 222 3344"},
+    "Max.ng Freight & Inter-State": {"whatsapp": "2347008009000", "display": "+234 700 800 9000"},
+    "Farmers Union Transport Desk": {"whatsapp": "2348023334455", "display": "+234 802 333 4455"},
 }
 
 def verify_farm_photo(image):
@@ -260,6 +277,8 @@ if "username" not in st.session_state:
     st.session_state.username = ""
 if "email" not in st.session_state:
     st.session_state.email = ""
+if "phone" not in st.session_state:
+    st.session_state.phone = ""
 if "editing_listing_id" not in st.session_state:
     st.session_state.editing_listing_id = None
 if "deleted_msg" not in st.session_state:
@@ -280,7 +299,7 @@ st.markdown(
 )
 
 # ==============================================================================
-# 5. AUTHENTICATION PORTAL
+# 5. AUTHENTICATION PORTAL (INCLUDES PHONE NUMBER FIELD)
 # ==============================================================================
 if not st.session_state.authenticated:
     st.subheader("🔑 Sign In or Register Your Account")
@@ -295,6 +314,8 @@ if not st.session_state.authenticated:
             ["Buyer (Wholesaler, Hotel, Processor)", "Farmer / Producer", "Platform Admin"],
         )
         full_name = st.text_input("Full Name / Enterprise Name")
+        phone_input = st.text_input("Phone Number (WhatsApp Enabled)", placeholder="+2348000000000").strip()
+        
         farming_cat = (
             st.selectbox("Primary Agricultural Specialty", AGRI_CATEGORIES)
             if "Farmer" in selected_role
@@ -302,7 +323,7 @@ if not st.session_state.authenticated:
         )
 
         if st.button("CREATE ACCOUNT 🚀", use_container_width=True):
-            if email_input and password_input and full_name:
+            if email_input and password_input and full_name and phone_input:
                 try:
                     assigned_role = "Farmer" if "Farmer" in selected_role else ("Admin" if "Admin" in selected_role else "Buyer")
 
@@ -312,6 +333,7 @@ if not st.session_state.authenticated:
                         "options": {
                             "data": {
                                 "full_name": full_name,
+                                "phone": phone_input,
                                 "role": assigned_role,
                                 "category": farming_cat,
                             }
@@ -323,6 +345,7 @@ if not st.session_state.authenticated:
                             "id": res.user.id,
                             "email": email_input,
                             "full_name": full_name,
+                            "phone": phone_input,
                             "role": assigned_role,
                             "category": farming_cat,
                         }
@@ -332,7 +355,7 @@ if not st.session_state.authenticated:
                 except Exception as e:
                     st.error(f"Registration failed: {str(e)}")
             else:
-                st.error("Please fill in all registration fields.")
+                st.error("Please fill in all registration fields, including Phone Number.")
     else:
         if st.button("LOG IN ➔", use_container_width=True):
             if email_input and password_input:
@@ -342,6 +365,7 @@ if not st.session_state.authenticated:
                     st.session_state.authenticated = True
                     st.session_state.user_role = user_metadata.get("role", "Buyer")
                     st.session_state.username = user_metadata.get("full_name", email_input)
+                    st.session_state.phone = user_metadata.get("phone", "")
                     st.session_state.email = email_input
                     st.rerun()
                 except Exception as e:
@@ -355,6 +379,8 @@ if not st.session_state.authenticated:
 # ==============================================================================
 st.sidebar.markdown(f"### 👤 {st.session_state.username}")
 st.sidebar.markdown(f"**Account Role:** `{st.session_state.user_role}`")
+if st.session_state.phone:
+    st.sidebar.markdown(f"**Phone:** `{st.session_state.phone}`")
 
 if st.sidebar.button("🔒 Sign Out"):
     supabase.auth.sign_out()
@@ -362,6 +388,7 @@ if st.sidebar.button("🔒 Sign Out"):
     st.session_state.user_role = None
     st.session_state.username = ""
     st.session_state.email = ""
+    st.session_state.phone = ""
     st.session_state.editing_listing_id = None
     st.session_state.deleted_msg = None
     st.rerun()
@@ -414,7 +441,7 @@ if navigation == "📈 Founder Revenue Dashboard":
         st.error(f"Error loading revenue ledger: {str(e)}")
 
 # ==============================================================================
-# 8. BUYER MARKETPLACE & ORDERS / ESCROW
+# 8. BUYER MARKETPLACE WITH LOGISTICS WHATSAPP DIRECT LINK
 # ==============================================================================
 elif navigation == "🛒 Browse Marketplace":
     st.subheader("🛒 Direct Farm Produce Marketplace")
@@ -459,11 +486,17 @@ elif navigation == "🛒 Browse Marketplace":
                 st.markdown(f"**Platform Escrow Fee (10%):** ₦{platform_fee:,.2f}")
 
                 st.markdown("#### 🚚 Logistics & Freight Option")
-                selected_partner = st.selectbox(f"Logistics Partner for {item['id']}", list(LOGISTICS_PARTNERS.keys()))
+                selected_partner = st.selectbox(f"Select Logistics Partner for {item['item']}", list(LOGISTICS_PARTNERS.keys()), key=f"sel_{item['id']}")
                 partner_info = LOGISTICS_PARTNERS[selected_partner]
 
+                # Generate dynamic WhatsApp message link for freight inquiry
+                wa_msg = urllib.parse.quote(f"Hello {selected_partner}, I am purchasing '{item['item']}' on FEED THE NATIONS from {item['location']}. I need a freight delivery quote.")
+                wa_url = f"https://wa.me/{partner_info['whatsapp']}?text={wa_msg}"
+
+                st.markdown(f'<a href="{wa_url}" target="_blank" class="whatsapp-btn">💬 Chat on WhatsApp with {selected_partner} ({partner_info["display"]})</a>', unsafe_allow_html=True)
+
                 agreed_freight = st.number_input(
-                    "Agreed Freight Cost (₦)",
+                    "Input Agreed Freight Cost (₦)",
                     min_value=0,
                     value=25000,
                     step=5000,
