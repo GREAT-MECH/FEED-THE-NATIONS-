@@ -45,11 +45,11 @@ st.markdown(
         font-family: 'Poppins', sans-serif;
     }
 
-    /* ANIMATED HEADER WITH END-TO-END GLOW SWEEP */
+    /* UNIQUE ANIMATED BRAND HEADER WITH WHITE SWEEP GLOW */
     .brand-header {
         position: relative;
         background: linear-gradient(135deg, #1E5631 0%, #2D6A4F 50%, #40916C 100%);
-        padding: 32px 24px;
+        padding: 35px 25px;
         border-radius: 20px;
         text-align: center;
         margin-bottom: 28px;
@@ -58,45 +58,50 @@ st.markdown(
         overflow: hidden;
     }
 
-    /* WHITE ANIMATED SWEEP LINE */
-    .brand-header::before {
+    /* THE SIGNATURE WHITE ANIMATED FLOWING GLOW */
+    .brand-header::after {
         content: '';
         position: absolute;
         top: 0;
-        left: -100%;
+        left: -150%;
         width: 100%;
         height: 100%;
         background: linear-gradient(
             90deg,
-            transparent,
-            rgba(255, 255, 255, 0.35),
-            transparent
+            transparent 0%,
+            rgba(255, 255, 255, 0.0) 20%,
+            rgba(255, 255, 255, 0.55) 50%,
+            rgba(255, 255, 255, 0.0) 80%,
+            transparent 100%
         );
-        animation: sweepGlow 3.5s infinite linear;
+        transform: skewX(-25deg);
+        animation: whiteSweepFlow 3.8s infinite linear;
+        pointer-events: none;
     }
 
-    @keyframes sweepGlow {
-        0% { left: -100%; }
-        100% { left: 100%; }
+    @keyframes whiteSweepFlow {
+        0% { left: -150%; }
+        100% { left: 150%; }
     }
     
     .brand-title {
         color: #FFFFFF !important;
         font-family: 'Montserrat', sans-serif;
-        font-size: clamp(2.1rem, 5vw, 3.4rem);
+        font-size: clamp(2.2rem, 5vw, 3.5rem);
         font-weight: 900;
         letter-spacing: 2px;
         margin: 0;
         text-transform: uppercase;
         position: relative;
         z-index: 2;
+        text-shadow: 0 2px 8px rgba(0,0,0,0.2);
     }
 
     .brand-subtext {
         color: #E8F5E9;
         font-size: 1.1rem;
         font-weight: 500;
-        margin-top: 8px;
+        margin-top: 10px;
         position: relative;
         z-index: 2;
     }
@@ -180,12 +185,12 @@ def verify_farm_photo(image):
         img = image.convert("RGB")
         stat = ImageStat.Stat(img)
         avg_stddev = sum(stat.stddev) / len(stat.stddev)
-        if avg_stddev < 18:
-            return False, "This image appears to be a screenshot or document. Please upload a clear photo of real farm produce."
+        if avg_stddev < 15:
+            return False, "This image appears to be a blank or document screenshot. Please upload a clear produce photo."
 
         w, h = img.size
-        if w < 200 or h < 200:
-            return False, "Image resolution is too low. Please upload a higher quality photo."
+        if w < 150 or h < 150:
+            return False, "Image resolution is too low. Minimum allowed size is 150x150 pixels."
 
         return True, "Valid farm photo"
     except Exception:
@@ -194,15 +199,28 @@ def verify_farm_photo(image):
 def upload_product_photo(file_bytes, filename):
     try:
         clean_name = "".join([c for c in filename if c.isalnum() or c in (".", "_", "-")]).lower()
-        path = f"public/{random.randint(1000,9999)}_{clean_name}"
+        path = f"farm_{random.randint(10000, 99999)}_{clean_name}"
         
-        # Upload file directly into 'farm-photos' bucket
-        supabase.storage.from_("farm-photos").upload(path, file_bytes, {"content-type": "image/jpeg"})
-        public_url = supabase.storage.from_("farm-photos").get_public_url(path)
+        # Upload into farm-photos bucket
+        supabase.storage.from_("farm-photos").upload(
+            path, 
+            file_bytes, 
+            file_options={"content-type": "image/jpeg", "upsert": "true"}
+        )
+        
+        # Build direct absolute public URL
+        public_url = f"{SUPABASE_URL}/storage/v1/object/public/farm-photos/{path}"
         return public_url
     except Exception as e:
         st.error(f"Failed to upload photo to Supabase storage: {str(e)}")
         return None
+
+def render_product_image(url_or_path):
+    if url_or_path and str(url_or_path).strip():
+        img_url = str(url_or_path).strip()
+        st.image(img_url, use_container_width=True)
+    else:
+        st.info("📷 Photo Verified (No Image Provided)")
 
 def initialize_paystack_payment(email, amount_ngn, reference):
     url = "https://api.paystack.co/transaction/initialize"
@@ -234,7 +252,7 @@ if "editing_listing_id" not in st.session_state:
     st.session_state.editing_listing_id = None
 
 # ==============================================================================
-# 4. BRAND HEADER WITH ANIMATED SWEEP
+# 4. BRAND HEADER WITH FLOWING WHITE ANIMATION
 # ==============================================================================
 st.markdown(
     """
@@ -295,11 +313,11 @@ if not st.session_state.authenticated:
                         }
                         supabase.table("profiles").upsert(profile_data).execute()
 
-                    st.success("🎉 Registration complete! Switch to 'Login' above to enter.")
+                    st.success("🎉 Account created successfully! Please select 'Login' above to enter.")
                 except Exception as e:
                     st.error(f"Registration failed: {str(e)}")
             else:
-                st.error("Please fill out all input fields.")
+                st.error("Please fill in all registration fields.")
     else:
         if st.button("LOG IN ➔", use_container_width=True):
             if email_input and password_input:
@@ -314,7 +332,7 @@ if not st.session_state.authenticated:
                 except Exception as e:
                     st.error(f"Login failed: {str(e)}")
             else:
-                st.error("Please enter your email and password.")
+                st.error("Please provide both email and password.")
     st.stop()
 
 # ==============================================================================
@@ -364,20 +382,20 @@ if navigation == "📈 Founder Revenue Dashboard":
                 st.markdown('</div>', unsafe_allow_html=True)
             with m2:
                 st.markdown('<div class="metric-box">', unsafe_allow_html=True)
-                st.metric("Platform Earnings (10%)", f"₦{total_commission:,.2f}")
+                st.metric("Platform Revenue (10%)", f"₦{total_commission:,.2f}")
                 st.markdown('</div>', unsafe_allow_html=True)
             with m3:
                 st.markdown('<div class="metric-box">', unsafe_allow_html=True)
-                st.metric("Total Completed Deals", len(df_tx))
+                st.metric("Completed Deals", len(df_tx))
                 st.markdown('</div>', unsafe_allow_html=True)
 
             st.divider()
             st.markdown("### 📜 Real-Time Escrow Ledger")
             st.dataframe(df_tx, use_container_width=True)
         else:
-            st.info("No recorded marketplace transactions yet.")
+            st.info("No recorded marketplace transactions currently in database.")
     except Exception as e:
-        st.error(f"Error fetching revenue stats: {str(e)}")
+        st.error(f"Error loading revenue ledger: {str(e)}")
 
 # ==============================================================================
 # 8. BUYER MARKETPLACE
@@ -389,7 +407,7 @@ elif navigation in ["🛒 Browse Marketplace", "📦 My Orders & Escrow"]:
     with f1:
         buying_scale = st.selectbox("Filter Scale", ["All Scales", "Large Scale / Commercial Wholesale", "Small Scale / Retail"])
     with f2:
-        category_filter = st.selectbox("Filter Category", ["All Categories"] + AGRI_CATEGORIES)
+        category_filter = st.selectbox("Filter Sector", ["All Categories"] + AGRI_CATEGORIES)
 
     st.divider()
 
@@ -403,18 +421,15 @@ elif navigation in ["🛒 Browse Marketplace", "📦 My Orders & Escrow"]:
         listings = query.execute().data
 
         if not listings:
-            st.info("No active produce listings available at the moment.")
+            st.info("No active produce listings matching your selection.")
 
         for item in listings:
             st.markdown('<div class="product-card">', unsafe_allow_html=True)
             col1, col2 = st.columns([1.2, 2])
 
             with col1:
-                if item.get("image_url"):
-                    st.image(item["image_url"], use_container_width=True)
-                else:
-                    st.info("📷 Photo Verified")
-                st.caption(f"Scale: **{item.get('scale', 'General')}**")
+                render_product_image(item.get("image_url"))
+                st.caption(f"Scale: **{item.get('scale', 'General Supply')}**")
 
             with col2:
                 st.markdown(f"### {item['item']}")
@@ -424,15 +439,15 @@ elif navigation in ["🛒 Browse Marketplace", "📦 My Orders & Escrow"]:
                 raw_price = float(item["price_ngn"])
                 platform_fee = raw_price * 0.10
 
-                st.markdown(f"**Produce Price:** ₦{raw_price:,.2f}")
+                st.markdown(f"**Farm Price:** ₦{raw_price:,.2f}")
                 st.markdown(f"**Platform Escrow Fee (10%):** ₦{platform_fee:,.2f}")
 
-                st.markdown("#### 🚚 Delivery & Freight Arrangement")
+                st.markdown("#### 🚚 Logistics & Freight Option")
                 selected_partner = st.selectbox(f"Logistics Partner for {item['id']}", list(LOGISTICS_PARTNERS.keys()))
                 partner_info = LOGISTICS_PARTNERS[selected_partner]
 
                 agreed_freight = st.number_input(
-                    "Negotiated Freight Cost (₦)",
+                    "Agreed Freight Cost (₦)",
                     min_value=0,
                     value=25000,
                     step=5000,
@@ -462,8 +477,8 @@ elif navigation in ["🛒 Browse Marketplace", "📦 My Orders & Escrow"]:
 
                     if pay_resp.get("status"):
                         auth_url = pay_resp["data"]["authorization_url"]
-                        st.success("🔒 Escrow payment initiated!")
-                        st.markdown(f'<a href="{auth_url}" target="_blank" style="display:inline-block; background: #1E5631; color:white; padding:12px 24px; border-radius:8px; text-decoration:none; font-weight:bold;">Complete Payment on Paystack ➔</a>', unsafe_allow_html=True)
+                        st.success("🔒 Escrow order initialized!")
+                        st.markdown(f'<a href="{auth_url}" target="_blank" style="display:inline-block; background: #1E5631; color:white; padding:12px 24px; border-radius:8px; text-decoration:none; font-weight:bold;">Proceed to Paystack Checkout ➔</a>', unsafe_allow_html=True)
 
             st.markdown("</div>", unsafe_allow_html=True)
     except Exception as e:
@@ -478,21 +493,21 @@ elif navigation == "➕ Add New Product":
     with st.form("add_product_form"):
         farming_cat = st.selectbox("Agricultural Sector", AGRI_CATEGORIES)
         prod_scale = st.selectbox("Supply Scale Category", ["Large Scale / Commercial Wholesale", "Small Scale / Retail"])
-        title = st.text_input("Product Title")
+        title = st.text_input("Product Title (e.g. 50kg Bags of White Maize)")
 
         c1, c2 = st.columns(2)
         with c1:
             price = st.number_input("Unit Price (₦)", min_value=1000, value=50000, step=5000)
-            location = st.text_input("Farm State / City Location", value="Ogun State")
+            location = st.text_input("Farm Location / State", value="Ogun State")
         with c2:
-            quantity = st.number_input("Available Stock Quantity", value=50)
+            quantity = st.number_input("Available Quantity", value=50)
 
-        uploaded_file = st.file_uploader("Upload Product Photo", type=["jpg", "jpeg", "png"])
-        submitted = st.form_submit_button("PUBLISH LISTING TO MARKET 🚀")
+        uploaded_file = st.file_uploader("Upload Product Image", type=["jpg", "jpeg", "png"])
+        submitted = st.form_submit_button("PUBLISH PRODUCT TO MARKETPLACE 🚀")
 
         if submitted:
             if not uploaded_file:
-                st.error("⚠️ Please attach a photo of your produce.")
+                st.error("⚠️ Please attach a clear photo of your farm produce.")
             else:
                 img_bytes = uploaded_file.read()
                 img = Image.open(io.BytesIO(img_bytes))
@@ -501,7 +516,7 @@ elif navigation == "➕ Add New Product":
                 if not is_valid:
                     st.error(f"⚠️ {msg}")
                 elif not title:
-                    st.error("Please enter a title for your product.")
+                    st.error("Please enter a product title.")
                 else:
                     img_url = upload_product_photo(img_bytes, uploaded_file.name)
                     new_id = f"FTN-{random.randint(100, 999)}"
@@ -521,7 +536,7 @@ elif navigation == "➕ Add New Product":
                     st.success("🎉 Product listing published successfully!")
 
 elif navigation == "📦 My Active Products":
-    st.subheader("🚜 My Active Farm Produce")
+    st.subheader("🚜 Manage My Farm Listings")
 
     if st.session_state.editing_listing_id:
         st.markdown("### ✏️ Edit Product Listing")
@@ -533,7 +548,7 @@ elif navigation == "📦 My Active Products":
                     e_title = st.text_input("Product Title", value=item_data.get("item", ""))
                     e_price = st.number_input("Unit Price (₦)", value=float(item_data.get("price_ngn", 1000)), step=1000.0)
                     e_location = st.text_input("Farm Location", value=item_data.get("location", ""))
-                    e_quantity = st.number_input("Quantity Available", value=int(item_data.get("quantity", 1)))
+                    e_quantity = st.number_input("Available Quantity", value=int(item_data.get("quantity", 1)))
 
                     c_save, c_cancel = st.columns(2)
                     save_changes = c_save.form_submit_button("💾 SAVE CHANGES")
@@ -554,7 +569,7 @@ elif navigation == "📦 My Active Products":
                         st.session_state.editing_listing_id = None
                         st.rerun()
         except Exception as e:
-            st.error(f"Error updating product: {str(e)}")
+            st.error(f"Error editing product: {str(e)}")
 
     else:
         try:
@@ -566,10 +581,7 @@ elif navigation == "📦 My Active Products":
                     col1, col2 = st.columns([1.2, 2])
 
                     with col1:
-                        if item.get("image_url"):
-                            st.image(item["image_url"], use_container_width=True)
-                        else:
-                            st.info("📷 Photo Verified")
+                        render_product_image(item.get("image_url"))
 
                     with col2:
                         st.markdown(f"### {item['item']}")
@@ -579,18 +591,18 @@ elif navigation == "📦 My Active Products":
 
                         b_col1, b_col2 = st.columns(2)
                         with b_col1:
-                            if st.button(f"✏️ Edit Product", key=f"edit_{item['id']}"):
+                            if st.button("✏️ Edit Product", key=f"edit_{item['id']}"):
                                 st.session_state.editing_listing_id = item["id"]
                                 st.rerun()
 
                         with b_col2:
-                            if st.button(f"🗑️ Delete Product", key=f"del_{item['id']}"):
+                            if st.button("🗑️ Delete Product", key=f"del_{item['id']}"):
                                 supabase.table("listings").delete().eq("id", item["id"]).execute()
                                 st.success("Listing removed successfully!")
                                 st.rerun()
 
                     st.markdown("</div>", unsafe_allow_html=True)
             else:
-                st.info("No active listings found. Click 'Add New Product' to post a produce listing!")
+                st.info("You currently have no active listings. Select 'Add New Product' to post your produce!")
         except Exception as e:
             st.error(f"Error fetching active products: {str(e)}")
