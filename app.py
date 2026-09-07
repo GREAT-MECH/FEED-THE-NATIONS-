@@ -309,7 +309,7 @@ if not st.session_state.authenticated:
                         }
                     )
 
-                    # 2. Use UPSERT to write/update profile without triggering duplicate primary key violations
+                    # 2. Use UPSERT to write/update profile without duplicate primary key collisions
                     if res.user:
                         profile_data = {
                             "id": res.user.id,
@@ -323,7 +323,7 @@ if not st.session_state.authenticated:
                         ).execute()
 
                     st.success(
-                        "🎉 Account created successfully! Please click the link sent to your email address for complete registration process."
+                        "🎉 Registration successful! Switch to 'Login' above to enter your account."
                     )
                 except Exception as e:
                     st.error(f"Error creating account: {str(e)}")
