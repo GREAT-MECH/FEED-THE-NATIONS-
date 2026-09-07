@@ -17,7 +17,7 @@ PAYSTACK_SECRET_KEY = "sk_live_5d70f03c20eea14b71be5b116e453e6a6848eebe"
 PAYSTACK_CALLBACK_URL = "https://feed-the-nations.onrender.com"
 
 # ==============================================================================
-# 1. PAGE CONFIG & MODERN AGRICULTURAL STYLING
+# 1. PAGE CONFIG & PREMIUM AGRICULTURAL STYLING
 # ==============================================================================
 st.set_page_config(
     page_title="FEED THE NATIONS - Direct Agri Marketplace",
@@ -48,28 +48,29 @@ st.markdown(
     /* BRAND HEADER */
     .brand-header {
         background: linear-gradient(135deg, #1E5631 0%, #2D6A4F 50%, #40916C 100%);
-        padding: 24px;
-        border-radius: 16px;
+        padding: 28px;
+        border-radius: 18px;
         text-align: center;
         margin-bottom: 25px;
         color: #FFFFFF !important;
-        box-shadow: 0 6px 20px rgba(30, 86, 49, 0.2);
+        box-shadow: 0 8px 24px rgba(30, 86, 49, 0.25);
     }
     
     .brand-title {
         color: #FFFFFF !important;
         font-family: 'Montserrat', sans-serif;
-        font-size: clamp(1.8rem, 4vw, 2.8rem);
+        font-size: clamp(2rem, 4.5vw, 3.2rem);
         font-weight: 900;
         letter-spacing: 1.5px;
         margin: 0;
+        text-transform: uppercase;
     }
 
     .brand-subtext {
         color: #D8F3DC;
-        font-size: 0.95rem;
+        font-size: 1.05rem;
         font-weight: 500;
-        margin-top: 6px;
+        margin-top: 8px;
     }
 
     /* BUTTONS */
@@ -79,26 +80,40 @@ st.markdown(
         font-family: 'Montserrat', sans-serif !important;
         font-weight: 700 !important;
         font-size: 0.95rem !important;
-        border-radius: 8px !important;
-        padding: 10px 20px !important;
+        border-radius: 10px !important;
+        padding: 12px 24px !important;
         border: none !important;
         transition: all 0.2s ease-in-out !important;
+        box-shadow: 0 4px 10px rgba(30, 86, 49, 0.15) !important;
     }
 
     div.stButton > button:hover {
         background: linear-gradient(135deg, #2D6A4F 0%, #40916C 100%) !important;
-        transform: translateY(-1px) !important;
-        box-shadow: 0 4px 12px rgba(30, 86, 49, 0.3) !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 6px 16px rgba(30, 86, 49, 0.3) !important;
     }
 
     /* CARDS */
     .product-card {
         background-color: var(--card-bg);
-        border-radius: 14px;
-        padding: 18px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+        border-radius: 16px;
+        padding: 22px;
+        box-shadow: 0 6px 16px rgba(0,0,0,0.05);
         border: 1px solid #E2E8F0;
-        margin-bottom: 18px;
+        margin-bottom: 22px;
+        transition: transform 0.2s ease;
+    }
+
+    .product-card:hover {
+        border-color: var(--accent-green);
+    }
+
+    .metric-box {
+        background: #FFFFFF;
+        padding: 18px;
+        border-radius: 12px;
+        border-left: 6px solid #1E5631;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
     }
 </style>
 """,
@@ -106,7 +121,7 @@ st.markdown(
 )
 
 # ==============================================================================
-# 2. SUPABASE & HELPER FUNCTIONS
+# 2. SUPABASE INITIALIZATION & HELPERS
 # ==============================================================================
 @st.cache_resource
 def init_supabase() -> Client:
@@ -137,19 +152,18 @@ def verify_farm_photo(image):
         stat = ImageStat.Stat(img)
         avg_stddev = sum(stat.stddev) / len(stat.stddev)
         if avg_stddev < 18:
-            return False, "This photo appears to be a plain graphic or screenshot. Please upload a clear photo of real produce."
+            return False, "This photo appears to be a document or screenshot. Please upload a clear photo of real farm produce."
 
         w, h = img.size
         if w < 200 or h < 200:
-            return False, "Photo resolution is too low."
+            return False, "Photo resolution is too low. Minimum allowed size is 200x200 pixels."
 
-        return True, "Valid photo"
+        return True, "Valid farm produce photo."
     except Exception:
-        return False, "Invalid image format."
+        return False, "Invalid image format. Please upload a valid JPG or PNG file."
 
 def upload_product_photo(file_bytes, filename):
     try:
-        # Sanitize filename (remove spaces/special characters)
         clean_name = "".join([c for c in filename if c.isalnum() or c in (".", "_", "-")]).lower()
         path = f"public/{random.randint(1000,9999)}_{clean_name}"
         
@@ -157,7 +171,7 @@ def upload_product_photo(file_bytes, filename):
         public_url = supabase.storage.from_("farm-photos").get_public_url(path)
         return public_url
     except Exception as e:
-        st.error(f"Storage upload error: {str(e)}")
+        st.error(f"Image storage upload error: {str(e)}")
         return None
 
 def initialize_paystack_payment(email, amount_ngn, reference):
@@ -176,7 +190,7 @@ def initialize_paystack_payment(email, amount_ngn, reference):
     return response.json()
 
 # ==============================================================================
-# 3. SESSION STATE
+# 3. SESSION STATE MANAGEMENT
 # ==============================================================================
 if "authenticated" not in st.session_state:
     st.session_state.authenticated = False
@@ -196,17 +210,17 @@ st.markdown(
     """
 <div class="brand-header">
     <h1 class="brand-title">FEED THE NATIONS</h1>
-    <p class="brand-subtext">Direct Farm-to-Buyer Marketplace • Zero Middlemen • Escrow Protection</p>
+    <p class="brand-subtext">Direct Farm-to-Buyer Agricultural Marketplace • Escrow Protection • Real-Time Freight</p>
 </div>
 """,
     unsafe_allow_html=True,
 )
 
 # ==============================================================================
-# 5. AUTHENTICATION PORTAL
+# 5. AUTHENTICATION SYSTEM
 # ==============================================================================
 if not st.session_state.authenticated:
-    st.subheader("🔑 Sign In or Register")
+    st.subheader("🔑 Sign In or Register Your Account")
     auth_mode = st.radio("Choose Action", ["Login", "Register Account"], horizontal=True)
 
     email_input = st.text_input("Email Address").strip().lower()
@@ -217,14 +231,14 @@ if not st.session_state.authenticated:
             "Account Type",
             ["Buyer (Wholesaler, Hotel, Processor)", "Farmer / Producer", "Platform Admin"],
         )
-        full_name = st.text_input("Full Name / Farm Name")
+        full_name = st.text_input("Full Name / Enterprise Name")
         farming_cat = (
-            st.selectbox("Primary Agricultural Category", AGRI_CATEGORIES)
+            st.selectbox("Primary Agricultural Specialty", AGRI_CATEGORIES)
             if "Farmer" in selected_role
             else "All Categories"
         )
 
-        if st.button("Create Account", use_container_width=True):
+        if st.button("CREATE ACCOUNT 🚀", use_container_width=True):
             if email_input and password_input and full_name:
                 try:
                     assigned_role = "Farmer" if "Farmer" in selected_role else ("Admin" if "Admin" in selected_role else "Buyer")
@@ -251,11 +265,11 @@ if not st.session_state.authenticated:
                         }
                         supabase.table("profiles").upsert(profile_data).execute()
 
-                    st.success("🎉 Registration successful! Switch to 'Login' above to sign in.")
+                    st.success("🎉 Account created successfully! Please select 'Login' above to enter.")
                 except Exception as e:
-                    st.error(f"Error creating account: {str(e)}")
+                    st.error(f"Registration error: {str(e)}")
             else:
-                st.error("Please fill out all required fields.")
+                st.error("Please fill in all registration fields.")
     else:
         if st.button("LOG IN ➔", use_container_width=True):
             if email_input and password_input:
@@ -270,16 +284,16 @@ if not st.session_state.authenticated:
                 except Exception as e:
                     st.error(f"Login failed: {str(e)}")
             else:
-                st.error("Please enter email and password.")
+                st.error("Please provide both email and password.")
     st.stop()
 
 # ==============================================================================
-# 6. SIDEBAR NAVIGATION
+# 6. NAVIGATION & SIDEBAR
 # ==============================================================================
 st.sidebar.markdown(f"### 👤 {st.session_state.username}")
-st.sidebar.markdown(f"**Role:** `{st.session_state.user_role}`")
+st.sidebar.markdown(f"**Account Role:** `{st.session_state.user_role}`")
 
-if st.sidebar.button("Log Out"):
+if st.sidebar.button("🔒 Sign Out"):
     supabase.auth.sign_out()
     st.session_state.authenticated = False
     st.session_state.user_role = None
@@ -297,13 +311,13 @@ elif st.session_state.user_role == "Buyer":
 elif st.session_state.user_role == "Admin":
     nav_options = ["📈 Founder Revenue Dashboard", "🛒 Browse Marketplace"]
 
-navigation = st.sidebar.radio("Navigation", nav_options)
+navigation = st.sidebar.radio("Navigation Menu", nav_options)
 
 # ==============================================================================
 # 7. FOUNDER REVENUE DASHBOARD (ADMIN)
 # ==============================================================================
 if navigation == "📈 Founder Revenue Dashboard":
-    st.subheader("📊 Revenue & Performance Dashboard")
+    st.subheader("📊 Marketplace GMV & Revenue Analytics")
     try:
         response = supabase.table("transactions").select("*").execute()
         tx_data = response.data
@@ -314,17 +328,26 @@ if navigation == "📈 Founder Revenue Dashboard":
             total_commission = df_tx["commission"].sum()
 
             m1, m2, m3 = st.columns(3)
-            m1.metric("Gross Merchandise Value (GMV)", f"₦{total_gmv:,.2f}")
-            m2.metric("Platform Revenue (10%)", f"₦{total_commission:,.2f}")
-            m3.metric("Completed Transactions", len(df_tx))
+            with m1:
+                st.markdown('<div class="metric-box">', unsafe_allow_html=True)
+                st.metric("Gross Merchandise Value (GMV)", f"₦{total_gmv:,.2f}")
+                st.markdown('</div>', unsafe_allow_html=True)
+            with m2:
+                st.markdown('<div class="metric-box">', unsafe_allow_html=True)
+                st.metric("Platform Revenue (10%)", f"₦{total_commission:,.2f}")
+                st.markdown('</div>', unsafe_allow_html=True)
+            with m3:
+                st.markdown('<div class="metric-box">', unsafe_allow_html=True)
+                st.metric("Completed Transactions", len(df_tx))
+                st.markdown('</div>', unsafe_allow_html=True)
 
             st.divider()
-            st.markdown("### 📜 Real-Time Transaction Logs")
+            st.markdown("### 📜 Real-Time Escrow Ledger")
             st.dataframe(df_tx, use_container_width=True)
         else:
-            st.info("No completed transactions recorded yet.")
+            st.info("No recorded transactions currently in database.")
     except Exception as e:
-        st.error(f"Error fetching revenue records: {str(e)}")
+        st.error(f"Error loading revenue ledger: {str(e)}")
 
 # ==============================================================================
 # 8. BUYER MARKETPLACE
@@ -332,11 +355,11 @@ if navigation == "📈 Founder Revenue Dashboard":
 elif navigation in ["🛒 Browse Marketplace", "📦 My Orders & Escrow"]:
     st.subheader("🛒 Direct Farm Produce Marketplace")
 
-    c_f1, c_f2 = st.columns(2)
-    with c_f1:
-        buying_scale = st.selectbox("Buying Scale", ["All Scales", "Large Scale / Commercial Wholesale", "Small Scale / Retail"])
-    with c_f2:
-        category_filter = st.selectbox("Agricultural Category", ["All Categories"] + AGRI_CATEGORIES)
+    f1, f2 = st.columns(2)
+    with f1:
+        buying_scale = st.selectbox("Filter Scale", ["All Scales", "Large Scale / Commercial Wholesale", "Small Scale / Retail"])
+    with f2:
+        category_filter = st.selectbox("Filter Agricultural Sector", ["All Categories"] + AGRI_CATEGORIES)
 
     st.divider()
 
@@ -350,36 +373,36 @@ elif navigation in ["🛒 Browse Marketplace", "📦 My Orders & Escrow"]:
         listings = query.execute().data
 
         if not listings:
-            st.info("No products currently listed matching your criteria.")
+            st.info("No agricultural products currently listed matching your criteria.")
 
         for item in listings:
             st.markdown('<div class="product-card">', unsafe_allow_html=True)
-            col1, col2 = st.columns([1, 2])
+            col1, col2 = st.columns([1.2, 2])
 
             with col1:
                 if item.get("image_url"):
                     st.image(item["image_url"], use_container_width=True)
                 else:
                     st.info("📷 Photo Verified")
-                st.caption(f"Scale: **{item.get('scale', 'General')}**")
+                st.caption(f"Scale: **{item.get('scale', 'General Supply')}**")
 
             with col2:
                 st.markdown(f"### {item['item']}")
-                st.write(f"**Category:** `{item.get('category')}`")
+                st.write(f"**Sector:** `{item.get('category')}`")
                 st.write(f"**Farmer:** {item['seller']} | 📍 **Location:** {item['location']}")
 
                 raw_price = float(item["price_ngn"])
                 platform_fee = raw_price * 0.10
 
-                st.markdown(f"**Base Produce Price:** ₦{raw_price:,.2f}")
-                st.markdown(f"**Platform Commission (10%):** ₦{platform_fee:,.2f}")
+                st.markdown(f"**Farm Price:** ₦{raw_price:,.2f}")
+                st.markdown(f"**Escrow Platform Fee (10%):** ₦{platform_fee:,.2f}")
 
-                st.markdown("#### 🚚 Logistics Bargaining & Delivery")
+                st.markdown("#### 🚚 Logistics & Delivery Arrangement")
                 selected_partner = st.selectbox(f"Logistics Partner for {item['id']}", list(LOGISTICS_PARTNERS.keys()))
                 partner_info = LOGISTICS_PARTNERS[selected_partner]
 
                 agreed_freight = st.number_input(
-                    "Agreed Delivery Fee (₦) after bargaining",
+                    "Agreed Freight Cost (₦)",
                     min_value=0,
                     value=25000,
                     step=5000,
@@ -387,9 +410,9 @@ elif navigation in ["🛒 Browse Marketplace", "📦 My Orders & Escrow"]:
                 )
 
                 final_total = raw_price + platform_fee + agreed_freight
-                st.markdown(f"### **Total Payable: ₦{final_total:,.2f}**")
+                st.markdown(f"### **Total Checkout Price: ₦{final_total:,.2f}**")
 
-                if st.button("PAY VIA PAYSTACK ESCROW 💳", key=f"pay_{item['id']}"):
+                if st.button("BUY WITH ESCROW PROTECTION 💳", key=f"pay_{item['id']}"):
                     ref = f"FTN-TX-{random.randint(100000, 999999)}"
                     tx_record = {
                         "id": ref,
@@ -409,37 +432,37 @@ elif navigation in ["🛒 Browse Marketplace", "📦 My Orders & Escrow"]:
 
                     if pay_resp.get("status"):
                         auth_url = pay_resp["data"]["authorization_url"]
-                        st.success("🔒 Escrow order initiated! Proceed below to complete payment.")
-                        st.markdown(f'<a href="{auth_url}" target="_blank" style="display:inline-block; background: #1E5631; color:white; padding:10px 20px; border-radius:6px; text-decoration:none; font-weight:bold;">Open Paystack Gateway ➔</a>', unsafe_allow_html=True)
+                        st.success("🔒 Escrow order generated successfully!")
+                        st.markdown(f'<a href="{auth_url}" target="_blank" style="display:inline-block; background: #1E5631; color:white; padding:12px 24px; border-radius:8px; text-decoration:none; font-weight:bold;">Proceed to Paystack Checkout ➔</a>', unsafe_allow_html=True)
 
             st.markdown("</div>", unsafe_allow_html=True)
     except Exception as e:
         st.error(f"Marketplace error: {str(e)}")
 
 # ==============================================================================
-# 9. FARMER PRODUCT MANAGEMENT
+# 9. FARMER PRODUCT MANAGEMENT (ADD / EDIT / DELETE)
 # ==============================================================================
 elif navigation == "➕ Add New Product":
-    st.subheader("🚜 Add New Product Listing")
+    st.subheader("🚜 Post New Farm Produce Listing")
 
     with st.form("add_product_form"):
-        farming_cat = st.selectbox("Select Agriculture Category", AGRI_CATEGORIES)
+        farming_cat = st.selectbox("Agricultural Sector", AGRI_CATEGORIES)
         prod_scale = st.selectbox("Supply Scale Category", ["Large Scale / Commercial Wholesale", "Small Scale / Retail"])
-        title = st.text_input("Product Title")
+        title = st.text_input("Product Name (e.g. 50kg Bags of White Maize)")
 
         c1, c2 = st.columns(2)
         with c1:
-            price = st.number_input("Base Farm Price (₦)", min_value=1000, value=50000, step=5000)
-            location = st.text_input("Farm Location / State", value="Ogun State")
+            price = st.number_input("Unit Price (₦)", min_value=1000, value=50000, step=5000)
+            location = st.text_input("Farm State / City Location", value="Ogun State")
         with c2:
-            quantity = st.number_input("Available Units / Bags / Crates", value=50)
+            quantity = st.number_input("Available Stock Quantity", value=50)
 
-        uploaded_file = st.file_uploader("Upload product photo", type=["jpg", "jpeg", "png"])
-        submitted = st.form_submit_button("PUBLISH PRODUCT LISTING 🚀")
+        uploaded_file = st.file_uploader("Upload Product Image", type=["jpg", "jpeg", "png"])
+        submitted = st.form_submit_button("PUBLISH PRODUCT TO MARKETPLACE 🚀")
 
         if submitted:
             if not uploaded_file:
-                st.error("⚠️ Please upload a real photo of your produce.")
+                st.error("⚠️ Please attach a photo of your farm produce.")
             else:
                 img_bytes = uploaded_file.read()
                 img = Image.open(io.BytesIO(img_bytes))
@@ -465,22 +488,22 @@ elif navigation == "➕ Add New Product":
                         "image_url": img_url
                     }
                     supabase.table("listings").insert(product_data).execute()
-                    st.success("🎉 Product listing published successfully!")
+                    st.success("🎉 Product successfully published!")
 
 elif navigation == "📦 My Active Products":
-    st.subheader("🚜 My Active Listings")
+    st.subheader("🚜 Manage My Farm Listings")
 
     if st.session_state.editing_listing_id:
-        st.markdown("### ✏️ Edit Listing")
+        st.markdown("### ✏️ Edit Product Listing")
         try:
             edit_item = supabase.table("listings").select("*").eq("id", st.session_state.editing_listing_id).execute().data
             if edit_item:
                 item_data = edit_item[0]
                 with st.form("edit_product_form"):
                     e_title = st.text_input("Product Title", value=item_data.get("item", ""))
-                    e_price = st.number_input("Base Farm Price (₦)", value=float(item_data.get("price_ngn", 1000)), step=1000.0)
-                    e_location = st.text_input("Location", value=item_data.get("location", ""))
-                    e_quantity = st.number_input("Quantity", value=int(item_data.get("quantity", 1)))
+                    e_price = st.number_input("Unit Price (₦)", value=float(item_data.get("price_ngn", 1000)), step=1000.0)
+                    e_location = st.text_input("Farm Location", value=item_data.get("location", ""))
+                    e_quantity = st.number_input("Available Quantity", value=int(item_data.get("quantity", 1)))
 
                     c_save, c_cancel = st.columns(2)
                     save_changes = c_save.form_submit_button("💾 SAVE CHANGES")
@@ -501,7 +524,7 @@ elif navigation == "📦 My Active Products":
                         st.session_state.editing_listing_id = None
                         st.rerun()
         except Exception as e:
-            st.error(f"Error editing listing: {str(e)}")
+            st.error(f"Error editing product: {str(e)}")
 
     else:
         try:
@@ -510,7 +533,7 @@ elif navigation == "📦 My Active Products":
             if my_items:
                 for item in my_items:
                     st.markdown('<div class="product-card">', unsafe_allow_html=True)
-                    col1, col2 = st.columns([1, 2])
+                    col1, col2 = st.columns([1.2, 2])
 
                     with col1:
                         if item.get("image_url"):
@@ -520,24 +543,24 @@ elif navigation == "📦 My Active Products":
 
                     with col2:
                         st.markdown(f"### {item['item']}")
-                        st.write(f"**Category:** `{item.get('category')}`")
-                        st.write(f"**Base Price:** ₦{float(item['price_ngn']):,.2f}")
-                        st.write(f"📍 **Location:** {item.get('location', 'N/A')} | **Units:** {item.get('quantity', 0)}")
+                        st.write(f"**Sector:** `{item.get('category')}`")
+                        st.write(f"**Price:** ₦{float(item['price_ngn']):,.2f}")
+                        st.write(f"📍 **Location:** {item.get('location', 'N/A')} | **Units Available:** {item.get('quantity', 0)}")
 
                         b_col1, b_col2 = st.columns(2)
                         with b_col1:
-                            if st.button(f"✏️ Edit Listing", key=f"edit_{item['id']}"):
+                            if st.button(f"✏️ Edit Product", key=f"edit_{item['id']}"):
                                 st.session_state.editing_listing_id = item["id"]
                                 st.rerun()
 
                         with b_col2:
-                            if st.button(f"🗑️ Delete Listing", key=f"del_{item['id']}"):
+                            if st.button(f"🗑️ Delete Product", key=f"del_{item['id']}"):
                                 supabase.table("listings").delete().eq("id", item["id"]).execute()
                                 st.success("Listing removed successfully!")
                                 st.rerun()
 
                     st.markdown("</div>", unsafe_allow_html=True)
             else:
-                st.info("You have no active listings. Click 'Add New Product' to post one!")
+                st.info("You currently have no active listings. Select 'Add New Product' to post your produce!")
         except Exception as e:
-            st.error(f"Error fetching listings: {str(e)}")
+            st.error(f"Error loading your active products: {str(e)}")
