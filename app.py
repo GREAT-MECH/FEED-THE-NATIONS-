@@ -257,7 +257,7 @@ st.markdown(
 )
 
 # ==============================================================================
-# 5. USER AUTHENTICATION & SUPABASE PROFILES SYNC (USING UPSERT TO PREVENT 23505 ERROR)
+# 5. USER AUTHENTICATION & SUPABASE PROFILES SYNC
 # ==============================================================================
 if not st.session_state.authenticated:
     st.subheader("🔑 Access Portal")
@@ -323,7 +323,7 @@ if not st.session_state.authenticated:
                         ).execute()
 
                     st.success(
-                        "🎉 Account created successfully! Switch to 'Login' above to enter your dashboard."
+                        "🎉 Account created successfully! Please click the link sent to your email address for complete registration process."
                     )
                 except Exception as e:
                     st.error(f"Error creating account: {str(e)}")
