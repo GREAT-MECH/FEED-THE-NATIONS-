@@ -25,7 +25,6 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# Custom CSS with Animated Brand Header & Distinct Colorful Custom Button Styling
 st.markdown(
     """
 <style>
@@ -51,13 +50,11 @@ st.markdown(
         font-weight: 700;
     }
 
-    /* ANIMATED SWEEPING LIGHT EFFECT FOR HEADER */
     @keyframes sweepLight {
         0% { background-position: -200% 0; }
         100% { background-position: 200% 0; }
     }
 
-    /* BRAND HEADER WITH SWEEPING ANIMATION */
     .brand-header {
         position: relative;
         background: linear-gradient(
@@ -102,7 +99,6 @@ st.markdown(
         text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
     }
 
-    /* COLORFUL LOG IN & ACTION BUTTONS WITH SPECIAL FONT */
     div.stButton > button {
         background: linear-gradient(135deg, #008751 0%, #11998e 50%, #38ef7d 100%) !important;
         color: #FFFFFF !important;
@@ -126,11 +122,6 @@ st.markdown(
         color: #FFFFFF !important;
     }
 
-    div.stButton > button:active {
-        transform: translateY(1px) scale(0.99) !important;
-    }
-
-    /* CARDS & UI CONTAINERS */
     .listing-card {
         background-color: white;
         border-radius: 12px;
@@ -138,15 +129,6 @@ st.markdown(
         box-shadow: 0 3px 10px rgba(0,0,0,0.05);
         border-top: 4px solid var(--primary-green);
         margin-bottom: 20px;
-    }
-
-    .escrow-box {
-        background-color: #FFF8F8;
-        border-left: 4px solid var(--accent-red);
-        padding: 10px 14px;
-        border-radius: 6px;
-        margin-top: 10px;
-        font-size: 0.9rem;
     }
 
     .negotiate-box {
@@ -199,20 +181,33 @@ LOGISTICS_PARTNERS = {
     },
 }
 
-def verify_farm_photo(image):
+# Image Quality & Visual Content Detector
+def verify_farm_photo(image, category_name=""):
     try:
         img = image.convert("RGB")
         stat = ImageStat.Stat(img)
+        
+        # Check standard deviation of RGB values to filter solid color/blank images
         if sum(stat.stddev) / len(stat.stddev) < 12:
             return (
                 False,
-                "Image appears blank or non-product graphic. PLEASE UPLOAD REAL PICTURE OF FARM PRODUCTS.",
+                "Image appears blank or unclear. Please upload a clear, real photo of your farm produce.",
             )
+        
+        # Verify color richness (genuine farm products contain natural variations)
+        extrema = img.getextrema()
+        diff_sum = sum([e[1] - e[0] for e in extrema])
+        if diff_sum < 40:
+            return (
+                False,
+                "Image quality is too low or plain graphic. Please upload an authentic farm produce photograph.",
+            )
+
         return True, "Valid photo"
     except Exception:
         return (
             False,
-            "Invalid image file format. PLEASE UPLOAD REAL PICTURE OF FARM PRODUCTS.",
+            "Invalid image file format. Please upload a valid JPG or PNG photo.",
         )
 
 def initialize_paystack_payment(email, amount_ngn, reference):
@@ -241,9 +236,11 @@ if "username" not in st.session_state:
     st.session_state.username = ""
 if "email" not in st.session_state:
     st.session_state.email = ""
+if "editing_listing_id" not in st.session_state:
+    st.session_state.editing_listing_id = None
 
 # ==============================================================================
-# 4. ANIMATED BRAND HEADER (SWEEPING LIGHT EFFECT)
+# 4. ANIMATED BRAND HEADER
 # ==============================================================================
 st.markdown(
     """
@@ -257,7 +254,7 @@ st.markdown(
 )
 
 # ==============================================================================
-# 5. USER AUTHENTICATION & SUPABASE PROFILES SYNC
+# 5. USER AUTHENTICATION
 # ==============================================================================
 if not st.session_state.authenticated:
     st.subheader("🔑 Access Portal")
@@ -294,7 +291,6 @@ if not st.session_state.authenticated:
                     else:
                         assigned_role = "Buyer"
 
-                    # 1. Sign up user in Supabase Auth
                     res = supabase.auth.sign_up(
                         {
                             "email": email_input,
@@ -309,7 +305,6 @@ if not st.session_state.authenticated:
                         }
                     )
 
-                    # 2. Use UPSERT to write/update profile without duplicate primary key collisions
                     if res.user:
                         profile_data = {
                             "id": res.user.id,
@@ -364,6 +359,7 @@ if st.sidebar.button("Log Out"):
     st.session_state.user_role = None
     st.session_state.username = ""
     st.session_state.email = ""
+    st.session_state.editing_listing_id = None
     st.rerun()
 
 st.sidebar.divider()
@@ -382,9 +378,7 @@ navigation = st.sidebar.radio("Navigation", nav_options)
 # ==============================================================================
 if navigation == "📈 Founder Revenue Dashboard":
     st.subheader("📊 Founder Revenue & Category Growth Analytics")
-    st.caption(
-        "Live transaction volumes and 10% platform commissions pulled directly from Supabase."
-    )
+    st.caption("Live transaction volumes and 10% platform commissions.")
 
     try:
         response = supabase.table("transactions").select("*").execute()
@@ -425,7 +419,7 @@ if navigation == "📈 Founder Revenue Dashboard":
             st.markdown("### 📜 Real-Time Transaction Logs")
             st.dataframe(df_tx, use_container_width=True)
         else:
-            st.info("No completed transactions recorded in Supabase yet.")
+            st.info("No completed transactions recorded yet.")
     except Exception as e:
         st.error(f"Error fetching revenue records: {str(e)}")
 
@@ -562,7 +556,7 @@ elif navigation in ["🛒 Browse Marketplace", "📦 My Orders & Escrow"]:
         st.error(f"Marketplace error: {str(e)}")
 
 # ==============================================================================
-# 9. FARMER PRODUCT UPLOAD & ACTIVE PRODUCTS
+# 9. FARMER PRODUCT UPLOAD & ACTIVE LISTINGS (WITH EDIT & DELETE)
 # ==============================================================================
 elif navigation == "➕ Add New Product":
     st.subheader("🚜 Publish Product Listing")
@@ -604,10 +598,10 @@ elif navigation == "➕ Add New Product":
 
         if submitted:
             if not uploaded_file:
-                st.error("⚠️ PLEASE UPLOAD REAL PICTURE OF FARM PRODUCTS")
+                st.error("⚠️ Please upload a real photograph of your farm products.")
             else:
                 img = Image.open(uploaded_file)
-                is_valid, msg = verify_farm_photo(img)
+                is_valid, msg = verify_farm_photo(img, farming_cat)
 
                 if not is_valid:
                     st.error(f"⚠️ {msg}")
@@ -626,32 +620,114 @@ elif navigation == "➕ Add New Product":
                         "quantity": quantity,
                     }
                     supabase.table("listings").insert(product_data).execute()
-                    st.success(
-                        "🎉 Product published and saved directly to your Supabase database!"
-                    )
+                    st.success("🎉 Product published successfully to the marketplace!")
 
 elif navigation == "📦 My Active Products":
     st.subheader("🚜 My Active Listings")
-    try:
-        my_items = (
-            supabase.table("listings")
-            .select("*")
-            .eq("seller", st.session_state.username)
-            .execute()
-            .data
-        )
 
-        if my_items:
-            for item in my_items:
-                st.markdown('<div class="listing-card">', unsafe_allow_html=True)
-                st.markdown(f"### {item['item']}")
-                st.write(
-                    f"Category: `{item.get('category')}` | Base Price: **₦{item['price_ngn']:,.2f}**"
-                )
-                st.markdown("</div>", unsafe_allow_html=True)
-        else:
-            st.info(
-                "No active listings found in Supabase. Click 'Add New Product' to get started!"
+    # If farmer clicked 'Edit' on a specific listing
+    if st.session_state.editing_listing_id:
+        st.markdown("### ✏️ Edit Product Listing")
+        try:
+            edit_item = (
+                supabase.table("listings")
+                .select("*")
+                .eq("id", st.session_state.editing_listing_id)
+                .execute()
+                .data
             )
-    except Exception as e:
-        st.error(f"Error fetching active listings: {str(e)}")
+            if edit_item:
+                item_data = edit_item[0]
+                with st.form("edit_product_form"):
+                    e_title = st.text_input("Product Title", value=item_data.get("item", ""))
+                    e_cat = st.selectbox(
+                        "Category", 
+                        AGRI_CATEGORIES, 
+                        index=AGRI_CATEGORIES.index(item_data.get("category")) if item_data.get("category") in AGRI_CATEGORIES else 0
+                    )
+                    e_scale = st.selectbox(
+                        "Scale",
+                        ["Large Scale / Commercial Wholesale", "Small Scale / Retail"],
+                        index=0 if item_data.get("scale") == "Large Scale / Commercial Wholesale" else 1
+                    )
+                    
+                    ec1, ec2 = st.columns(2)
+                    with ec1:
+                        e_price = st.number_input("Base Farm Price (₦)", value=float(item_data.get("price_ngn", 1000)), step=5000.0)
+                        e_location = st.text_input("Location", value=item_data.get("location", ""))
+                    with ec2:
+                        e_quantity = st.number_input("Quantity", value=int(item_data.get("quantity", 1)))
+
+                    c_save, c_cancel = st.columns(2)
+                    with c_save:
+                        save_changes = st.form_submit_button("💾 SAVE CHANGES")
+                    with c_cancel:
+                        cancel_changes = st.form_submit_button("❌ CANCEL")
+
+                    if save_changes:
+                        updated_fields = {
+                            "item": e_title,
+                            "category": e_cat,
+                            "scale": e_scale,
+                            "price_ngn": e_price,
+                            "location": e_location,
+                            "quantity": e_quantity
+                        }
+                        supabase.table("listings").update(updated_fields).eq("id", item_data["id"]).execute()
+                        st.session_state.editing_listing_id = None
+                        st.success("🎉 Product listing updated successfully!")
+                        st.rerun()
+                    
+                    if cancel_changes:
+                        st.session_state.editing_listing_id = None
+                        st.rerun()
+        except Exception as e:
+            st.error(f"Error loading product for edit: {str(e)}")
+
+    else:
+        try:
+            my_items = (
+                supabase.table("listings")
+                .select("*")
+                .eq("seller", st.session_state.username)
+                .execute()
+                .data
+            )
+
+            if my_items:
+                for item in my_items:
+                    st.markdown('<div class="listing-card">', unsafe_allow_html=True)
+                    col1, col2 = st.columns([1, 2])
+
+                    with col1:
+                        if item.get("image_url"):
+                            st.image(item["image_url"], use_container_width=True)
+                        else:
+                            st.info("📷 Photo Verified")
+                        st.caption(f"Scale: **{item.get('scale', 'General')}**")
+
+                    with col2:
+                        st.markdown(f"### {item['item']}")
+                        st.write(f"**Category:** `{item.get('category')}`")
+                        st.write(f"**Base Price:** ₦{float(item['price_ngn']):,.2f}")
+                        st.write(f"📍 **Location:** {item.get('location', 'N/A')} | **Available Units:** {item.get('quantity', 0)}")
+
+                        b_col1, b_col2 = st.columns(2)
+                        with b_col1:
+                            if st.button(f"✏️ Edit Listing", key=f"btn_edit_{item['id']}"):
+                                st.session_state.editing_listing_id = item["id"]
+                                st.rerun()
+
+                        with b_col2:
+                            if st.button(f"🗑️ Delete Listing", key=f"btn_del_{item['id']}"):
+                                supabase.table("listings").delete().eq("id", item["id"]).execute()
+                                st.success("Listing removed successfully!")
+                                st.rerun()
+
+                    st.markdown("</div>", unsafe_allow_html=True)
+            else:
+                st.info(
+                    "You have no active listings. Click 'Add New Product' to get started!"
+                )
+        except Exception as e:
+            st.error(f"Error fetching active listings: {str(e)}")
