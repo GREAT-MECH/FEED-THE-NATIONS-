@@ -45,41 +45,42 @@ st.markdown(
         font-family: 'Poppins', sans-serif;
     }
 
-    /* UNIQUE ANIMATED BRAND HEADER WITH WHITE SWEEP GLOW */
+    /* UNIQUE ANIMATED BRAND HEADER WITH BRIGHT WHITE SWEEP GLOW */
     .brand-header {
         position: relative;
         background: linear-gradient(135deg, #1E5631 0%, #2D6A4F 50%, #40916C 100%);
-        padding: 35px 25px;
+        padding: 36px 24px;
         border-radius: 20px;
         text-align: center;
         margin-bottom: 28px;
         color: #FFFFFF !important;
-        box-shadow: 0 10px 30px rgba(30, 86, 49, 0.25);
+        box-shadow: 0 12px 32px rgba(30, 86, 49, 0.3);
         overflow: hidden;
     }
 
-    /* THE SIGNATURE WHITE ANIMATED FLOWING GLOW */
+    /* INTENSIFIED BRIGHT WHITE FLOWING ANIMATION */
     .brand-header::after {
         content: '';
         position: absolute;
         top: 0;
         left: -150%;
-        width: 100%;
+        width: 80%;
         height: 100%;
         background: linear-gradient(
             90deg,
             transparent 0%,
-            rgba(255, 255, 255, 0.0) 20%,
-            rgba(255, 255, 255, 0.55) 50%,
-            rgba(255, 255, 255, 0.0) 80%,
+            rgba(255, 255, 255, 0.1) 20%,
+            rgba(255, 255, 255, 0.85) 50%,
+            rgba(255, 255, 255, 0.1) 80%,
             transparent 100%
         );
         transform: skewX(-25deg);
-        animation: whiteSweepFlow 3.8s infinite linear;
+        filter: drop-shadow(0 0 12px rgba(255, 255, 255, 0.9));
+        animation: brightWhiteSweep 3.2s infinite linear;
         pointer-events: none;
     }
 
-    @keyframes whiteSweepFlow {
+    @keyframes brightWhiteSweep {
         0% { left: -150%; }
         100% { left: 150%; }
     }
@@ -94,12 +95,12 @@ st.markdown(
         text-transform: uppercase;
         position: relative;
         z-index: 2;
-        text-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        text-shadow: 0 3px 10px rgba(0,0,0,0.3);
     }
 
     .brand-subtext {
         color: #E8F5E9;
-        font-size: 1.1rem;
+        font-size: 1.15rem;
         font-weight: 500;
         margin-top: 10px;
         position: relative;
@@ -208,7 +209,7 @@ def upload_product_photo(file_bytes, filename):
             file_options={"content-type": "image/jpeg", "upsert": "true"}
         )
         
-        # Build direct absolute public URL
+        # Construct exact public bucket URL
         public_url = f"{SUPABASE_URL}/storage/v1/object/public/farm-photos/{path}"
         return public_url
     except Exception as e:
@@ -220,7 +221,7 @@ def render_product_image(url_or_path):
         img_url = str(url_or_path).strip()
         st.image(img_url, use_container_width=True)
     else:
-        st.info("📷 Photo Verified (No Image Provided)")
+        st.info("📷 Photo Verified")
 
 def initialize_paystack_payment(email, amount_ngn, reference):
     url = "https://api.paystack.co/transaction/initialize"
@@ -252,12 +253,12 @@ if "editing_listing_id" not in st.session_state:
     st.session_state.editing_listing_id = None
 
 # ==============================================================================
-# 4. BRAND HEADER WITH FLOWING WHITE ANIMATION
+# 4. BRAND HEADER WITH EMOJIS & ANIMATED SWEEP
 # ==============================================================================
 st.markdown(
     """
 <div class="brand-header">
-    <h1 class="brand-title">FEED THE NATIONS</h1>
+    <h1 class="brand-title">🌾 🌽 FEED THE NATIONS 🐂 🐓</h1>
     <p class="brand-subtext">Direct Farm-to-Buyer Agricultural Marketplace • Escrow Protection • Real-Time Freight</p>
 </div>
 """,
