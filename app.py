@@ -98,11 +98,19 @@ st.markdown(
         text-shadow: 0 3px 10px rgba(0,0,0,0.3);
     }
 
+    .brand-emojis {
+        font-size: 2.2rem;
+        margin-top: 6px;
+        margin-bottom: 4px;
+        position: relative;
+        z-index: 2;
+    }
+
     .brand-subtext {
         color: #E8F5E9;
         font-size: 1.15rem;
         font-weight: 500;
-        margin-top: 10px;
+        margin-top: 8px;
         position: relative;
         z-index: 2;
     }
@@ -209,7 +217,7 @@ def upload_product_photo(file_bytes, filename):
             file_options={"content-type": "image/jpeg", "upsert": "true"}
         )
         
-        # Construct exact public bucket URL
+        # Construct public bucket URL
         public_url = f"{SUPABASE_URL}/storage/v1/object/public/farm-photos/{path}"
         return public_url
     except Exception as e:
@@ -219,9 +227,15 @@ def upload_product_photo(file_bytes, filename):
 def render_product_image(url_or_path):
     if url_or_path and str(url_or_path).strip():
         img_url = str(url_or_path).strip()
-        st.image(img_url, use_container_width=True)
+        # If a relative path was stored, convert to full public URL
+        if not img_url.startswith("http"):
+            img_url = f"{SUPABASE_URL}/storage/v1/object/public/farm-photos/{img_url}"
+        try:
+            st.image(img_url, use_container_width=True)
+        except Exception:
+            st.info("📷 Farm Photo Verified")
     else:
-        st.info("📷 Photo Verified")
+        st.info("📷 Farm Photo Verified")
 
 def initialize_paystack_payment(email, amount_ngn, reference):
     url = "https://api.paystack.co/transaction/initialize"
@@ -253,12 +267,13 @@ if "editing_listing_id" not in st.session_state:
     st.session_state.editing_listing_id = None
 
 # ==============================================================================
-# 4. BRAND HEADER WITH EMOJIS & ANIMATED SWEEP
+# 4. BRAND HEADER WITH EMOJIS UNDER TITLE & ANIMATED SWEEP
 # ==============================================================================
 st.markdown(
     """
 <div class="brand-header">
-    <h1 class="brand-title">🌾 🌽 FEED THE NATIONS 🐂 🐓</h1>
+    <h1 class="brand-title">FEED THE NATIONS</h1>
+    <div class="brand-emojis">🌾 🌽 🐂 🐓</div>
     <p class="brand-subtext">Direct Farm-to-Buyer Agricultural Marketplace • Escrow Protection • Real-Time Freight</p>
 </div>
 """,
@@ -394,14 +409,14 @@ if navigation == "📈 Founder Revenue Dashboard":
             st.markdown("### 📜 Real-Time Escrow Ledger")
             st.dataframe(df_tx, use_container_width=True)
         else:
-            st.info("No recorded marketplace transactions currently in database.")
+            st.info("There are no active orders.")
     except Exception as e:
         st.error(f"Error loading revenue ledger: {str(e)}")
 
 # ==============================================================================
-# 8. BUYER MARKETPLACE
+# 8. BUYER MARKETPLACE & ORDERS / ESCROW
 # ==============================================================================
-elif navigation in ["🛒 Browse Marketplace", "📦 My Orders & Escrow"]:
+elif navigation == "🛒 Browse Marketplace":
     st.subheader("🛒 Direct Farm Produce Marketplace")
 
     f1, f2 = st.columns(2)
@@ -484,6 +499,27 @@ elif navigation in ["🛒 Browse Marketplace", "📦 My Orders & Escrow"]:
             st.markdown("</div>", unsafe_allow_html=True)
     except Exception as e:
         st.error(f"Marketplace error: {str(e)}")
+
+elif navigation == "📦 My Orders & Escrow":
+    st.subheader("📦 My Escrow Orders & Tracking")
+    try:
+        user_orders = supabase.table("transactions").select("*").eq("buyer", st.session_state.username).execute().data
+
+        if not user_orders:
+            st.info("There are no active orders.")
+        else:
+            df_orders = pd.DataFrame(user_orders)
+            st.dataframe(df_orders, use_container_width=True)
+
+            for order in user_orders:
+                st.markdown('<div class="product-card">', unsafe_allow_html=True)
+                st.markdown(f"### Order ID: `{order['id']}` - {order.get('item', 'Farm Produce')}")
+                st.write(f"**Escrow Status:** `{order.get('status', 'ESCROW_HELD')}`")
+                st.write(f"**Total Amount Paid:** ₦{float(order.get('total_paid', 0)):,.2f}")
+                st.write(f"**Paystack Reference:** `{order.get('paystack_ref', 'N/A')}`")
+                st.markdown("</div>", unsafe_allow_html=True)
+    except Exception as e:
+        st.info("There are no active orders.")
 
 # ==============================================================================
 # 9. FARMER PRODUCT MANAGEMENT (ADD / EDIT / DELETE)
