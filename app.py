@@ -57,7 +57,7 @@ st.markdown(
         100% { background-position: 200% 0; }
     }
 
-    /* BRAND HEADER */
+    /* BRAND HEADER WITH SWEEPING ANIMATION */
     .brand-header {
         position: relative;
         background: linear-gradient(
@@ -161,14 +161,12 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-
 # ==============================================================================
 # 2. SUPABASE & PAYSTACK INITIALIZATION
 # ==============================================================================
 @st.cache_resource
 def init_supabase() -> Client:
     return create_client(SUPABASE_URL, SUPABASE_KEY)
-
 
 supabase = init_supabase()
 
@@ -201,8 +199,6 @@ LOGISTICS_PARTNERS = {
     },
 }
 
-
-# Image verification function
 def verify_farm_photo(image):
     try:
         img = image.convert("RGB")
@@ -219,8 +215,6 @@ def verify_farm_photo(image):
             "Invalid image file format. PLEASE UPLOAD REAL PICTURE OF FARM PRODUCTS.",
         )
 
-
-# Paystack Payment Gateway Initializer
 def initialize_paystack_payment(email, amount_ngn, reference):
     url = "https://api.paystack.co/transaction/initialize"
     headers = {
@@ -229,13 +223,12 @@ def initialize_paystack_payment(email, amount_ngn, reference):
     }
     data = {
         "email": email,
-        "amount": int(amount_ngn * 100),  # Paystack expects kobo
+        "amount": int(amount_ngn * 100),
         "reference": reference,
         "callback_url": PAYSTACK_CALLBACK_URL,
     }
     response = requests.post(url, json=data, headers=headers)
     return response.json()
-
 
 # ==============================================================================
 # 3. SESSION STATE MANAGEMENT
@@ -250,7 +243,7 @@ if "email" not in st.session_state:
     st.session_state.email = ""
 
 # ==============================================================================
-# 4. ANIMATED BRAND HEADER
+# 4. ANIMATED BRAND HEADER (SWEEPING LIGHT EFFECT)
 # ==============================================================================
 st.markdown(
     """
@@ -264,7 +257,7 @@ st.markdown(
 )
 
 # ==============================================================================
-# 5. USER AUTHENTICATION (SUPABASE AUTH + PROFILES SYNC)
+# 5. USER AUTHENTICATION & SUPABASE PROFILES SYNC
 # ==============================================================================
 if not st.session_state.authenticated:
     st.subheader("🔑 Access Portal")
@@ -330,7 +323,7 @@ if not st.session_state.authenticated:
                         ).execute()
 
                     st.success(
-                        "🎉 Account created successfully! Please check your email inbox to confirm registration setup, then log in."
+                        "🎉 Account created successfully! Please check your email address for complete registration setup before logging in."
                     )
                 except Exception as e:
                     st.error(f"Error creating account: {str(e)}")
@@ -531,7 +524,6 @@ elif navigation in ["🛒 Browse Marketplace", "📦 My Orders & Escrow"]:
                 ):
                     ref = f"FTN-TX-{random.randint(100000, 999999)}"
 
-                    # 1. Insert Escrow record to Supabase
                     tx_record = {
                         "id": ref,
                         "listing_id": item["id"],
@@ -547,7 +539,6 @@ elif navigation in ["🛒 Browse Marketplace", "📦 My Orders & Escrow"]:
                     }
                     supabase.table("transactions").insert(tx_record).execute()
 
-                    # 2. Trigger Paystack payment link
                     pay_resp = initialize_paystack_payment(
                         st.session_state.email, final_total, ref
                     )
