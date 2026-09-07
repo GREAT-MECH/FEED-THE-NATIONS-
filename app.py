@@ -227,7 +227,6 @@ def upload_product_photo(file_bytes, filename):
 def render_product_image(url_or_path):
     if url_or_path and str(url_or_path).strip():
         img_url = str(url_or_path).strip()
-        # If a relative path was stored, convert to full public URL
         if not img_url.startswith("http"):
             img_url = f"{SUPABASE_URL}/storage/v1/object/public/farm-photos/{img_url}"
         try:
@@ -634,9 +633,12 @@ elif navigation == "📦 My Active Products":
 
                         with b_col2:
                             if st.button("🗑️ Delete Product", key=f"del_{item['id']}"):
-                                supabase.table("listings").delete().eq("id", item["id"]).execute()
-                                st.success("Listing removed successfully!")
-                                st.rerun()
+                                try:
+                                    supabase.table("listings").delete().eq("id", item["id"]).execute()
+                                    st.toast("Product deleted successfully!", icon="🗑️")
+                                    st.rerun()
+                                except Exception as del_err:
+                                    st.error(f"Failed to delete product: {str(del_err)}")
 
                     st.markdown("</div>", unsafe_allow_html=True)
             else:
