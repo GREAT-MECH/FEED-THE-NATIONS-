@@ -1,6 +1,7 @@
 import io
 import os
 import random
+import time
 import pandas as pd
 from PIL import Image, ImageStat
 import requests
@@ -58,7 +59,6 @@ st.markdown(
         overflow: hidden;
     }
 
-    /* INTENSIFIED BRIGHT WHITE FLOWING ANIMATION */
     .brand-header::after {
         content: '';
         position: absolute;
@@ -210,14 +210,12 @@ def upload_product_photo(file_bytes, filename):
         clean_name = "".join([c for c in filename if c.isalnum() or c in (".", "_", "-")]).lower()
         path = f"farm_{random.randint(10000, 99999)}_{clean_name}"
         
-        # Upload into farm-photos bucket
         supabase.storage.from_("farm-photos").upload(
             path, 
             file_bytes, 
             file_options={"content-type": "image/jpeg", "upsert": "true"}
         )
         
-        # Construct public bucket URL
         public_url = f"{SUPABASE_URL}/storage/v1/object/public/farm-photos/{path}"
         return public_url
     except Exception as e:
@@ -264,9 +262,11 @@ if "email" not in st.session_state:
     st.session_state.email = ""
 if "editing_listing_id" not in st.session_state:
     st.session_state.editing_listing_id = None
+if "deleted_msg" not in st.session_state:
+    st.session_state.deleted_msg = None
 
 # ==============================================================================
-# 4. BRAND HEADER WITH EMOJIS UNDER TITLE & ANIMATED SWEEP
+# 4. BRAND HEADER
 # ==============================================================================
 st.markdown(
     """
@@ -363,6 +363,7 @@ if st.sidebar.button("🔒 Sign Out"):
     st.session_state.username = ""
     st.session_state.email = ""
     st.session_state.editing_listing_id = None
+    st.session_state.deleted_msg = None
     st.rerun()
 
 st.sidebar.divider()
@@ -574,6 +575,10 @@ elif navigation == "➕ Add New Product":
 elif navigation == "📦 My Active Products":
     st.subheader("🚜 Manage My Farm Listings")
 
+    if st.session_state.deleted_msg:
+        st.success(st.session_state.deleted_msg)
+        st.session_state.deleted_msg = None
+
     if st.session_state.editing_listing_id:
         st.markdown("### ✏️ Edit Product Listing")
         try:
@@ -635,7 +640,7 @@ elif navigation == "📦 My Active Products":
                             if st.button("🗑️ Delete Product", key=f"del_{item['id']}"):
                                 try:
                                     supabase.table("listings").delete().eq("id", item["id"]).execute()
-                                    st.toast("Product deleted successfully!", icon="🗑️")
+                                    st.session_state.deleted_msg = f"✅ Product '{item['item']}' was permanently deleted."
                                     st.rerun()
                                 except Exception as del_err:
                                     st.error(f"Failed to delete product: {str(del_err)}")
