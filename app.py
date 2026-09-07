@@ -45,7 +45,7 @@ st.markdown(
         font-family: 'Poppins', sans-serif;
     }
 
-    /* PREMIUM HEADER */
+    /* BRAND HEADER */
     .brand-header {
         background: linear-gradient(135deg, #1E5631 0%, #2D6A4F 50%, #40916C 100%);
         padding: 24px;
@@ -72,7 +72,7 @@ st.markdown(
         margin-top: 6px;
     }
 
-    /* BUTTON STYLING */
+    /* BUTTONS */
     div.stButton > button {
         background: linear-gradient(135deg, #1E5631 0%, #2D6A4F 100%) !important;
         color: #FFFFFF !important;
@@ -91,7 +91,7 @@ st.markdown(
         box-shadow: 0 4px 12px rgba(30, 86, 49, 0.3) !important;
     }
 
-    /* PRODUCT CARDS */
+    /* CARDS */
     .product-card {
         background-color: var(--card-bg);
         border-radius: 14px;
@@ -100,22 +100,13 @@ st.markdown(
         border: 1px solid #E2E8F0;
         margin-bottom: 18px;
     }
-
-    .badge-scale {
-        background-color: #E8F5E9;
-        color: #1E5631;
-        padding: 4px 10px;
-        border-radius: 20px;
-        font-size: 0.8rem;
-        font-weight: 600;
-    }
 </style>
 """,
     unsafe_allow_html=True,
 )
 
 # ==============================================================================
-# 2. SUPABASE INITIALIZATION
+# 2. SUPABASE & HELPER FUNCTIONS
 # ==============================================================================
 @st.cache_resource
 def init_supabase() -> Client:
@@ -140,34 +131,33 @@ LOGISTICS_PARTNERS = {
     "Farmers Union Local Transport": {"phone": "+2348023334455", "display": "+234 802 333 4455"},
 }
 
-# Image Quality & Farm Product Verifier
 def verify_farm_photo(image):
     try:
         img = image.convert("RGB")
         stat = ImageStat.Stat(img)
-        
-        # Check standard deviation of colors (detects solid colors, plain UI screenshots, blank images)
         avg_stddev = sum(stat.stddev) / len(stat.stddev)
         if avg_stddev < 18:
-            return False, "This photo appears to be a document, plain graphic, or screenshot. Please upload a clear photo of real farm produce."
+            return False, "This photo appears to be a plain graphic or screenshot. Please upload a clear photo of real produce."
 
-        # Check resolution
         w, h = img.size
         if w < 200 or h < 200:
-            return False, "Photo resolution is too low. Please upload a clearer picture."
+            return False, "Photo resolution is too low."
 
         return True, "Valid photo"
     except Exception:
-        return False, "Invalid image file format. Please upload a valid JPG or PNG photo."
+        return False, "Invalid image format."
 
-# Upload photo to Supabase Storage Bucket
 def upload_product_photo(file_bytes, filename):
     try:
-        path = f"public/{random.randint(1000,9999)}_{filename}"
+        # Sanitize filename (remove spaces/special characters)
+        clean_name = "".join([c for c in filename if c.isalnum() or c in (".", "_", "-")]).lower()
+        path = f"public/{random.randint(1000,9999)}_{clean_name}"
+        
         supabase.storage.from_("farm-photos").upload(path, file_bytes, {"content-type": "image/jpeg"})
         public_url = supabase.storage.from_("farm-photos").get_public_url(path)
         return public_url
-    except Exception:
+    except Exception as e:
+        st.error(f"Storage upload error: {str(e)}")
         return None
 
 def initialize_paystack_payment(email, amount_ngn, reference):
@@ -427,7 +417,7 @@ elif navigation in ["🛒 Browse Marketplace", "📦 My Orders & Escrow"]:
         st.error(f"Marketplace error: {str(e)}")
 
 # ==============================================================================
-# 9. FARMER PRODUCT MANAGEMENT (ADD / EDIT / DELETE)
+# 9. FARMER PRODUCT MANAGEMENT
 # ==============================================================================
 elif navigation == "➕ Add New Product":
     st.subheader("🚜 Add New Product Listing")
@@ -460,7 +450,6 @@ elif navigation == "➕ Add New Product":
                 elif not title:
                     st.error("Please enter a product title.")
                 else:
-                    # Upload photo to storage
                     img_url = upload_product_photo(img_bytes, uploaded_file.name)
                     new_id = f"FTN-{random.randint(100, 999)}"
                     
