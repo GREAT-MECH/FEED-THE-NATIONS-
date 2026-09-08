@@ -15,14 +15,14 @@ from supabase import Client, create_client
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://rewewstbknigolxiozwp.supabase.co")
 SUPABASE_KEY = os.environ.get(
     "SUPABASE_KEY",
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJld2V3c3Ria25pZ29seGlvendwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgzNDU5MTUsImV4cCI6MjEwMzkyMTkxNX0.s1reBkT9vmYSKGM0yPJTJiAWxT0xxdO446GVOI6ib3U",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJld2V3c3Ria25pZ29seGlvendwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgzNDU5MTUsImV4cCI6Bt3U",
 )
 
 PAYSTACK_SECRET_KEY = os.environ.get("PAYSTACK_SECRET_KEY", "sk_live_5d70f03c20eea14b71be5b116e453e6a6848eebe")
 PAYSTACK_CALLBACK_URL = os.environ.get("PAYSTACK_CALLBACK_URL", "https://feed-the-nations.onrender.com")
 
 # ==============================================================================
-# 1. PAGE CONFIG & STYLING
+# 1. PAGE CONFIG & STYLING (MODERN APP DESIGN)
 # ==============================================================================
 st.set_page_config(
     page_title="FEED THE NATIONS - Direct Agri Marketplace",
@@ -34,163 +34,162 @@ st.set_page_config(
 st.markdown(
     """
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800;900&family=Poppins:wght@400;500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Montserrat:wght@700;800;900&display=swap');
 
     :root {
-        --primary-agri: #1E5631;
-        --accent-green: #4C9A2A;
+        --primary: #1B4D3E;
+        --primary-light: #2C6E49;
+        --accent: #D4A373;
+        --bg-main: #F8FAF8;
         --card-bg: #FFFFFF;
-        --light-bg: #F4F7F4;
+        --text-dark: #1E293B;
+        --text-muted: #64748B;
+        --border-color: #E2E8F0;
     }
 
     .stApp {
-        background-color: var(--light-bg);
-        font-family: 'Poppins', sans-serif;
+        background-color: var(--bg-main);
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        color: var(--text-dark);
     }
 
+    /* Brand Header Banner */
     .brand-header {
         position: relative;
-        background: linear-gradient(135deg, #1E5631 0%, #2D6A4F 50%, #40916C 100%);
-        padding: 36px 24px;
-        border-radius: 20px;
+        background: linear-gradient(135deg, #103B2B 0%, #1B4D3E 50%, #2D6A4F 100%);
+        padding: 30px 20px;
+        border-radius: 18px;
         text-align: center;
-        margin-bottom: 28px;
+        margin-bottom: 24px;
         color: #FFFFFF !important;
-        box-shadow: 0 12px 32px rgba(30, 86, 49, 0.3);
+        box-shadow: 0 10px 25px rgba(27, 77, 62, 0.2);
         overflow: hidden;
     }
 
-    .brand-header::after {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -150%;
-        width: 80%;
-        height: 100%;
-        background: linear-gradient(
-            90deg,
-            transparent 0%,
-            rgba(255, 255, 255, 0.1) 20%,
-            rgba(255, 255, 255, 0.85) 50%,
-            rgba(255, 255, 255, 0.1) 80%,
-            transparent 100%
-        );
-        transform: skewX(-25deg);
-        filter: drop-shadow(0 0 12px rgba(255, 255, 255, 0.9));
-        animation: brightWhiteSweep 3.2s infinite linear;
-        pointer-events: none;
-    }
-
-    @keyframes brightWhiteSweep {
-        0% { left: -150%; }
-        100% { left: 150%; }
-    }
-    
     .brand-title {
         color: #FFFFFF !important;
         font-family: 'Montserrat', sans-serif;
-        font-size: clamp(2.2rem, 5vw, 3.5rem);
+        font-size: clamp(2rem, 4.5vw, 3.2rem);
         font-weight: 900;
-        letter-spacing: 2px;
+        letter-spacing: 1.5px;
         margin: 0;
         text-transform: uppercase;
-        position: relative;
-        z-index: 2;
-    }
-
-    .brand-emojis {
-        font-size: 2.2rem;
-        margin-top: 6px;
-        margin-bottom: 4px;
-        position: relative;
-        z-index: 2;
     }
 
     .brand-subtext {
-        color: #E8F5E9;
-        font-size: 1.15rem;
+        color: #A3B18A;
+        font-size: 1.05rem;
         font-weight: 500;
-        margin-top: 8px;
-        position: relative;
-        z-index: 2;
+        margin-top: 6px;
     }
 
+    /* Sidebar Styling */
+    section[data-testid="stSidebar"] {
+        background-color: #FFFFFF;
+        border-right: 1px solid var(--border-color);
+    }
+    
+    .user-profile-badge {
+        background: #F1F5F9;
+        padding: 14px;
+        border-radius: 12px;
+        border: 1px solid #E2E8F0;
+        margin-bottom: 16px;
+    }
+
+    /* Compact Grid Product Cards */
+    .product-grid-card {
+        background-color: #FFFFFF;
+        border: 1px solid #E2E8F0;
+        border-radius: 16px;
+        padding: 16px;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+    }
+
+    .product-grid-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 24px rgba(0,0,0,0.08);
+        border-color: #CBD5E1;
+    }
+
+    .badge-tag {
+        display: inline-block;
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+    .badge-green { background: #E8F5E9; color: #2E7D32; }
+    .badge-amber { background: #FFF8E1; color: #F57F17; }
+
+    /* Button Customization */
     div.stButton > button {
-        background: linear-gradient(135deg, #1E5631 0%, #2D6A4F 100%) !important;
+        background: linear-gradient(135deg, #1B4D3E 0%, #2C6E49 100%) !important;
         color: #FFFFFF !important;
-        font-family: 'Montserrat', sans-serif !important;
         font-weight: 700 !important;
-        font-size: 0.95rem !important;
+        font-size: 0.9rem !important;
         border-radius: 10px !important;
-        padding: 12px 24px !important;
+        padding: 10px 18px !important;
         border: none !important;
-        transition: all 0.25s ease-in-out !important;
-        box-shadow: 0 4px 12px rgba(30, 86, 49, 0.18) !important;
+        transition: all 0.2s ease !important;
+        width: 100%;
     }
 
     div.stButton > button:hover {
-        background: linear-gradient(135deg, #2D6A4F 0%, #40916C 100%) !important;
-        transform: translateY(-2px) !important;
-        box-shadow: 0 6px 18px rgba(30, 86, 49, 0.35) !important;
+        background: linear-gradient(135deg, #2C6E49 0%, #3A8659 100%) !important;
+        transform: translateY(-1px) !important;
+        box-shadow: 0 4px 12px rgba(27, 77, 62, 0.25) !important;
     }
 
-    .product-card {
-        background-color: var(--card-bg);
-        border-radius: 16px;
-        padding: 24px;
-        box-shadow: 0 6px 18px rgba(0,0,0,0.05);
-        border: 1px solid #E2E8F0;
-        margin-bottom: 22px;
-    }
-
-    .metric-box {
+    /* Metric Cards */
+    .metric-card {
         background: #FFFFFF;
         padding: 20px;
         border-radius: 14px;
-        border-left: 6px solid #1E5631;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+        border: 1px solid #E2E8F0;
+        border-left: 5px solid #1B4D3E;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.02);
     }
 
-    .warning-banner {
-        background-color: #FFF3CD;
-        border-left: 6px solid #FFC107;
-        padding: 16px;
-        border-radius: 10px;
-        margin-bottom: 20px;
-        color: #856404;
-    }
-
+    /* WhatsApp Button */
     .whatsapp-btn {
-        display: inline-block;
+        display: block;
+        text-align: center;
         background-color: #25D366;
         color: white !important;
         font-weight: 700;
-        padding: 10px 18px;
-        border-radius: 8px;
+        padding: 10px 16px;
+        border-radius: 10px;
         text-decoration: none;
-        margin-top: 8px;
-        margin-bottom: 12px;
+        margin-top: 10px;
+        margin-bottom: 10px;
         font-size: 0.9rem;
     }
     .whatsapp-btn:hover {
         background-color: #128C7E;
     }
 
-    /* Support Chat UI Styling */
+    /* Support Chat Bubbles */
     .user-msg-box {
         background-color: #E8F5E9;
         border-left: 4px solid #2E7D32;
-        padding: 14px;
-        border-radius: 10px;
-        margin-bottom: 12px;
+        padding: 12px 16px;
+        border-radius: 8px;
+        margin-bottom: 10px;
     }
     .ai-msg-box {
         background-color: #F1F8E9;
-        border-left: 4px solid #1E5631;
-        padding: 14px;
-        border-radius: 10px;
-        margin-top: 8px;
-        margin-bottom: 18px;
+        border-left: 4px solid #1B4D3E;
+        padding: 12px 16px;
+        border-radius: 8px;
+        margin-top: 6px;
+        margin-bottom: 16px;
     }
 </style>
 """,
@@ -198,7 +197,7 @@ st.markdown(
 )
 
 # ==============================================================================
-# 2. SUPABASE & PAYSTACK HELPER FUNCTIONS
+# 2. HELPER FUNCTIONS & DB CONNECTIONS
 # ==============================================================================
 @st.cache_resource
 def init_supabase() -> Client:
@@ -207,8 +206,8 @@ def init_supabase() -> Client:
 supabase = init_supabase()
 
 AGRI_CATEGORIES = [
-    "🌾 Crop Farming (Rice, Beans, Maize, Raw Grains)",
-    "🏭 Agro-Processing & Packaged Goods (Flour, Oils, Branded Foods)",
+    "🌾 Crop Farming (Rice, Beans, Maize, Grains)",
+    "🏭 Agro-Processing & Packaged Goods",
     "🐂 Livestock Farming",
     "🐓 Poultry Farming",
     "🐟 Fishery / Aquaculture",
@@ -225,16 +224,16 @@ NIGERIAN_STATES = [
 ]
 
 LOGISTICS_PARTNERS = {
-    "1. GIG Logistics (E-commerce & Nationwide Delivery)": {"whatsapp": "13467744344"},
-    "2. Maersk Nigeria (International Shipping & Bulk Freight)": {"whatsapp": "2349087848100"},
-    "3. Fortune Global Shipping (Freight Forwarding & Warehousing)": {"whatsapp": "2348182784572"},
-    "4. CourierPlus (Nationwide Express Courier)": {"whatsapp": "2347033074129"},
-    "5. Kobo360 (Haulage & Heavy Cargo Platform)": {"whatsapp": "2348186780000"},
-    "6. DHL Express Nigeria (Express Courier & Freight)": {"whatsapp": "2347011126221"},
-    "7. Red Star Express (Express Delivery Services)": {"whatsapp": "2347007337827"},
-    "8. SkyNet Worldwide Express (Shipping & Logistics)": {"whatsapp": "2349056533136"},
-    "9. Tranex (Cargo & Heavy Haulage)": {"whatsapp": "2348123682573"},
-    "10. Sendbox (Local & International Delivery)": {"whatsapp": "23417006150"},
+    "GIG Logistics": {"whatsapp": "13467744344"},
+    "Maersk Nigeria": {"whatsapp": "2349087848100"},
+    "Fortune Global Shipping": {"whatsapp": "2348182784572"},
+    "CourierPlus": {"whatsapp": "2347033074129"},
+    "Kobo360 Haulage": {"whatsapp": "2348186780000"},
+    "DHL Express Nigeria": {"whatsapp": "2347011126221"},
+    "Red Star Express": {"whatsapp": "2347007337827"},
+    "SkyNet Worldwide": {"whatsapp": "2349056533136"},
+    "Tranex Cargo": {"whatsapp": "2348123682573"},
+    "Sendbox Delivery": {"whatsapp": "23417006150"},
 }
 
 def verify_farm_photo(image):
@@ -243,174 +242,125 @@ def verify_farm_photo(image):
         stat = ImageStat.Stat(img)
         avg_stddev = sum(stat.stddev) / len(stat.stddev)
         if avg_stddev < 15:
-            return False, "This image appears to be a blank or document screenshot. Please upload a clear produce photo."
-
+            return False, "Image appears blank or low contrast. Please upload a clear produce photo."
         w, h = img.size
         if w < 150 or h < 150:
-            return False, "Image resolution is too low. Minimum allowed size is 150x150 pixels."
-
+            return False, "Image resolution too low. Minimum allowed size is 150x150 pixels."
         return True, "Valid farm photo"
     except Exception:
-        return False, "Invalid image file format."
+        return False, "Invalid image format."
 
 def upload_product_photo(file_bytes, filename):
     try:
         clean_name = "".join([c for c in filename if c.isalnum() or c in (".", "_", "-")]).lower()
         path = f"farm_{random.randint(10000, 99999)}_{clean_name}"
-
         supabase.storage.from_("farm-photos").upload(
-            path,
-            file_bytes,
-            file_options={"content-type": "image/jpeg", "upsert": "true"},
+            path, file_bytes, file_options={"content-type": "image/jpeg", "upsert": "true"}
         )
-
-        public_url = f"{SUPABASE_URL}/storage/v1/object/public/farm-photos/{path}"
-        return public_url
+        return f"{SUPABASE_URL}/storage/v1/object/public/farm-photos/{path}"
     except Exception as e:
-        st.error(f"Failed to upload photo to Supabase storage: {str(e)}")
+        st.error(f"Storage upload error: {e}")
         return None
 
-def render_product_image(url_or_path):
+def render_product_image(url_or_path, height=180):
     if url_or_path and str(url_or_path).strip():
         img_url = str(url_or_path).strip()
         if not img_url.startswith("http"):
             img_url = f"{SUPABASE_URL}/storage/v1/object/public/farm-photos/{img_url}"
         try:
             st.image(img_url, use_container_width=True)
+            return
         except Exception:
-            st.info("📷 Farm Photo Verified")
-    else:
-        st.info("📷 Farm Photo Verified")
+            pass
+    st.info("📷 Photo Verified")
 
 def initialize_paystack_payment(email, amount_ngn, reference):
     url = "https://api.paystack.co/transaction/initialize"
-    headers = {
-        "Authorization": f"Bearer {PAYSTACK_SECRET_KEY}",
-        "Content-Type": "application/json",
-    }
+    headers = {"Authorization": f"Bearer {PAYSTACK_SECRET_KEY}", "Content-Type": "application/json"}
     data = {
         "email": email,
         "amount": int(amount_ngn * 100),
         "reference": reference,
         "callback_url": PAYSTACK_CALLBACK_URL,
     }
-    response = requests.post(url, json=data, headers=headers)
-    return response.json()
+    return requests.post(url, json=data, headers=headers).json()
 
 def verify_paystack_payment(reference):
     url = f"https://api.paystack.co/transaction/verify/{reference}"
-    headers = {
-        "Authorization": f"Bearer {PAYSTACK_SECRET_KEY}",
-    }
+    headers = {"Authorization": f"Bearer {PAYSTACK_SECRET_KEY}"}
     try:
-        res = requests.get(url, headers=headers)
-        data = res.json()
-        if data.get("status") and data.get("data", {}).get("status") == "success":
-            return True, data["data"]
-        return False, "Payment verification pending or failed."
+        res = requests.get(url, headers=headers).json()
+        if res.get("status") and res.get("data", {}).get("status") == "success":
+            return True, res["data"]
+        return False, "Pending or failed."
     except Exception as e:
         return False, str(e)
 
 def generate_ai_support_response(user_name: str, user_role: str, message: str) -> str:
-    """Action-oriented AI Assistant logic personalized with the user's actual name."""
     msg = message.lower().strip()
     name = user_name if user_name else "Valued User"
 
     if any(k in msg for k in ["buyer", "customer", "client"]):
-        if user_role == "Farmer":
-            return (
-                f"Hello **{name}**! I understand you are experiencing an issue regarding a buyer on the platform.\n\n"
-                "**Immediate Action Steps & Troubleshooting:**\n"
-                "1. **Order Reference:** What is the Order ID or transaction reference for this buyer?\n"
-                "2. **Escrow Status Check:** Has the payment been marked as `PAID_VERIFIED` in your *Farmer Sales & Escrow Orders* dashboard?\n"
-                "3. **Dispatch Status:** Have you dispatched the produce with the agreed logistics provider yet?\n\n"
-                "📌 **Resolution Protocol:** If the buyer is unresponsive or disputing item quality/quantity, please upload waybill photos or dispatch receipts here. "
-                "Our Admin Dispute Team has been notified and will hold the escrow funds safely while verifying dispatch details."
-            )
-        else:
-            return (
-                f"Hello **{name}**! Are you having trouble connecting with a specific buyer or account setting?\n\n"
-                "Please provide the Order ID or buyer details so I can assist you directly or connect you with support."
-            )
-
-    elif any(k in msg for k in ["escrow", "payment", "fund", "money", "bank", "pay", "refund"]):
         return (
-            f"Hello **{name}**! I am analyzing your payment/escrow inquiry.\n\n"
-            "**Instant Financial Guidance:**\n"
-            "• **Escrow Security:** All payments on Feed The Nations are locked securely in Paystack Escrow until delivery is confirmed.\n"
-            "• **Farmer Payouts:** Funds are released automatically once the buyer verifies delivery or 48 hours post-confirmed freight delivery.\n"
-            "• **Disputes/Refunds:** If you need an immediate payment halt or refund investigation, please share your Paystack Reference Number below.\n\n"
-            "💡 *Our financial compliance officer has logged this ticket for verification.*"
+            f"Hello **{name}**! I see you have an inquiry regarding a buyer transaction.\n\n"
+            "**Action Steps:**\n"
+            "1. **Order Reference:** Provide the Order ID for this transaction.\n"
+            "2. **Escrow Status:** Check if payment is marked as `PAID_VERIFIED` on your dashboard.\n"
+            "3. **Dispatch Verification:** Attach waybill or freight receipts here if a dispute is active.\n\n"
+            "Our Trust & Safety Admin team is keeping escrow funds secured while this is reviewed."
         )
-
-    elif any(k in msg for k in ["deliver", "logistics", "ship", "transit", "dispatch", "courier", "delay", "damaged"]):
+    elif any(k in msg for k in ["escrow", "payment", "fund", "money", "pay", "refund"]):
         return (
-            f"Hi **{name}**! I can help you resolve logistics and shipment concerns immediately.\n\n"
-            "**Recommended Next Steps:**\n"
-            "1. **Logistics Carrier:** Which of our 10 nationwide haulers (e.g., GIG, Kobo360, DHL) was selected for this trip?\n"
-            "2. **Waybill / Tracking:** Please share your waybill number or freight quote receipt.\n"
-            "3. **Physical Inspection:** If goods arrived damaged, please do not release escrow. Share photos here immediately.\n\n"
-            "🚚 *I am flagging your ticket for our Freight Escalation Lead to contact the courier partner directly.*"
+            f"Hello **{name}**! Regarding your escrow/payment inquiry:\n\n"
+            "• Payments remain locked in Paystack Escrow until delivery verification.\n"
+            "• Payouts trigger automatically upon delivery confirmation or 48 hours post-dispatch.\n"
+            "• Share your Paystack Reference for immediate verification."
         )
-
-    elif any(k in msg for k in ["scam", "fraud", "fake", "stolen", "dispute", "cheat"]):
+    elif any(k in msg for k in ["deliver", "logistics", "ship", "transit", "dispatch", "delay"]):
         return (
-            f"🚨 **URGENT SECURITY ESCALATION FOR {name.upper()}** 🚨\n\n"
-            "We take security and trade integrity extremely seriously on Feed The Nations.\n\n"
-            "**Immediate Protection Applied:**\n"
-            "• All escrow transfers linked to your recent orders have been **TEMPORARILY PAUSED** pending investigation.\n"
-            "• Please provide the offender's username, phone number, or order ID.\n"
-            "• Our Trust & Safety Admin will call you directly at your registered phone number."
+            f"Hi **{name}**! For shipping and logistics assistance:\n\n"
+            "1. State the logistics partner selected (e.g. GIG Logistics, Kobo360).\n"
+            "2. Provide your waybill tracking number.\n"
+            "Our Freight Operations team will contact the carrier directly."
         )
-
     else:
         return (
-            f"Hello **{name}**! Thank you for contacting Feed The Nations Support.\n\n"
-            f"I have received your message regarding: *\"{message}\"*\n\n"
-            "**How I can help solve this right now:**\n"
-            "• If this relates to an existing order, please reply with the **Order ID**.\n"
-            "• If you have produce listing issues, mention the **Product Title**.\n\n"
-            "Our automated system and live support team are actively monitoring this thread to resolve your issue quickly."
+            f"Hello **{name}**! Thank you for contacting Support.\n\n"
+            f"Re: *\"{message}\"*\n\n"
+            "Please provide your **Order ID** or **Product Title** so we can assist you right away."
         )
 
 # ==============================================================================
-# 3. SESSION STATE
+# 3. SESSION STATE & PAYSTACK CALLBACK
 # ==============================================================================
-if "authenticated" not in st.session_state:
-    st.session_state.authenticated = False
-if "user_role" not in st.session_state:
-    st.session_state.user_role = None
-if "username" not in st.session_state:
-    st.session_state.username = ""
-if "email" not in st.session_state:
-    st.session_state.email = ""
-if "phone" not in st.session_state:
-    st.session_state.phone = ""
-if "editing_listing_id" not in st.session_state:
-    st.session_state.editing_listing_id = None
-if "deleted_msg" not in st.session_state:
-    st.session_state.deleted_msg = None
+for key, default in [
+    ("authenticated", False),
+    ("user_role", None),
+    ("username", ""),
+    ("email", ""),
+    ("phone", ""),
+    ("selected_product_id", None),
+    ("editing_listing_id", None),
+    ("deleted_msg", None),
+]:
+    if key not in st.session_state:
+        st.session_state[key] = default
 
-# Check Paystack payment callback from URL query params
 query_params = st.query_params
 if "reference" in query_params or "trxref" in query_params:
     pay_ref = query_params.get("reference") or query_params.get("trxref")
-    is_success, msg_or_data = verify_paystack_payment(pay_ref)
+    is_success, _ = verify_paystack_payment(pay_ref)
     if is_success:
         existing_tx = supabase.table("transactions").select("*").eq("paystack_ref", pay_ref).execute().data
         if existing_tx and existing_tx[0].get("status") != "PAID_VERIFIED":
             tx_item = existing_tx[0]
-            
             supabase.table("transactions").update({"status": "PAID_VERIFIED"}).eq("paystack_ref", pay_ref).execute()
-            
             listing_res = supabase.table("listings").select("quantity").eq("id", tx_item["listing_id"]).execute().data
             if listing_res:
-                current_qty = int(listing_res[0].get("quantity", 0))
-                purchased_qty = int(tx_item.get("quantity_bought", 1))
-                new_qty = max(0, current_qty - purchased_qty)
-                supabase.table("listings").update({"quantity": new_qty}).eq("id", tx_item["listing_id"]).execute()
-
-            st.success("🎉 Payment verified! Order sent to Farmer's Dashboard and stock updated.")
+                cur_qty = int(listing_res[0].get("quantity", 0))
+                bought_qty = int(tx_item.get("quantity_bought", 1))
+                supabase.table("listings").update({"quantity": max(0, cur_qty - bought_qty)}).eq("id", tx_item["listing_id"]).execute()
+            st.success("🎉 Payment verified! Order status updated and inventory updated.")
         st.query_params.clear()
 
 # ==============================================================================
@@ -420,8 +370,7 @@ st.markdown(
     """
 <div class="brand-header">
     <h1 class="brand-title">FEED THE NATIONS</h1>
-    <div class="brand-emojis">🌾 🌽 🐂 🐓</div>
-    <p class="brand-subtext">Direct Farm-to-Buyer Agricultural Marketplace • Escrow Protection • Managed Freight Delivery</p>
+    <p class="brand-subtext">Direct Farm-to-Buyer Marketplace • Escrow Protection • Integrated Logistics</p>
 </div>
 """,
     unsafe_allow_html=True,
@@ -431,698 +380,451 @@ st.markdown(
 # 5. AUTHENTICATION PORTAL
 # ==============================================================================
 if not st.session_state.authenticated:
-    st.subheader("🔑 Sign In or Register Your Account")
-    auth_mode = st.radio("Choose Action", ["Login", "Register Account"], horizontal=True)
+    c_auth, _ = st.columns([1, 0.1])
+    with c_auth:
+        st.subheader("🔑 Access Account")
+        auth_mode = st.radio("Choose Action", ["Login", "Register Account"], horizontal=True)
 
-    email_input = st.text_input("Email Address").strip().lower()
-    password_input = st.text_input("Password", type="password")
+        email_input = st.text_input("Email Address").strip().lower()
+        password_input = st.text_input("Password", type="password")
 
-    if auth_mode == "Register Account":
-        selected_role = st.selectbox(
-            "Account Type",
-            ["Buyer (Wholesaler, Hotel, Processor)", "Farmer / Producer", "Platform Admin"],
-        )
-        full_name = st.text_input("Full Name / Enterprise Name")
-        phone_input = st.text_input("Phone Number (WhatsApp Enabled)", placeholder="+2348000000000").strip()
+        if auth_mode == "Register Account":
+            selected_role = st.selectbox("Account Role", ["Buyer (Wholesaler/Processor)", "Farmer / Producer", "Platform Admin"])
+            full_name = st.text_input("Full Name / Business Name")
+            phone_input = st.text_input("Phone Number (WhatsApp Enabled)", placeholder="+2348000000000").strip()
+            farming_cat = st.selectbox("Primary Category", AGRI_CATEGORIES) if "Farmer" in selected_role else "All Categories"
 
-        farming_cat = (
-            st.selectbox("Primary Agricultural Specialty", AGRI_CATEGORIES)
-            if "Farmer" in selected_role
-            else "All Categories"
-        )
-
-        if st.button("CREATE ACCOUNT 🚀", use_container_width=True):
-            if email_input and password_input and full_name and phone_input:
-                try:
-                    assigned_role = "Farmer" if "Farmer" in selected_role else ("Admin" if "Admin" in selected_role else "Buyer")
-
-                    res = supabase.auth.sign_up({
-                        "email": email_input,
-                        "password": password_input,
-                        "options": {
-                            "data": {
-                                "full_name": full_name,
-                                "phone": phone_input,
-                                "role": assigned_role,
-                                "category": farming_cat,
-                            }
-                        },
-                    })
-
-                    if res.user:
-                        profile_data = {
-                            "id": res.user.id,
+            if st.button("CREATE ACCOUNT 🚀"):
+                if email_input and password_input and full_name and phone_input:
+                    try:
+                        role_str = "Farmer" if "Farmer" in selected_role else ("Admin" if "Admin" in selected_role else "Buyer")
+                        res = supabase.auth.sign_up({
                             "email": email_input,
-                            "full_name": full_name,
-                            "phone": phone_input,
-                            "role": assigned_role,
-                            "category": farming_cat,
-                        }
-                        supabase.table("profiles").upsert(profile_data).execute()
-
-                    st.success("🎉 Account created successfully! Please select 'Login' above to enter.")
-                except Exception as e:
-                    st.error(f"Registration failed: {str(e)}")
-            else:
-                st.error("Please fill in all registration fields, including Phone Number.")
-    else:
-        if st.button("LOG IN ➔", use_container_width=True):
-            if email_input and password_input:
-                try:
-                    res = supabase.auth.sign_in_with_password({"email": email_input, "password": password_input})
-                    user_metadata = res.user.user_metadata
-                    st.session_state.authenticated = True
-                    st.session_state.user_role = user_metadata.get("role", "Buyer")
-                    st.session_state.username = user_metadata.get("full_name", email_input)
-                    st.session_state.phone = user_metadata.get("phone", "")
-                    st.session_state.email = email_input
-                    st.rerun()
-                except Exception as e:
-                    st.error(f"Login failed: {str(e)}")
-            else:
-                st.error("Please provide both email and password.")
+                            "password": password_input,
+                            "options": {"data": {"full_name": full_name, "phone": phone_input, "role": role_str, "category": farming_cat}},
+                        })
+                        if res.user:
+                            supabase.table("profiles").upsert({
+                                "id": res.user.id, "email": email_input, "full_name": full_name, "phone": phone_input, "role": role_str, "category": farming_cat
+                            }).execute()
+                        st.success("🎉 Account created! Please log in.")
+                    except Exception as e:
+                        st.error(f"Registration error: {e}")
+                else:
+                    st.error("Please complete all required fields.")
+        else:
+            if st.button("LOG IN ➔"):
+                if email_input and password_input:
+                    try:
+                        res = supabase.auth.sign_in_with_password({"email": email_input, "password": password_input})
+                        meta = res.user.user_metadata
+                        st.session_state.authenticated = True
+                        st.session_state.user_role = meta.get("role", "Buyer")
+                        st.session_state.username = meta.get("full_name", email_input)
+                        st.session_state.phone = meta.get("phone", "")
+                        st.session_state.email = email_input
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Login error: {e}")
+                else:
+                    st.error("Please enter email and password.")
     st.stop()
 
 # ==============================================================================
 # 6. SIDEBAR NAVIGATION
 # ==============================================================================
-st.sidebar.markdown(f"### 👤 {st.session_state.username}")
-st.sidebar.markdown(f"**Account Role:** `{st.session_state.user_role}`")
-if st.session_state.phone:
-    st.sidebar.markdown(f"**Phone:** `{st.session_state.phone}`")
-
-if st.sidebar.button("🔒 Sign Out"):
-    supabase.auth.sign_out()
-    st.session_state.authenticated = False
-    st.session_state.user_role = None
-    st.session_state.username = ""
-    st.session_state.email = ""
-    st.session_state.phone = ""
-    st.session_state.editing_listing_id = None
-    st.session_state.deleted_msg = None
-    st.rerun()
-
-st.sidebar.divider()
-
-if st.session_state.user_role == "Farmer":
-    nav_options = [
-        "💰 Farmer Sales & Escrow Orders",
-        "📦 My Active Products",
-        "➕ Add New Product",
-        "💬 Support & AI Helpdesk",
-        "📢 Platform Announcements"
-    ]
-elif st.session_state.user_role == "Buyer":
-    nav_options = [
-        "🛒 Browse Marketplace",
-        "📦 My Orders & Escrow",
-        "💬 Support & AI Helpdesk",
-        "📢 Platform Announcements"
-    ]
-elif st.session_state.user_role == "Admin":
-    nav_options = [
-        "📈 Founder Revenue Dashboard",
-        "🛒 Browse Marketplace",
-        "💬 Support & AI Helpdesk",
-        "📢 Platform Announcements"
-    ]
-
-navigation = st.sidebar.radio("Navigation Menu", nav_options)
-
-# ==============================================================================
-# 7. FOUNDER REVENUE DASHBOARD (ADMIN)
-# ==============================================================================
-if navigation == "📈 Founder Revenue Dashboard":
-    st.subheader("📊 Marketplace Revenue & Volume Metrics")
-    try:
-        response = supabase.table("transactions").select("*").eq("status", "PAID_VERIFIED").execute()
-        tx_data = response.data
-
-        if tx_data:
-            df_tx = pd.DataFrame(tx_data)
-            total_gmv = df_tx["amount"].sum()
-            total_commission = df_tx["commission"].sum()
-
-            m1, m2, m3 = st.columns(3)
-            with m1:
-                st.markdown('<div class="metric-box">', unsafe_allow_html=True)
-                st.metric("Gross Merchandise Value (GMV)", f"₦{total_gmv:,.2f}")
-                st.markdown('</div>', unsafe_allow_html=True)
-            with m2:
-                st.markdown('<div class="metric-box">', unsafe_allow_html=True)
-                st.metric("Platform Revenue (10%)", f"₦{total_commission:,.2f}")
-                st.markdown('</div>', unsafe_allow_html=True)
-            with m3:
-                st.markdown('<div class="metric-box">', unsafe_allow_html=True)
-                st.metric("Verified Orders", len(df_tx))
-                st.markdown('</div>', unsafe_allow_html=True)
-
-            st.divider()
-            st.markdown("### 📜 Real-Time Escrow Ledger (Verified Payments)")
-            st.dataframe(df_tx, use_container_width=True)
-        else:
-            st.info("There are no verified completed payments yet.")
-    except Exception as e:
-        st.error(f"Error loading revenue ledger: {str(e)}")
-
-# ==============================================================================
-# 8. FARMER SALES & ESCROW MONITORING
-# ==============================================================================
-elif navigation == "💰 Farmer Sales & Escrow Orders":
-    st.subheader("💰 Purchased Items & Escrow Status")
-    st.markdown("Only **PAYSTACK VERIFIED** payments appear on your dashboard.")
-
-    try:
-        farmer_listings = supabase.table("listings").select("id").eq("seller", st.session_state.username).execute().data
-        
-        if farmer_listings:
-            farmer_listing_ids = [l["id"] for l in farmer_listings]
-            
-            tx_response = (
-                supabase.table("transactions")
-                .select("*")
-                .in_("listing_id", farmer_listing_ids)
-                .eq("status", "PAID_VERIFIED")
-                .execute()
-                .data
-            )
-            
-            if tx_response:
-                df_farmer_tx = pd.DataFrame(tx_response)
-                
-                total_sales_val = df_farmer_tx["amount"].sum()
-                held_escrow_val = df_farmer_tx["amount"].sum()
-
-                m1, m2, m3 = st.columns(3)
-                with m1:
-                    st.markdown('<div class="metric-box">', unsafe_allow_html=True)
-                    st.metric("Total Confirmed Sales", f"₦{total_sales_val:,.2f}")
-                    st.markdown('</div>', unsafe_allow_html=True)
-                with m2:
-                    st.markdown('<div class="metric-box">', unsafe_allow_html=True)
-                    st.metric("Escrow Funds Secured", f"₦{held_escrow_val:,.2f}")
-                    st.markdown('</div>', unsafe_allow_html=True)
-                with m3:
-                    st.markdown('<div class="metric-box">', unsafe_allow_html=True)
-                    st.metric("Verified Orders", len(tx_response))
-                    st.markdown('</div>', unsafe_allow_html=True)
-
-                st.divider()
-                st.markdown("### 📦 Detailed Customer Sales Ledger")
-
-                for order in tx_response:
-                    st.markdown('<div class="product-card">', unsafe_allow_html=True)
-                    st.markdown(f"### Order Reference: `{order['id']}` - Produce: **{order.get('item', 'N/A')}**")
-                    
-                    c1, c2, c3 = st.columns(3)
-                    with c1:
-                        st.write(f"**Buyer Username:** `{order.get('buyer', 'N/A')}`")
-                        st.write(f"**Quantity Purchased:** {order.get('quantity_bought', 1)} units")
-                        st.write(f"**Delivery Address:** {order.get('delivery_address', 'N/A')}")
-                    with c2:
-                        st.write(f"**Produce Subtotal:** ₦{float(order.get('amount', 0)):,.2f}")
-                        st.write(f"**Payment Verification:** ✅ `PAID_VERIFIED`")
-                    with c3:
-                        st.write(f"**Agreed Freight Fee:** ₦{float(order.get('freight', 0)):,.2f}")
-                        st.write(f"**Grand Total Paid:** ₦{float(order.get('total_paid', 0)):,.2f}")
-
-                    st.markdown("</div>", unsafe_allow_html=True)
-            else:
-                st.info("No verified orders recorded yet. Pending payments will not display until Paystack confirms transfer.")
-        else:
-            st.info("You haven't listed any produce yet. Go to 'Add New Product' to start selling.")
-    except Exception as e:
-        st.error(f"Error loading sales ledger: {str(e)}")
-
-# ==============================================================================
-# 9. BUYER MARKETPLACE WITH EXACT DESTINATION ADDRESS & LOGISTICS ESCROW
-# ==============================================================================
-elif navigation == "🛒 Browse Marketplace":
-    st.subheader("🛒 Direct Farm Produce Marketplace")
-
-    f1, f2 = st.columns(2)
-    with f1:
-        buying_scale = st.selectbox("Filter Scale", ["All Scales", "Large Scale / Commercial Wholesale", "Small Scale / Retail"])
-    with f2:
-        category_filter = st.selectbox("Filter Sector", ["All Categories"] + AGRI_CATEGORIES)
-
-    st.divider()
-
-    try:
-        query = supabase.table("listings").select("*").gt("quantity", 0)
-        if buying_scale != "All Scales":
-            query = query.eq("scale", buying_scale)
-        if category_filter != "All Categories":
-            query = query.eq("category", category_filter)
-
-        listings = query.execute().data
-
-        if not listings:
-            st.info("No active produce listings matching your selection or available in stock.")
-
-        for item in listings:
-            st.markdown('<div class="product-card">', unsafe_allow_html=True)
-            col1, col2 = st.columns([1.2, 2])
-
-            with col1:
-                render_product_image(item.get("image_url"))
-                st.caption(f"Scale: **{item.get('scale', 'General Supply')}**")
-
-            with col2:
-                st.markdown(f"### {item['item']}")
-                st.write(f"**Sector:** `{item.get('category')}`")
-                st.write(f"**Producer:** {item['seller']} | 📍 **Pickup Origin:** {item['location']}")
-
-                unit_price = float(item["price_ngn"])
-                available_stock = int(item.get("quantity", 1))
-                unit_weight = float(item.get("unit_weight_kg", 50.0))
-
-                st.markdown(f"**Unit Price:** ₦{unit_price:,.2f}")
-                st.markdown(f"🟢 **Available Stock:** **{available_stock} units left** (Est. {unit_weight} kg per unit)")
-
-                desired_qty = st.number_input(
-                    "Select Quantity to Purchase",
-                    min_value=1,
-                    max_value=max(available_stock, 1),
-                    value=1,
-                    step=1,
-                    key=f"qty_{item['id']}",
-                )
-
-                product_subtotal = unit_price * desired_qty
-                platform_fee = product_subtotal * 0.10
-                total_weight_kg = unit_weight * desired_qty
-
-                st.markdown(f"**Subtotal ({desired_qty} units • Est. {total_weight_kg:,.1f} kg):** ₦{product_subtotal:,.2f}")
-                st.markdown(f"**Platform Escrow Fee (10%):** ₦{platform_fee:,.2f}")
-
-                st.markdown("#### 🚚 Step 1: Input Delivery Destination & Negotiate Freight")
-                
-                c_dest1, c_dest2 = st.columns([1, 2])
-                with c_dest1:
-                    delivery_state = st.selectbox(
-                        f"Destination State",
-                        NIGERIAN_STATES,
-                        index=24,
-                        key=f"dest_state_{item['id']}"
-                    )
-                with c_dest2:
-                    delivery_street = st.text_input(
-                        "Exact Delivery Address (Street, Landmark, City)",
-                        placeholder="e.g., 14 Commercial Avenue, Yaba, Lagos",
-                        key=f"dest_street_{item['id']}"
-                    )
-
-                full_delivery_address = f"{delivery_street.strip()}, {delivery_state}" if delivery_street.strip() else delivery_state
-
-                selected_partner = st.selectbox(
-                    f"Select Freight Carrier (Top 10 Nationwide Haulers)",
-                    list(LOGISTICS_PARTNERS.keys()),
-                    key=f"sel_{item['id']}",
-                )
-                partner_info = LOGISTICS_PARTNERS[selected_partner]
-
-                wa_msg_text = (
-                    f"Hello {selected_partner},\n\n"
-                    f"I am purchasing produce on FEED THE NATIONS marketplace:\n"
-                    f"• Item: {item['item']}\n"
-                    f"• Quantity: {desired_qty} units\n"
-                    f"• Est. Total Weight: {total_weight_kg} kg\n"
-                    f"• Pickup Farm Location: {item['location']}\n"
-                    f"• Exact Delivery Destination: {full_delivery_address}\n\n"
-                    f"Please provide an official freight quote for this delivery. Note: FEED THE NATIONS marketplace pays freight fees directly from escrow upon delivery completion."
-                )
-                wa_url = f"https://wa.me/{partner_info['whatsapp']}?text={urllib.parse.quote(wa_msg_text)}"
-
-                st.markdown(
-                    f'<a href="{wa_url}" target="_blank" class="whatsapp-btn">💬 Send Delivery Details to {selected_partner} on WhatsApp</a>',
-                    unsafe_allow_html=True,
-                )
-
-                st.markdown("#### 🚚 Step 2: Input Negotiated Freight Amount")
-                agreed_freight = st.number_input(
-                    "Enter Agreed Freight Quote from Logistics Partner (₦)",
-                    min_value=0,
-                    value=25000,
-                    step=5000,
-                    key=f"freight_{item['id']}",
-                )
-
-                final_total = product_subtotal + platform_fee + agreed_freight
-                st.markdown(f"### **Total Amount Payable (Produce + Escrow + Freight): ₦{final_total:,.2f}**")
-
-                if st.button("BUY WITH ESCROW 💳", key=f"pay_{item['id']}"):
-                    if not delivery_street.strip():
-                        st.error("⚠️ Please enter your exact delivery address before proceeding to payment.")
-                    else:
-                        ref = f"FTN-TX-{random.randint(100000, 999999)}"
-                        tx_record = {
-                            "id": ref,
-                            "listing_id": item["id"],
-                            "category": item["category"],
-                            "item": item["item"],
-                            "quantity_bought": desired_qty,
-                            "amount": product_subtotal,
-                            "commission": platform_fee,
-                            "freight": agreed_freight,
-                            "total_paid": final_total,
-                            "buyer": st.session_state.username,
-                            "delivery_address": full_delivery_address,
-                            "status": "PAYMENT_INITIATED",
-                            "paystack_ref": ref,
-                        }
-                        supabase.table("transactions").insert(tx_record).execute()
-                        pay_resp = initialize_paystack_payment(st.session_state.email, final_total, ref)
-
-                        if pay_resp.get("status"):
-                            auth_url = pay_resp["data"]["authorization_url"]
-                            st.success("🔒 Checkout initialized! Click link below to complete payment.")
-                            st.markdown(
-                                f'<a href="{auth_url}" target="_blank" style="display:inline-block; background: #1E5631; color:white; padding:12px 24px; border-radius:8px; text-decoration:none; font-weight:bold;">Proceed to Paystack Checkout ➔</a>',
-                                unsafe_allow_html=True,
-                            )
-
-            st.markdown("</div>", unsafe_allow_html=True)
-    except Exception as e:
-        st.error(f"Marketplace error: {str(e)}")
-
-elif navigation == "📦 My Orders & Escrow":
-    st.subheader("📦 My Escrow Orders & Tracking")
-    try:
-        user_orders = supabase.table("transactions").select("*").eq("buyer", st.session_state.username).execute().data
-
-        if not user_orders:
-            st.info("There are no active orders.")
-        else:
-            df_orders = pd.DataFrame(user_orders)
-            st.dataframe(df_orders, use_container_width=True)
-
-            for order in user_orders:
-                st.markdown('<div class="product-card">', unsafe_allow_html=True)
-                st.markdown(f"### Order ID: `{order['id']}` - {order.get('item', 'Farm Produce')}")
-                st.write(f"**Quantity Purchased:** {order.get('quantity_bought', 1)} units")
-                st.write(f"**Delivery Destination:** {order.get('delivery_address', 'N/A')}")
-                st.write(f"**Verification Status:** `{order.get('status', 'PENDING')}`")
-                st.write(f"**Freight Paid:** ₦{float(order.get('freight', 0)):,.2f}")
-                st.write(f"**Total Amount Paid:** ₦{float(order.get('total_paid', 0)):,.2f}")
-                st.write(f"**Paystack Reference:** `{order.get('paystack_ref', 'N/A')}`")
-                st.markdown("</div>", unsafe_allow_html=True)
-    except Exception as e:
-        st.info("There are no active orders.")
-
-# ==============================================================================
-# 10. FARMER PRODUCT MANAGEMENT (FULL EDITABLE CATEGORY & DETAILS)
-# ==============================================================================
-elif navigation == "➕ Add New Product":
-    st.subheader("🚜 Post New Farm Produce Listing")
-
+with st.sidebar:
     st.markdown(
-        """
-        <div class="warning-banner">
-            <h4>⚠️ ATTENTION FARMERS / PRODUCERS:</h4>
-            <p>Please double-check and input <b>ACCURATE values</b> for standard Unit Price, Available Units, and Individual Unit Weight (KG).</p>
-            <ul>
-                <li><b>Unit Weight (KG):</b> Logistics quotes depend directly on weight calculations. Inputting incorrect weights will cause haulage dispute and shipping cancellation.</li>
-                <li><b>Stock Quantity:</b> Inventory updates automatically as buyers complete payment. Ensure your quantity reflects real produce ready for pickup.</li>
-            </ul>
+        f"""
+        <div class="user-profile-badge">
+            <div style="font-weight: 800; font-size: 1.05rem; color: #1E293B;">👤 {st.session_state.username}</div>
+            <div style="font-size: 0.85rem; color: #64748B;">Role: <b>{st.session_state.user_role}</b></div>
+            <div style="font-size: 0.8rem; color: #94A3B8;">📞 {st.session_state.phone or 'N/A'}</div>
         </div>
         """,
         unsafe_allow_html=True,
     )
 
-    with st.form("add_product_form"):
-        farming_cat = st.selectbox("Agricultural Sector / Category", AGRI_CATEGORIES)
-        prod_scale = st.selectbox("Supply Scale Category", ["Large Scale / Commercial Wholesale", "Small Scale / Retail"])
-        title = st.text_input("Product Title (e.g. 50kg Bags of White Maize)")
+    if st.button("🔒 Sign Out"):
+        supabase.auth.sign_out()
+        st.session_state.authenticated = False
+        st.session_state.user_role = None
+        st.rerun()
 
-        c1, c2, c3 = st.columns(3)
-        with c1:
-            price = st.number_input("Unit Price (₦)", min_value=1000, value=50000, step=5000)
-        with c2:
-            quantity = st.number_input("Available Stock Quantity (Units)", min_value=1, value=50)
-        with c3:
-            unit_weight = st.number_input("Accurate Weight Per Unit (KG)", min_value=0.5, value=50.0, step=1.0)
+    st.divider()
 
-        location = st.text_input("Farm Location / Pickup State", value="Ogun State")
-        uploaded_file = st.file_uploader("Upload Clear Produce Photo", type=["jpg", "jpeg", "png"])
-        submitted = st.form_submit_button("PUBLISH PRODUCT TO MARKETPLACE 🚀")
-
-        if submitted:
-            if not uploaded_file:
-                st.error("⚠️ Please attach a clear photo of your farm produce.")
-            else:
-                img_bytes = uploaded_file.read()
-                img = Image.open(io.BytesIO(img_bytes))
-                is_valid, msg = verify_farm_photo(img)
-
-                if not is_valid:
-                    st.error(f"⚠️ {msg}")
-                elif not title:
-                    st.error("Please enter a product title.")
-                else:
-                    img_url = upload_product_photo(img_bytes, uploaded_file.name)
-                    new_id = f"FTN-{random.randint(100, 999)}"
-
-                    product_data = {
-                        "id": new_id,
-                        "seller": st.session_state.username,
-                        "category": farming_cat,
-                        "scale": prod_scale,
-                        "item": title,
-                        "location": location,
-                        "price_ngn": price,
-                        "quantity": quantity,
-                        "unit_weight_kg": unit_weight,
-                        "image_url": img_url,
-                    }
-                    supabase.table("listings").insert(product_data).execute()
-                    st.success("🎉 Product listing published successfully!")
-
-elif navigation == "📦 My Active Products":
-    st.subheader("🚜 Manage My Farm Listings")
-
-    if st.session_state.deleted_msg:
-        st.success(st.session_state.deleted_msg)
-        st.session_state.deleted_msg = None
-
-    if st.session_state.editing_listing_id:
-        st.markdown("### ✏️ Edit Product Listing")
-        try:
-            edit_item = supabase.table("listings").select("*").eq("id", st.session_state.editing_listing_id).execute().data
-            if edit_item:
-                item_data = edit_item[0]
-                
-                current_cat = item_data.get("category", AGRI_CATEGORIES[0])
-                cat_index = AGRI_CATEGORIES.index(current_cat) if current_cat in AGRI_CATEGORIES else 0
-                
-                current_scale = item_data.get("scale", "Large Scale / Commercial Wholesale")
-                scale_options = ["Large Scale / Commercial Wholesale", "Small Scale / Retail"]
-                scale_index = scale_options.index(current_scale) if current_scale in scale_options else 0
-
-                with st.form("edit_product_form"):
-                    e_category = st.selectbox("Agricultural Sector / Category", AGRI_CATEGORIES, index=cat_index)
-                    e_scale = st.selectbox("Supply Scale Category", scale_options, index=scale_index)
-                    e_title = st.text_input("Product Title", value=item_data.get("item", ""))
-                    
-                    c1, c2, c3 = st.columns(3)
-                    with c1:
-                        e_price = st.number_input("Unit Price (₦)", value=float(item_data.get("price_ngn", 1000)), step=1000.0)
-                    with c2:
-                        e_quantity = st.number_input("Available Stock Quantity", value=int(item_data.get("quantity", 1)), min_value=0)
-                    with c3:
-                        e_weight = st.number_input("Unit Weight (KG)", value=float(item_data.get("unit_weight_kg", 50.0)), min_value=0.1)
-
-                    e_location = st.text_input("Farm Pickup Location / State", value=item_data.get("location", ""))
-
-                    c_save, c_cancel = st.columns(2)
-                    save_changes = c_save.form_submit_button("💾 SAVE CHANGES")
-                    cancel_changes = c_cancel.form_submit_button("❌ CANCEL")
-
-                    if save_changes:
-                        updated_fields = {
-                            "category": e_category,
-                            "scale": e_scale,
-                            "item": e_title,
-                            "price_ngn": e_price,
-                            "location": e_location,
-                            "quantity": e_quantity,
-                            "unit_weight_kg": e_weight,
-                        }
-                        supabase.table("listings").update(updated_fields).eq("id", item_data["id"]).execute()
-                        st.session_state.editing_listing_id = None
-                        st.success("✅ Product updated successfully!")
-                        st.rerun()
-
-                    if cancel_changes:
-                        st.session_state.editing_listing_id = None
-                        st.rerun()
-        except Exception as e:
-            st.error(f"Error editing product: {str(e)}")
-
+    if st.session_state.user_role == "Farmer":
+        nav_options = ["🛒 Produce Marketplace", "💰 Farmer Sales & Escrow", "📦 Manage Farm Listings", "💬 Support & AI Helpdesk"]
+    elif st.session_state.user_role == "Buyer":
+        nav_options = ["🛒 Produce Marketplace", "📦 My Orders & Escrow", "💬 Support & AI Helpdesk"]
     else:
-        try:
-            my_items = supabase.table("listings").select("*").eq("seller", st.session_state.username).execute().data
+        nav_options = ["📈 Revenue Dashboard", "🛒 Produce Marketplace", "💬 Support & AI Helpdesk"]
 
-            if my_items:
-                for item in my_items:
-                    st.markdown('<div class="product-card">', unsafe_allow_html=True)
-                    col1, col2 = st.columns([1.2, 2])
-
-                    with col1:
-                        render_product_image(item.get("image_url"))
-
-                    with col2:
-                        st.markdown(f"### {item['item']}")
-                        st.write(f"**Sector:** `{item.get('category')}`")
-                        st.write(f"**Unit Price:** ₦{float(item['price_ngn']):,.2f}")
-                        st.write(f"📍 **Location:** {item.get('location', 'N/A')} | **Available Units:** {item.get('quantity', 0)} | **Unit Weight:** {item.get('unit_weight_kg', 0)} KG")
-
-                        b_col1, b_col2 = st.columns(2)
-                        with b_col1:
-                            if st.button("✏️ Edit Product", key=f"edit_{item['id']}"):
-                                st.session_state.editing_listing_id = item["id"]
-                                st.rerun()
-
-                        with b_col2:
-                            if st.button("🗑️ Delete Product", key=f"del_{item['id']}"):
-                                try:
-                                    supabase.table("transactions").delete().eq("listing_id", item["id"]).execute()
-                                    supabase.table("listings").delete().eq("id", item["id"]).execute()
-
-                                    st.session_state.deleted_msg = f"✅ Product '{item['item']}' was permanently deleted."
-                                    st.rerun()
-                                except Exception as del_err:
-                                    st.error(f"Failed to delete product: {str(del_err)}")
-
-                    st.markdown("</div>", unsafe_allow_html=True)
-            else:
-                st.info("You currently have no active listings. Select 'Add New Product' to post your produce!")
-        except Exception as e:
-            st.error(f"Error fetching active products: {str(e)}")
+    navigation = st.radio("Navigation Menu", nav_options)
 
 # ==============================================================================
-# 11. ENHANCED AI SUPPORT & DISPUTE HELPDESK MODULE
+# 7. PRODUCT DETAIL & BUY MODAL (DIALOG)
+# ==============================================================================
+@st.dialog("🌾 Produce Details & Escrow Purchase")
+def show_product_detail_modal(product_id):
+    try:
+        res = supabase.table("listings").select("*").eq("id", product_id).execute().data
+        if not res:
+            st.error("Product not found.")
+            return
+
+        item = res[0]
+        col1, col2 = st.columns([1, 1.2])
+
+        with col1:
+            render_product_image(item.get("image_url"))
+            st.markdown(f"**Pickup Origin:** {item.get('location')}")
+            st.markdown(f"**Producer:** `{item.get('seller')}`")
+
+        with col2:
+            st.markdown(f"### {item['item']}")
+            st.caption(f"Sector: {item.get('category')}")
+            
+            unit_price = float(item["price_ngn"])
+            available_stock = int(item.get("quantity", 1))
+            unit_weight = float(item.get("unit_weight_kg", 50.0))
+
+            st.markdown(f"### ₦{unit_price:,.2f} <span style='font-size: 0.9rem; color: grey;'>/ unit</span>", unsafe_allow_html=True)
+            st.markdown(f"🟢 Stock: **{available_stock} units** ({unit_weight} kg/unit)")
+
+            desired_qty = st.number_input(
+                "Order Quantity", min_value=1, max_value=max(available_stock, 1), value=1, step=1, key="modal_qty"
+            )
+
+            product_subtotal = unit_price * desired_qty
+            platform_fee = product_subtotal * 0.10
+            total_weight_kg = unit_weight * desired_qty
+
+            st.markdown(f"**Subtotal ({total_weight_kg:,.1f} kg):** ₦{product_subtotal:,.2f}")
+            st.markdown(f"**Platform Escrow Fee (10%):** ₦{platform_fee:,.2f}")
+
+        st.divider()
+        st.markdown("#### 🚚 Step 1: Delivery Destination & Freight Quote")
+
+        d_col1, d_col2 = st.columns([1, 2])
+        with d_col1:
+            delivery_state = st.selectbox("Destination State", NIGERIAN_STATES, index=24, key="modal_state")
+        with d_col2:
+            delivery_street = st.text_input("Exact Delivery Address", placeholder="Street, City, Landmark", key="modal_street")
+
+        full_address = f"{delivery_street.strip()}, {delivery_state}" if delivery_street.strip() else delivery_state
+
+        selected_partner = st.selectbox("Freight Carrier Partner", list(LOGISTICS_PARTNERS.keys()), key="modal_carrier")
+        partner_info = LOGISTICS_PARTNERS[selected_partner]
+
+        wa_msg_text = (
+            f"Hello {selected_partner},\n\n"
+            f"I am purchasing produce on FEED THE NATIONS:\n"
+            f"• Produce: {item['item']}\n"
+            f"• Quantity: {desired_qty} units ({total_weight_kg} kg)\n"
+            f"• Pickup Farm Location: {item['location']}\n"
+            f"• Destination: {full_address}\n\n"
+            f"Please provide an official freight quote."
+        )
+        wa_url = f"https://wa.me/{partner_info['whatsapp']}?text={urllib.parse.quote(wa_msg_text)}"
+        st.markdown(f'<a href="{wa_url}" target="_blank" class="whatsapp-btn">💬 Request Freight Quote on WhatsApp</a>', unsafe_allow_html=True)
+
+        st.markdown("#### 🚚 Step 2: Agreed Freight & Checkout")
+        agreed_freight = st.number_input("Enter Agreed Freight Fee (₦)", min_value=0, value=25000, step=5000, key="modal_freight")
+
+        grand_total = product_subtotal + platform_fee + agreed_freight
+        st.markdown(f"### **Total Amount: ₦{grand_total:,.2f}**")
+
+        if st.button("PROCEED TO PAYSTACK CHECKOUT 💳", key="modal_checkout"):
+            if not delivery_street.strip():
+                st.error("⚠️ Please enter a delivery address.")
+            else:
+                ref = f"FTN-TX-{random.randint(100000, 999999)}"
+                tx_record = {
+                    "id": ref,
+                    "listing_id": item["id"],
+                    "category": item["category"],
+                    "item": item["item"],
+                    "quantity_bought": desired_qty,
+                    "amount": product_subtotal,
+                    "commission": platform_fee,
+                    "freight": agreed_freight,
+                    "total_paid": grand_total,
+                    "buyer": st.session_state.username,
+                    "delivery_address": full_address,
+                    "status": "PAYMENT_INITIATED",
+                    "paystack_ref": ref,
+                }
+                supabase.table("transactions").insert(tx_record).execute()
+                pay_resp = initialize_paystack_payment(st.session_state.email, grand_total, ref)
+
+                if pay_resp.get("status"):
+                    auth_url = pay_resp["data"]["authorization_url"]
+                    st.success("Checkout created! Click button below to complete payment.")
+                    st.markdown(
+                        f'<a href="{auth_url}" target="_blank" style="display:block; text-align:center; background: #1B4D3E; color:white; padding:12px; border-radius:8px; text-decoration:none; font-weight:bold;">Pay via Paystack ➔</a>',
+                        unsafe_allow_html=True,
+                    )
+
+    except Exception as e:
+        st.error(f"Error opening modal: {e}")
+
+# ==============================================================================
+# 8. MARKETPLACE VIEW (CLEAN COMPACT GRID)
+# ==============================================================================
+if navigation == "🛒 Produce Marketplace":
+    st.subheader("🛒 Farm Produce Marketplace")
+
+    f1, f2 = st.columns([1, 1])
+    with f1:
+        category_filter = st.selectbox("Category Filter", ["All Categories"] + AGRI_CATEGORIES)
+    with f2:
+        scale_filter = st.selectbox("Scale Filter", ["All Scales", "Large Scale / Commercial Wholesale", "Small Scale / Retail"])
+
+    st.divider()
+
+    try:
+        query = supabase.table("listings").select("*").gt("quantity", 0)
+        if category_filter != "All Categories":
+            query = query.eq("category", category_filter)
+        if scale_filter != "All Scales":
+            query = query.eq("scale", scale_filter)
+
+        listings = query.execute().data
+
+        if not listings:
+            st.info("No active produce listings available.")
+        else:
+            # Grid Layout: 3 Columns for Clean Visual Cards
+            cols_per_row = 3
+            for i in range(0, len(listings), cols_per_row):
+                row_items = listings[i:i + cols_per_row]
+                grid_cols = st.columns(cols_per_row)
+
+                for idx, item in enumerate(row_items):
+                    with grid_cols[idx]:
+                        with st.container():
+                            st.markdown('<div class="product-grid-card">', unsafe_allow_html=True)
+                            render_product_image(item.get("image_url"))
+                            
+                            st.markdown(f"#### {item['item']}")
+                            st.caption(f"📍 {item.get('location')} | Seller: {item['seller']}")
+                            
+                            unit_price = float(item["price_ngn"])
+                            st.markdown(f"**₦{unit_price:,.2f}** / unit")
+                            st.markdown(f"Stock: `{item.get('quantity', 0)} units` ({item.get('unit_weight_kg', 50)} kg)")
+
+                            if st.button("View Details & Buy ➔", key=f"btn_view_{item['id']}"):
+                                show_product_detail_modal(item["id"])
+
+                            st.markdown("</div>", unsafe_allow_html=True)
+
+    except Exception as e:
+        st.error(f"Marketplace error: {e}")
+
+# ==============================================================================
+# 9. FARMER LISTINGS MANAGEMENT (TABBED INTERFACE)
+# ==============================================================================
+elif navigation == "📦 Manage Farm Listings":
+    st.subheader("📦 Farm Produce Inventory")
+
+    tab_active, tab_add = st.tabs(["🟢 Active Listings", "➕ Post New Produce"])
+
+    with tab_active:
+        try:
+            my_items = supabase.table("listings").select("*").eq("seller", st.session_state.username).execute().data
+            if not my_items:
+                st.info("You haven't listed any produce yet.")
+            else:
+                for item in my_items:
+                    with st.container(border=True):
+                        c1, c2, c3 = st.columns([1, 2, 1])
+                        with c1:
+                            render_product_image(item.get("image_url"))
+                        with c2:
+                            st.markdown(f"### {item['item']}")
+                            st.write(f"**Category:** {item.get('category')}")
+                            st.write(f"**Price:** ₦{float(item['price_ngn']):,.2f} | **Stock:** {item.get('quantity')} units")
+                            st.write(f"**Location:** {item.get('location')}")
+                        with c3:
+                            if st.button("🗑️ Delete Listing", key=f"del_{item['id']}"):
+                                supabase.table("transactions").delete().eq("listing_id", item["id"]).execute()
+                                supabase.table("listings").delete().eq("id", item["id"]).execute()
+                                st.success("Listing removed.")
+                                st.rerun()
+        except Exception as e:
+            st.error(f"Error loading listings: {e}")
+
+    with tab_add:
+        with st.form("add_product_form", clear_on_submit=True):
+            farming_cat = st.selectbox("Category", AGRI_CATEGORIES)
+            prod_scale = st.selectbox("Supply Scale", ["Large Scale / Commercial Wholesale", "Small Scale / Retail"])
+            title = st.text_input("Product Title (e.g., 50kg Bags of White Maize)")
+
+            c1, c2, c3 = st.columns(3)
+            with c1:
+                price = st.number_input("Unit Price (₦)", min_value=1000, value=50000, step=1000)
+            with c2:
+                quantity = st.number_input("Available Stock Quantity", min_value=1, value=50)
+            with c3:
+                unit_weight = st.number_input("Unit Weight (KG)", min_value=0.5, value=50.0, step=1.0)
+
+            location = st.text_input("Farm Pickup Location", value="Ogun State")
+            uploaded_file = st.file_uploader("Upload Produce Photo", type=["jpg", "jpeg", "png"])
+            submit_product = st.form_submit_button("PUBLISH PRODUCT TO MARKETPLACE 🚀")
+
+            if submit_product:
+                if not uploaded_file:
+                    st.error("Please attach a product photo.")
+                elif not title:
+                    st.error("Please enter a title.")
+                else:
+                    img_bytes = uploaded_file.read()
+                    img = Image.open(io.BytesIO(img_bytes))
+                    is_valid, msg = verify_farm_photo(img)
+
+                    if not is_valid:
+                        st.error(f"Image issue: {msg}")
+                    else:
+                        img_url = upload_product_photo(img_bytes, uploaded_file.name)
+                        new_id = f"FTN-{random.randint(1000, 9999)}"
+                        product_data = {
+                            "id": new_id,
+                            "seller": st.session_state.username,
+                            "category": farming_cat,
+                            "scale": prod_scale,
+                            "item": title,
+                            "location": location,
+                            "price_ngn": price,
+                            "quantity": quantity,
+                            "unit_weight_kg": unit_weight,
+                            "image_url": img_url,
+                        }
+                        supabase.table("listings").insert(product_data).execute()
+                        st.success("🎉 Produce listed successfully!")
+
+# ==============================================================================
+# 10. FARMER SALES & ESCROW LEDGER
+# ==============================================================================
+elif navigation == "💰 Farmer Sales & Escrow":
+    st.subheader("💰 Confirmed Sales & Escrow Orders")
+    try:
+        farmer_listings = supabase.table("listings").select("id").eq("seller", st.session_state.username).execute().data
+        if farmer_listings:
+            f_ids = [l["id"] for l in farmer_listings]
+            tx_res = supabase.table("transactions").select("*").in_("listing_id", f_ids).eq("status", "PAID_VERIFIED").execute().data
+
+            if tx_res:
+                df_tx = pd.DataFrame(tx_res)
+                m1, m2, m3 = st.columns(3)
+                with m1:
+                    st.metric("Total Sales Value", f"₦{df_tx['amount'].sum():,.2f}")
+                with m2:
+                    st.metric("Escrow Secured", f"₦{df_tx['amount'].sum():,.2f}")
+                with m3:
+                    st.metric("Total Verified Orders", len(tx_res))
+
+                st.divider()
+                st.dataframe(df_tx, use_container_width=True)
+            else:
+                st.info("No verified purchases recorded yet.")
+        else:
+            st.info("No active listings found.")
+    except Exception as e:
+        st.error(f"Error loading sales: {e}")
+
+# ==============================================================================
+# 11. BUYER ORDERS VIEW
+# ==============================================================================
+elif navigation == "📦 My Orders & Escrow":
+    st.subheader("📦 My Orders & Escrow Status")
+    try:
+        orders = supabase.table("transactions").select("*").eq("buyer", st.session_state.username).execute().data
+        if not orders:
+            st.info("No orders found.")
+        else:
+            df_orders = pd.DataFrame(orders)
+            st.dataframe(df_orders, use_container_width=True)
+    except Exception as e:
+        st.error(f"Error loading orders: {e}")
+
+# ==============================================================================
+# 12. FOUNDER REVENUE DASHBOARD (ADMIN)
+# ==============================================================================
+elif navigation == "📈 Revenue Dashboard":
+    st.subheader("📈 Marketplace GMV & Platform Revenue")
+    try:
+        tx_data = supabase.table("transactions").select("*").eq("status", "PAID_VERIFIED").execute().data
+        if tx_data:
+            df_tx = pd.DataFrame(tx_data)
+            m1, m2, m3 = st.columns(3)
+            with m1:
+                st.metric("Gross Volume (GMV)", f"₦{df_tx['amount'].sum():,.2f}")
+            with m2:
+                st.metric("Platform Revenue (10%)", f"₦{df_tx['commission'].sum():,.2f}")
+            with m3:
+                st.metric("Completed Transactions", len(df_tx))
+
+            st.divider()
+            st.dataframe(df_tx, use_container_width=True)
+        else:
+            st.info("No completed verified transactions yet.")
+    except Exception as e:
+        st.error(f"Error loading revenue metrics: {e}")
+
+# ==============================================================================
+# 13. SUPPORT & AI HELPDESK MODULE
 # ==============================================================================
 elif navigation == "💬 Support & AI Helpdesk":
     st.subheader("💬 AI Dispute Support & Helpdesk")
-    st.caption("Submit your inquiry or complaint below. Our AI dispute assistant will analyze your request instantly.")
 
-    col1, col2 = st.columns([1, 1], gap="medium")
+    col1, col2 = st.columns([1, 1], gap="large")
 
     with col1:
-        st.markdown("### 📝 Complaint & Inquiry Portal")
-        with st.form(key="support_ticket_form", clear_on_submit=True):
-            message_input = st.text_area(
-                "Describe your issue, buyer dispute, or order inquiry in detail...",
-                height=160,
-                placeholder="e.g., I am a farmer and have an issue with a buyer who hasn't confirmed delivery for Order #104..."
-            )
-            submit_btn = st.form_submit_button("SUBMIT TICKET TO AI HELPDESK 🚀")
+        st.markdown("### 📝 Submit Ticket")
+        with st.form("support_ticket_form", clear_on_submit=True):
+            msg_input = st.text_area("Describe your issue or order inquiry...", height=140)
+            submit_ticket = st.form_submit_button("SEND TO AI SUPPORT 🚀")
 
-        if submit_btn:
-            if not message_input.strip():
-                st.warning("Please enter your message before submitting.")
-            else:
-                try:
-                    # Generate personalized and action-oriented AI reply using user's real name
-                    ai_reply = generate_ai_support_response(
-                        st.session_state.username,
-                        st.session_state.user_role,
-                        message_input
-                    )
-
-                    payload = {
-                        "user_email": st.session_state.email,
-                        "user_role": st.session_state.user_role,
-                        "message": message_input.strip(),
-                        "response": ai_reply,
-                        "status": "In Progress"
-                    }
-                    supabase.table("support_messages").insert(payload).execute()
-                    st.success("Ticket submitted! Instant AI troubleshooting response generated below.")
-                    st.rerun()
-                except Exception as e:
-                    st.error(f"Error submitting message: {e}")
+        if submit_ticket:
+            if msg_input.strip():
+                ai_reply = generate_ai_support_response(st.session_state.username, st.session_state.user_role, msg_input)
+                payload = {
+                    "user_email": st.session_state.email,
+                    "user_role": st.session_state.user_role,
+                    "message": msg_input.strip(),
+                    "response": ai_reply,
+                    "status": "In Progress"
+                }
+                supabase.table("support_messages").insert(payload).execute()
+                st.success("Ticket submitted! Check history for AI response.")
+                st.rerun()
 
     with col2:
-        st.markdown("### 📜 Support Conversation History")
+        st.markdown("### 📜 Support History")
         try:
-            res = (
+            tickets = (
                 supabase.table("support_messages")
                 .select("*")
                 .eq("user_email", st.session_state.email)
                 .order("created_at", desc=True)
                 .execute()
+                .data
             )
-            tickets = res.data
 
             if not tickets:
-                st.info("No active or past support conversations found.")
+                st.info("No previous support chats.")
             else:
                 for t in tickets:
-                    status_str = t.get("status", "In Progress")
-                    badge = "🟢 Resolved" if status_str == "Resolved" else "🟡 In Progress"
-                    created_date = str(t.get("created_at", ""))[:10] if t.get("created_at") else "Recent"
-                    
-                    title_str = f"Ticket #{t['id']} | Status: {badge} ({created_date})"
-                    
-                    with st.expander(title_str, expanded=True):
+                    with st.expander(f"Ticket #{t['id']} | {t.get('created_at', '')[:10]}", expanded=True):
                         st.markdown(
-                            f'<div class="user-msg-box"><b>👤 {st.session_state.username} ({t.get("user_role", "User")}):</b><br>{t["message"]}</div>',
+                            f'<div class="user-msg-box"><b>👤 {st.session_state.username}:</b><br>{t["message"]}</div>',
                             unsafe_allow_html=True
                         )
                         if t.get("response"):
                             st.markdown(
-                                f'<div class="ai-msg-box"><b>🤖 Feed The Nations AI Support:</b><br>{t["response"]}</div>',
+                                f'<div class="ai-msg-box"><b>🤖 Feed The Nations AI:</b><br>{t["response"]}</div>',
                                 unsafe_allow_html=True
                             )
-                        else:
-                            st.caption("⌛ Awaiting manual review by Feed The Nations Admin...")
-
         except Exception as e:
-            st.error(f"Error loading chat history: {e}")
-
-# ==============================================================================
-# 12. PLATFORM ANNOUNCEMENTS MODULE
-# ==============================================================================
-elif navigation == "📢 Platform Announcements":
-    st.subheader("📢 Platform Announcements")
-    st.divider()
-
-    if st.session_state.user_role == "Admin":
-        with st.expander("📌 Post Platform Announcement", expanded=False):
-            with st.form("announcement_form", clear_on_submit=True):
-                ann_title = st.text_input("Announcement Title")
-                ann_content = st.text_area("Content")
-                submit_ann = st.form_submit_button("Post Announcement 📣")
-
-                if submit_ann:
-                    if ann_title and ann_content:
-                        try:
-                            payload = {
-                                "title": ann_title,
-                                "content": ann_content,
-                                "author": f"FEED THE NATIONS Admin ({st.session_state.email})"
-                            }
-                            supabase.table("platform_announcements").insert(payload).execute()
-                            st.success("Announcement published!")
-                            st.rerun()
-                        except Exception as e:
-                            st.error(f"Failed to publish announcement: {e}")
-                    else:
-                        st.warning("Please fill in both title and content.")
-
-    try:
-        res = supabase.table("platform_announcements").select("*").order("created_at", desc=True).execute()
-        announcements = res.data
-
-        if not announcements:
-            st.info("No platform announcements published yet.")
-        else:
-            for a in announcements:
-                with st.container(border=True):
-                    st.markdown(f"### {a.get('title')}")
-                    st.caption(f"Posted on {str(a.get('created_at', ''))[:10]} by {a.get('author', 'Admin')}")
-                    st.write(a.get('content'))
-    except Exception as e:
-        st.error(f"Error loading announcements: {e}")
+            st.error(f"Error loading history: {e}")
