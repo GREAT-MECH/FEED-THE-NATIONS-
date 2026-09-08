@@ -13,11 +13,11 @@ from supabase import Client, create_client
 # 🗝️ CONFIGURATION & API KEYS
 # ==============================================================================
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://rewewstbknigolxiozwp.supabase.co")
+
 SUPABASE_KEY = os.environ.get(
     "SUPABASE_KEY",
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJld2V3c3Ria25pZ29seGlvendwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgzNDU5MTUsImV4cCI6MjEwMzkyMTkxNX0.s1reBkT9vmYSKGM0yPJTJiAWxT0xxdO446GVOI6ib3U",
 )
-
 
 
 PAYSTACK_SECRET_KEY = os.environ.get(
@@ -170,6 +170,46 @@ st.markdown(
         margin: 0 0 6px 0;
         color: #B45309;
         font-weight: 800;
+    }
+
+    .alert-danger-box {
+        background-color: #FEF2F2;
+        border-left: 5px solid #EF4444;
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 16px;
+        color: #991B1B;
+    }
+
+    .alert-success-box {
+        background-color: #F0FDF4;
+        border-left: 5px solid #22C55E;
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 16px;
+        color: #166534;
+    }
+
+    /* BROWN SIGN-OFF BUTTON STYLING */
+    div.stButton > button.brown-signoff-btn {
+        background: linear-gradient(135deg, #7F4F24 0%, #582F0E 100%) !important;
+        color: #FFFFFF !important;
+        font-weight: 800 !important;
+        font-size: 1rem !important;
+        border-radius: 12px !important;
+        padding: 14px 20px !important;
+        border: 2px solid #3D200A !important;
+        box-shadow: 0 6px 18px rgba(88, 47, 14, 0.35) !important;
+        transition: all 0.25s ease-in-out !important;
+        width: 100%;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    div.stButton > button.brown-signoff-btn:hover {
+        background: linear-gradient(135deg, #935E31 0%, #6F3C13 100%) !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 10px 22px rgba(88, 47, 14, 0.45) !important;
     }
 
     section[data-testid="stSidebar"] {
@@ -383,7 +423,7 @@ def verify_paystack_payment(reference):
         return False, str(e)
 
 # ==============================================================================
-# 🤖 AI GENERATION FUNCTION (GEMINI API WITH FALLBACK)
+# 3. AI HELP DESK
 # ==============================================================================
 def generate_ai_support_response(user_name: str, user_role: str, message: str) -> str:
     name = user_name if user_name else "Valued User"
@@ -402,43 +442,29 @@ def generate_ai_support_response(user_name: str, user_role: str, message: str) -
             response = requests.post(url, json=payload, headers=headers, timeout=10)
             if response.status_code == 200:
                 res_data = response.json()
-                reply = res_data["candidates"][0]["content"]["parts"][0]["text"]
-                return reply
+                return res_data["candidates"][0]["content"]["parts"][0]["text"]
         except Exception:
             pass
 
     msg = message.lower().strip()
     if any(k in msg for k in ["buyer", "customer", "client"]):
         return (
-            f"Hello **{name}**! I see you have an inquiry regarding a buyer transaction.\n\n"
-            "**Action Steps:**\n"
-            "1. **Order Reference:** Provide the Order ID for this transaction.\n"
-            "2. **Escrow Status:** Check if payment is marked as `PAID_VERIFIED` on your dashboard.\n"
-            "3. **Dispatch Verification:** Attach waybill or freight receipts here if a dispute is active.\n\n"
-            "Our Trust & Safety Admin team is keeping escrow funds secured while this is reviewed."
+            f"Hello **{name}**! Regarding your buyer transaction:\n"
+            "• Escrow funds are secured safely by the platform.\n"
+            "• Both Farmer and Buyer must sign off before funds unlock to prevent fraud."
         )
-    elif any(k in msg for k in ["escrow", "payment", "fund", "money", "pay", "refund", "withdraw"]):
+    elif any(k in msg for k in ["escrow", "payment", "fund", "money", "pay", "withdraw"]):
         return (
-            f"Hello **{name}**! Regarding your escrow/payout inquiry:\n\n"
-            "• Payments remain locked in Paystack Escrow until delivery is verified by the logistics carrier.\n"
-            "• Once verified as `DELIVERED_VERIFIED`, payouts can be withdrawn to your connected bank account via Paystack."
-        )
-    elif any(k in msg for k in ["deliver", "logistics", "ship", "transit", "dispatch", "delay"]):
-        return (
-            f"Hi **{name}**! For shipping and logistics assistance:\n\n"
-            "1. State the logistics partner selected (e.g. GIG Logistics, Kobo360).\n"
-            "2. Provide your waybill tracking number.\n"
-            "Our Freight Operations team will contact the carrier directly."
+            f"Hello **{name}**! Regarding your escrow status:\n"
+            "• Farmer signs off when produce is dispatched.\n"
+            "• Buyer signs off upon inspecting delivered goods.\n"
+            "• Funds unlock automatically to the Farmer Wallet once both confirmations are complete."
         )
     else:
-        return (
-            f"Hello **{name}**! Thank you for contacting Support.\n\n"
-            f"Re: *\"{message}\"*\n\n"
-            "Please provide your **Order ID** or **Product Title** so we can assist you right away."
-        )
+        return f"Hello **{name}**! Re: *\"{message}\"*\nOur support team is reviewing your ticket."
 
 # ==============================================================================
-# 3. SESSION STATE & PAYSTACK CALLBACK
+# 4. SESSION STATE & PAYSTACK CALLBACK
 # ==============================================================================
 for key, default in [
     ("authenticated", False),
@@ -459,19 +485,24 @@ if "reference" in query_params or "trxref" in query_params:
     is_success, _ = verify_paystack_payment(pay_ref)
     if is_success:
         existing_tx = supabase.table("transactions").select("*").eq("paystack_ref", pay_ref).execute().data
-        if existing_tx and existing_tx[0].get("status") != "PAID_VERIFIED":
+        if existing_tx and existing_tx[0].get("status") not in ["PAID_VERIFIED", "FARMER_DISPATCHED", "DELIVERED_VERIFIED"]:
             tx_item = existing_tx[0]
-            supabase.table("transactions").update({"status": "PAID_VERIFIED"}).eq("paystack_ref", pay_ref).execute()
+            supabase.table("transactions").update({
+                "status": "PAID_VERIFIED",
+                "farmer_signoff": False,
+                "buyer_signoff": False
+            }).eq("paystack_ref", pay_ref).execute()
+            
             listing_res = supabase.table("listings").select("quantity").eq("id", tx_item["listing_id"]).execute().data
             if listing_res:
                 cur_qty = int(listing_res[0].get("quantity", 0))
                 bought_qty = int(tx_item.get("quantity_bought", 1))
                 supabase.table("listings").update({"quantity": max(0, cur_qty - bought_qty)}).eq("id", tx_item["listing_id"]).execute()
-            st.success("🎉 Payment verified! Escrow funds held until logistics delivery confirmation.")
+            st.success("🎉 Payment verified! Escrow funds locked safely until dual sign-off.")
         st.query_params.clear()
 
 # ==============================================================================
-# 4. BRAND HEADER
+# 5. BRAND HEADER
 # ==============================================================================
 st.markdown(
     """
@@ -486,7 +517,7 @@ st.markdown(
 )
 
 # ==============================================================================
-# 5. AUTHENTICATION PORTAL
+# 6. AUTHENTICATION PORTAL
 # ==============================================================================
 if not st.session_state.authenticated:
     c_auth, _ = st.columns([1, 0.1])
@@ -544,7 +575,7 @@ if not st.session_state.authenticated:
     st.stop()
 
 # ==============================================================================
-# 6. SIDEBAR NAVIGATION
+# 7. SIDEBAR NAVIGATION
 # ==============================================================================
 with st.sidebar:
     st.markdown(
@@ -576,7 +607,7 @@ with st.sidebar:
     navigation = st.radio("Navigation Menu", nav_options)
 
 # ==============================================================================
-# 7. PRODUCT DETAIL & BUY MODAL
+# 8. PRODUCT DETAIL & BUY MODAL
 # ==============================================================================
 @st.dialog("🌾 Produce Details & Escrow Purchase")
 def show_product_detail_modal(product_id):
@@ -668,6 +699,8 @@ def show_product_detail_modal(product_id):
                     "delivery_address": full_address,
                     "status": "PAYMENT_INITIATED",
                     "paystack_ref": ref,
+                    "farmer_signoff": False,
+                    "buyer_signoff": False,
                 }
                 supabase.table("transactions").insert(tx_record).execute()
                 pay_resp = initialize_paystack_payment(st.session_state.email, grand_total, ref)
@@ -684,7 +717,7 @@ def show_product_detail_modal(product_id):
         st.error(f"Error opening modal: {e}")
 
 # ==============================================================================
-# 8. MARKETPLACE VIEW
+# 9. MARKETPLACE VIEW
 # ==============================================================================
 if navigation == "🛒 Produce Marketplace":
     st.subheader("🛒 Farm Produce Marketplace")
@@ -736,7 +769,7 @@ if navigation == "🛒 Produce Marketplace":
         st.error(f"Marketplace error: {e}")
 
 # ==============================================================================
-# 9. FARMER LISTINGS MANAGEMENT
+# 10. FARMER LISTINGS MANAGEMENT
 # ==============================================================================
 elif navigation == "📦 Manage Farm Listings":
     st.subheader("📦 Farm Produce Inventory")
@@ -769,13 +802,12 @@ elif navigation == "📦 Manage Farm Listings":
             st.error(f"Error loading listings: {e}")
 
     with tab_add:
-        # LOGISTICS & ACCURACY WARNING BANNER
         st.markdown(
             """
             <div class="warning-box">
                 <h4>⚠️ IMPORTANT LOGISTICS & DATA ACCURACY NOTICE</h4>
                 Please ensure you input the <b>exact price, location address, unit count, and weight (in KG)</b> for your produce.
-                Inaccurate weight or location details will cause logistics quote mismatches, transport delays, or order cancellations by the carrier.
+                Inaccurate details will cause transport delays or order cancellations.
             </div>
             """,
             unsafe_allow_html=True,
@@ -837,12 +869,12 @@ elif navigation == "📦 Manage Farm Listings":
                         st.success("🎉 Produce listed successfully with verified logistics location!")
 
 # ==============================================================================
-# 10. FARMER SALES & ESCROW LEDGER WITH PAYSTACK WITHDRAWAL
+# 11. FARMER SALES & ESCROW LEDGER WITH DUAL SIGN-OFF & PAYSTACK WITHDRAWAL
 # ==============================================================================
 elif navigation == "💰 Farmer Sales & Escrow":
-    st.subheader("💰 Confirmed Sales & Escrow Orders")
+    st.subheader("💰 Confirmed Sales & Escrow Ledger")
 
-    tab_sales, tab_payout = st.tabs(["📊 Sales Orders & Delivery Status", "💼 Farmer Wallet & Payouts"])
+    tab_sales, tab_payout = st.tabs(["📊 Sales Orders & Sign-Off Status", "💼 Farmer Wallet & Bank Payouts"])
 
     with tab_sales:
         try:
@@ -853,8 +885,7 @@ elif navigation == "💰 Farmer Sales & Escrow":
 
                 if tx_res:
                     df_tx = pd.DataFrame(tx_res)
-                    
-                    paid_df = df_tx[df_tx["status"].isin(["PAID_VERIFIED", "DELIVERED_VERIFIED"])]
+                    paid_df = df_tx[df_tx["status"].isin(["PAID_VERIFIED", "FARMER_DISPATCHED", "DELIVERED_VERIFIED"])]
                     total_sales = paid_df["amount"].sum() if not paid_df.empty else 0.0
 
                     m1, m2, m3 = st.columns(3)
@@ -869,24 +900,50 @@ elif navigation == "💰 Farmer Sales & Escrow":
 
                     for tx in tx_res:
                         with st.container(border=True):
-                            tc1, tc2, tc3 = st.columns([2, 2, 1])
+                            tc1, tc2, tc3 = st.columns([2, 2, 1.5])
                             with tc1:
                                 st.markdown(f"**Order ID:** `{tx['id']}`")
                                 st.markdown(f"**Item:** {tx['item']} ({tx.get('quantity_bought', 1)} units)")
-                                st.markdown(f"**Buyer:** {tx['buyer']}")
+                                st.markdown(f"**Buyer Name:** {tx['buyer']}")
                             with tc2:
                                 st.markdown(f"**Subtotal:** ₦{float(tx['amount']):,.2f}")
-                                st.markdown(f"**Delivery Address:** {tx.get('delivery_address', 'N/A')}")
-                                status_str = tx.get("status", "PENDING")
-                                st.markdown(f"**Status:** `{status_str}`")
+                                st.markdown(f"**Delivery Destination:** {tx.get('delivery_address', 'N/A')}")
+                                
+                                f_sign = tx.get("farmer_signoff", False)
+                                b_sign = tx.get("buyer_signoff", False)
+                                
+                                st.markdown(f"**Farmer Dispatch Sign-Off:** {'🟢 Complete' if f_sign else '⏳ Pending'}")
+                                st.markdown(f"**Buyer Delivery Sign-Off:** {'🟢 Complete' if b_sign else '⏳ Pending'}")
+
                             with tc3:
-                                if status_str == "PAID_VERIFIED":
-                                    if st.button("🚚 Confirm Handover to Freight Carrier", key=f"handover_{tx['id']}"):
-                                        supabase.table("transactions").update({"status": "DELIVERED_VERIFIED"}).eq("id", tx["id"]).execute()
-                                        st.success("Handover confirmed! Funds unlocked for withdrawal.")
+                                status_str = tx.get("status", "PENDING")
+                                
+                                # FARMER MANUAL SIGN-OFF BUTTON IN BROWN
+                                if not f_sign and status_str in ["PAID_VERIFIED", "PAYMENT_INITIATED"]:
+                                    st.markdown(
+                                        '<div class="warning-box" style="padding:8px; font-size:0.8rem; margin-bottom:8px;">'
+                                        '<b>Farmer Action Required:</b> Click below only when produce is handed over to logistics carrier.'
+                                        '</div>',
+                                        unsafe_allow_html=True
+                                    )
+                                    if st.button("🚚 CONFIRM DISPATCH TO CARRIER", key=f"f_sign_{tx['id']}"):
+                                        supabase.table("transactions").update({
+                                            "farmer_signoff": True,
+                                            "status": "FARMER_DISPATCHED" if not b_sign else "DELIVERED_VERIFIED"
+                                        }).eq("id", tx["id"]).execute()
+                                        st.success("Dispatch confirmed! Awaiting buyer receipt sign-off.")
                                         st.rerun()
-                                elif status_str == "DELIVERED_VERIFIED":
-                                    st.success("✅ Delivery Handover Verified. Funds Ready in Wallet.")
+
+                                elif f_sign and not b_sign:
+                                    st.info("🚚 Dispatched to carrier. Awaiting buyer inspection & sign-off.")
+                                
+                                elif f_sign and b_sign:
+                                    st.markdown(
+                                        '<div class="alert-success-box" style="padding:10px; font-size:0.85rem;">'
+                                        '🎉 <b>Buyer Confirmed Receipt!</b><br>Funds fully unlocked in your wallet.'
+                                        '</div>',
+                                        unsafe_allow_html=True
+                                    )
 
                 else:
                     st.info("No sales records found.")
@@ -896,9 +953,8 @@ elif navigation == "💰 Farmer Sales & Escrow":
             st.error(f"Error loading sales: {e}")
 
     with tab_payout:
-        st.markdown("### 🏦 Withdraw Funds to Local Bank (Paystack Payouts)")
-        st.caption("When the logistics carrier receives and verifies farm produce, escrow funds are automatically unlocked here for instant bank transfer.")
-
+        st.markdown("### 🏦 Withdraw Unlocked Earnings to Bank (Paystack)")
+        
         try:
             farmer_listings = supabase.table("listings").select("id").eq("seller", st.session_state.username).execute().data
             unlocked_balance = 0.0
@@ -910,17 +966,31 @@ elif navigation == "💰 Farmer Sales & Escrow":
                 
                 for tx in all_tx:
                     amt = float(tx.get("amount", 0.0))
-                    status = tx.get("status")
-                    if status == "DELIVERED_VERIFIED":
+                    f_sign = tx.get("farmer_signoff", False)
+                    b_sign = tx.get("buyer_signoff", False)
+                    
+                    if f_sign and b_sign:
                         unlocked_balance += amt
-                    elif status == "PAID_VERIFIED":
+                    elif tx.get("status") in ["PAID_VERIFIED", "FARMER_DISPATCHED"]:
                         pending_balance += amt
 
             b1, b2 = st.columns(2)
             with b1:
                 st.metric("🟢 Unlocked & Available to Withdraw", f"₦{unlocked_balance:,.2f}")
             with b2:
-                st.metric("⏳ Locked in Logistics Escrow", f"₦{pending_balance:,.2f}")
+                st.metric("⏳ Locked in Dual-Signoff Escrow", f"₦{pending_balance:,.2f}")
+
+            if unlocked_balance > 0:
+                st.markdown(
+                    """
+                    <div class="alert-success-box">
+                        <b>✅ NOTIFICATION TO FARMER:</b> The buyer has received and confirmed your produce delivery! Your escrow earnings are now fully unlocked. You may request your Paystack bank transfer below.
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+            else:
+                st.caption("🔒 Funds unlock automatically as soon as the buyer clicks their confirmation sign-off upon receiving produce.")
 
             st.divider()
             
@@ -935,7 +1005,7 @@ elif navigation == "💰 Farmer Sales & Escrow":
 
                 if submit_withdraw:
                     if unlocked_balance < p_amount:
-                        st.error("Insufficient unlocked balance. Funds unlock once logistics carrier receives produce.")
+                        st.error("Insufficient unlocked balance. Earnings unlock once buyer signs off delivery.")
                     elif len(p_acc_num) != 10 or not p_acc_num.isdigit():
                         st.error("Please enter a valid 10-digit account number.")
                     elif not p_acc_name.strip():
@@ -952,33 +1022,78 @@ elif navigation == "💰 Farmer Sales & Escrow":
                             "status": "PROCESSING_PAYSTACK_TRANSFER",
                         }
                         supabase.table("payouts").insert(payout_record).execute()
-                        st.success(f"🎉 Withdrawal request of ₦{p_amount:,.2f} submitted! Paystack payout processing to {p_bank} ({p_acc_num}).")
+                        st.success(f"🎉 Payout request of ₦{p_amount:,.2f} submitted! Paystack transfer processing to {p_bank} ({p_acc_num}).")
 
         except Exception as e:
             st.error(f"Error processing payouts: {e}")
 
 # ==============================================================================
-# 11. BUYER ORDERS VIEW
+# 12. BUYER ORDERS VIEW WITH DUAL SIGN-OFF & WARNING BANNER
 # ==============================================================================
 elif navigation == "📦 My Orders & Escrow":
-    st.subheader("📦 My Orders & Escrow Status")
+    st.subheader("📦 My Purchased Orders & Delivery Sign-Off")
+
+    st.markdown(
+        """
+        <div class="alert-danger-box">
+            <h4>🛑 CRITICAL SECURITY WARNING TO BUYERS</h4>
+            <b>DO NOT CLICK</b> the delivery confirmation sign-off button below until you have <b>physically received and inspected</b> your farm produce from the freight carrier.
+            <br>Clicking sign-off immediately unlocks escrow funds to the farmer and completes the contract.
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
     try:
         orders = supabase.table("transactions").select("*").eq("buyer", st.session_state.username).execute().data
         if not orders:
             st.info("No orders found.")
         else:
-            df_orders = pd.DataFrame(orders)
-            st.dataframe(df_orders, use_container_width=True)
+            for ord_item in orders:
+                with st.container(border=True):
+                    oc1, oc2, oc3 = st.columns([2, 2, 1.5])
+                    with oc1:
+                        st.markdown(f"**Order ID:** `{ord_item['id']}`")
+                        st.markdown(f"**Item:** {ord_item['item']} ({ord_item.get('quantity_bought', 1)} units)")
+                        st.markdown(f"**Delivery Address:** {ord_item.get('delivery_address', 'N/A')}")
+                    with oc2:
+                        st.markdown(f"**Total Amount Paid:** ₦{float(ord_item.get('total_paid', ord_item['amount'])):,.2f}")
+                        
+                        f_sign = ord_item.get("farmer_signoff", False)
+                        b_sign = ord_item.get("buyer_signoff", False)
+                        
+                        st.markdown(f"**Farmer Dispatch:** {'🟢 Complete' if f_sign else '⏳ Awaiting Farmer Dispatch'}")
+                        st.markdown(f"**Buyer Sign-Off:** {'🟢 Verified Received' if b_sign else '⏳ Pending Buyer Sign-Off'}")
+
+                    with oc3:
+                        if not b_sign:
+                            # DISTINCT BROWN SIGN-OFF BUTTON FOR BUYER
+                            if st.button("✅ CONFIRM DELIVERY RECEIVED", key=f"b_sign_{ord_item['id']}"):
+                                new_status = "DELIVERED_VERIFIED" if f_sign else "BUYER_RECEIVED_PENDING_FARMER"
+                                supabase.table("transactions").update({
+                                    "buyer_signoff": True,
+                                    "status": new_status
+                                }).eq("id", ord_item["id"]).execute()
+                                st.success("🎉 Delivery verified! Escrow funds unlocked for the farmer.")
+                                st.rerun()
+                        else:
+                            st.markdown(
+                                '<div class="alert-success-box" style="padding:10px; text-align:center;">'
+                                '✅ <b>Order Completed & Signed Off</b>'
+                                '</div>',
+                                unsafe_allow_html=True
+                            )
+
     except Exception as e:
         st.error(f"Error loading orders: {e}")
 
 # ==============================================================================
-# 12. REVENUE DASHBOARD (ADMIN)
+# 13. REVENUE DASHBOARD (ADMIN)
 # ==============================================================================
 elif navigation == "📈 Revenue Dashboard":
     st.subheader("📈 Marketplace GMV & Platform Revenue")
     try:
-        tx_data = supabase.table("transactions").select("*").in_("status", ["PAID_VERIFIED", "DELIVERED_VERIFIED"]).execute().data
+        tx_data = supabase.table("transactions").select("*").in_("status", ["PAID_VERIFIED", "DELIVERED_VERIFIED", "FARMER_DISPATCHED"]).execute().data
         if tx_data:
             df_tx = pd.DataFrame(tx_data)
             m1, m2, m3 = st.columns(3)
@@ -997,7 +1112,7 @@ elif navigation == "📈 Revenue Dashboard":
         st.error(f"Error loading revenue metrics: {e}")
 
 # ==============================================================================
-# 13. SUPPORT & AI HELPDESK MODULE
+# 14. SUPPORT & AI HELPDESK MODULE
 # ==============================================================================
 elif navigation == "💬 Support & AI Helpdesk":
     st.subheader("💬 AI Dispute Support & Helpdesk")
