@@ -13,16 +13,17 @@ from supabase import Client, create_client
 # 🗝️ CONFIGURATION & API KEYS
 # ==============================================================================
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://rewewstbknigolxiozwp.supabase.co")
+# Replace the default string below with your complete Supabase anon/public key if not using env vars
 SUPABASE_KEY = os.environ.get(
     "SUPABASE_KEY",
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJld2V3c3Ria25pZ29seGlvendwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgzNDU5MTUsImV4cCI6Bt3U",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJld2V3c3Ria25pZ29seGlvendwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgzNDU5MTUsImV4cCI6MjA0MzkyMTkxNX0.1234567890abcdefghijklmnopqrstuvwxyz"
 )
 
 PAYSTACK_SECRET_KEY = os.environ.get("PAYSTACK_SECRET_KEY", "sk_live_5d70f03c20eea14b71be5b116e453e6a6848eebe")
 PAYSTACK_CALLBACK_URL = os.environ.get("PAYSTACK_CALLBACK_URL", "https://feed-the-nations.onrender.com")
 
 # ==============================================================================
-# 1. PAGE CONFIG & RESTORED BEAUTIFUL HEADER STYLING
+# 1. PAGE CONFIG & STYLING (WITH FLASHING LIGHT & HEADER RESTORATION)
 # ==============================================================================
 st.set_page_config(
     page_title="FEED THE NATIONS - Direct Agri Marketplace",
@@ -53,7 +54,7 @@ st.markdown(
         color: var(--text-dark);
     }
 
-    /* RESTORED LUXURY BRAND HEADER */
+    /* RESTORED LUXURY HEADER WITH CONTINUOUS END-TO-END FLASHING LIGHT */
     .brand-header-container {
         position: relative;
         background: linear-gradient(135deg, #0A2F23 0%, #1B4D3E 50%, #2D6A4F 100%);
@@ -66,16 +67,28 @@ st.markdown(
         overflow: hidden;
     }
 
-    /* Background glow effect for header */
-    .brand-header-container::before {
+    /* END-TO-END WHITE FLASHING LIGHT ANIMATION */
+    .brand-header-container::after {
         content: '';
         position: absolute;
-        top: -50%;
-        left: -50%;
-        width: 200%;
-        height: 200%;
-        background: radial-gradient(circle, rgba(163, 177, 138, 0.15) 0%, rgba(0,0,0,0) 70%);
+        top: 0;
+        left: -100%;
+        width: 60%;
+        height: 100%;
+        background: linear-gradient(
+            90deg,
+            rgba(255, 255, 255, 0) 0%,
+            rgba(255, 255, 255, 0.4) 50%,
+            rgba(255, 255, 255, 0) 100%
+        );
+        transform: skewX(-25deg);
+        animation: headerGlow 3.5s infinite linear;
         pointer-events: none;
+    }
+
+    @keyframes headerGlow {
+        0% { left: -100%; }
+        100% { left: 200%; }
     }
 
     .brand-title {
@@ -87,6 +100,13 @@ st.markdown(
         margin: 0;
         text-transform: uppercase;
         text-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+
+    .header-emojis {
+        font-size: 1.8rem;
+        margin: 10px 0;
+        letter-spacing: 8px;
+        animation: pulse 2s infinite alternate;
     }
 
     .brand-badge {
@@ -111,7 +131,7 @@ st.markdown(
         letter-spacing: 0.5px;
     }
 
-    /* Sidebar Styling */
+    /* Sidebar & Profile Styling */
     section[data-testid="stSidebar"] {
         background-color: #FFFFFF;
         border-right: 1px solid var(--border-color);
@@ -372,13 +392,14 @@ if "reference" in query_params or "trxref" in query_params:
         st.query_params.clear()
 
 # ==============================================================================
-# 4. RESTORED BRAND HEADER
+# 4. RESTORED HEADER WITH EMOJIS & FLASHING LIGHT
 # ==============================================================================
 st.markdown(
     """
 <div class="brand-header-container">
     <div class="brand-badge">🌾 Official Agricultural Escrow Platform</div>
     <h1 class="brand-title">FEED THE NATIONS</h1>
+    <div class="header-emojis">🌾 🌽 🐂 🐓</div>
     <p class="brand-subtext">Direct Farm-to-Buyer Marketplace • Verified Produce • Instant Logistics Freight</p>
 </div>
 """,
@@ -426,7 +447,7 @@ if not st.session_state.authenticated:
                 if email_input and password_input:
                     try:
                         res = supabase.auth.sign_in_with_password({"email": email_input, "password": password_input})
-                        meta = res.user.user_metadata
+                        meta = res.user.user_metadata if res.user else {}
                         st.session_state.authenticated = True
                         st.session_state.user_role = meta.get("role", "Buyer")
                         st.session_state.username = meta.get("full_name", email_input)
@@ -434,7 +455,7 @@ if not st.session_state.authenticated:
                         st.session_state.email = email_input
                         st.rerun()
                     except Exception as e:
-                        st.error(f"Login error: {e}")
+                        st.error(f"Login error: {e}. Please ensure SUPABASE_KEY in Render Environment Variables is valid.")
                 else:
                     st.error("Please enter email and password.")
     st.stop()
