@@ -28,6 +28,8 @@ PAYSTACK_SECRET_KEY = os.environ.get(
 
 PAYSTACK_CALLBACK_URL = os.environ.get("PAYSTACK_CALLBACK_URL", "https://feed-the-nations.onrender.com")
 
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
+
 # ==============================================================================
 # 1. PAGE CONFIG & RESPONSIVE SCREEN-FITTING STYLING
 # ==============================================================================
@@ -87,7 +89,7 @@ st.markdown(
         100% { background-position: 0% 50%; }
     }
 
-    /* INTENSE HIGH-GLOSS FLASHING WHITE SHINE LIGHT */
+    /* HIGH-GLOSS FLASHING WHITE SHINE LIGHT */
     .brand-header-container::after {
         content: '';
         position: absolute;
@@ -193,7 +195,26 @@ st.markdown(
         border-color: #CBD5E1;
     }
 
-    /* Responsive Buttons */
+    /* Custom Chat Bubble Styling */
+    .user-msg-box {
+        background-color: #E2E8F0;
+        color: #1E293B;
+        padding: 12px 16px;
+        border-radius: 12px;
+        margin-bottom: 8px;
+        border-left: 4px solid #64748B;
+    }
+
+    .ai-msg-box {
+        background-color: #E6F4EA;
+        color: #1B4D3E;
+        padding: 12px 16px;
+        border-radius: 12px;
+        margin-bottom: 16px;
+        border-left: 4px solid #1B4D3E;
+    }
+
+    /* Buttons */
     div.stButton > button {
         background: linear-gradient(135deg, #1B4D3E 0%, #2C6E49 100%) !important;
         color: #FFFFFF !important;
@@ -212,7 +233,6 @@ st.markdown(
         box-shadow: 0 6px 16px rgba(27, 77, 62, 0.3) !important;
     }
 
-    /* WhatsApp Button */
     .whatsapp-btn {
         display: block;
         text-align: center;
@@ -349,10 +369,34 @@ def verify_paystack_payment(reference):
     except Exception as e:
         return False, str(e)
 
+# ==============================================================================
+# 🤖 AI GENERATION FUNCTION (GEMINI API WITH FALLBACK)
+# ==============================================================================
 def generate_ai_support_response(user_name: str, user_role: str, message: str) -> str:
-    msg = message.lower().strip()
     name = user_name if user_name else "Valued User"
+    
+    # Check if Gemini API key is provided
+    if GEMINI_API_KEY:
+        try:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
+            prompt_text = (
+                f"You are the AI Helpdesk Agent for FEED THE NATIONS, an agricultural marketplace & escrow platform.\n"
+                f"User Name: {name}\nUser Role: {user_role}\nUser Message: {message}\n\n"
+                f"Provide a helpful, professional, and concise response assisting them with their inquiry, escrow, or freight delivery."
+            )
+            payload = {"contents": [{"parts": [{"text": prompt_text}]}]}
+            headers = {"Content-Type": "application/json"}
+            
+            response = requests.post(url, json=payload, headers=headers, timeout=10)
+            if response.status_code == 200:
+                res_data = response.json()
+                reply = res_data["candidates"][0]["content"]["parts"][0]["text"]
+                return reply
+        except Exception:
+            pass # Fall through to heuristic AI fallback if API call fails
 
+    # Rule-Based Fallback AI
+    msg = message.lower().strip()
     if any(k in msg for k in ["buyer", "customer", "client"]):
         return (
             f"Hello **{name}**! I see you have an inquiry regarding a buyer transaction.\n\n"
@@ -417,7 +461,7 @@ if "reference" in query_params or "trxref" in query_params:
         st.query_params.clear()
 
 # ==============================================================================
-# 4. LUXURY HEADER (BADGE AT VERY BOTTOM)
+# 4. BRAND HEADER
 # ==============================================================================
 st.markdown(
     """
@@ -432,7 +476,7 @@ st.markdown(
 )
 
 # ==============================================================================
-# 5. AUTHENTICATION PORTAL (WITH ENHANCED PROFILE FALLBACK)
+# 5. AUTHENTICATION PORTAL
 # ==============================================================================
 if not st.session_state.authenticated:
     c_auth, _ = st.columns([1, 0.1])
@@ -462,7 +506,7 @@ if not st.session_state.authenticated:
                             supabase.table("profiles").upsert({
                                 "id": res.user.id, "email": email_input, "full_name": full_name, "phone": phone_input, "role": role_str, "category": farming_cat
                             }).execute()
-                        st.success("🎉 Account created! If email confirmation is enabled in your Supabase settings, check your inbox first before logging in.")
+                        st.success("🎉 Account created! If email confirmation is enabled in Supabase, verify your email before logging in.")
                     except Exception as e:
                         st.error(f"Registration error: {e}")
                 else:
@@ -475,7 +519,7 @@ if not st.session_state.authenticated:
                         if res.user:
                             meta = res.user.user_metadata or {}
                             
-                            # Fallback profile lookup if metadata is incomplete
+                            # Fallback profile query if auth metadata is missing
                             prof_data = supabase.table("profiles").select("*").eq("email", email_input).execute().data
                             profile = prof_data[0] if prof_data else {}
 
@@ -488,7 +532,7 @@ if not st.session_state.authenticated:
                     except Exception as e:
                         err_str = str(e)
                         if "Invalid login credentials" in err_str:
-                            st.error("❌ Invalid credentials. If you just registered, please verify if email confirmation is enabled in your Supabase Auth dashboard.")
+                            st.error("❌ Invalid credentials. Please check password or verify if email confirmation is enabled in your Supabase Auth settings.")
                         else:
                             st.error(f"Login error: {e}")
                 else:
@@ -528,7 +572,7 @@ with st.sidebar:
     navigation = st.radio("Navigation Menu", nav_options)
 
 # ==============================================================================
-# 7. PRODUCT DETAIL & BUY MODAL (DIALOG)
+# 7. PRODUCT DETAIL & BUY MODAL
 # ==============================================================================
 @st.dialog("🌾 Produce Details & Escrow Purchase")
 def show_product_detail_modal(product_id):
@@ -813,7 +857,7 @@ elif navigation == "📦 My Orders & Escrow":
         st.error(f"Error loading orders: {e}")
 
 # ==============================================================================
-# 12. FOUNDER REVENUE DASHBOARD (ADMIN)
+# 12. REVENUE DASHBOARD (ADMIN)
 # ==============================================================================
 elif navigation == "📈 Revenue Dashboard":
     st.subheader("📈 Marketplace GMV & Platform Revenue")
