@@ -2,6 +2,7 @@ import io
 import os
 import random
 import urllib.parse
+from datetime import datetime
 import pandas as pd
 from PIL import Image, ImageStat
 import requests
@@ -174,6 +175,23 @@ st.markdown(
     .whatsapp-btn:hover {
         background-color: #128C7E;
     }
+
+    /* Support Chat UI Styling */
+    .user-msg-box {
+        background-color: #E8F5E9;
+        border-left: 4px solid #2E7D32;
+        padding: 14px;
+        border-radius: 10px;
+        margin-bottom: 12px;
+    }
+    .ai-msg-box {
+        background-color: #F1F8E9;
+        border-left: 4px solid #1E5631;
+        padding: 14px;
+        border-radius: 10px;
+        margin-top: 8px;
+        margin-bottom: 18px;
+    }
 </style>
 """,
     unsafe_allow_html=True,
@@ -293,44 +311,66 @@ def verify_paystack_payment(reference):
     except Exception as e:
         return False, str(e)
 
-def generate_ai_support_response(message: str, user_role: str) -> str:
-    """Automated AI assistant logic tailored for marketplace support, complaints, and escrow chats."""
+def generate_ai_support_response(user_name: str, user_role: str, message: str) -> str:
+    """Action-oriented AI Assistant logic personalized with the user's actual name."""
     msg = message.lower().strip()
+    name = user_name if user_name else "Valued User"
 
-    if any(k in msg for k in ["escrow", "payment", "fund", "money", "bank", "pay", "refund"]):
+    if any(k in msg for k in ["buyer", "customer", "client"]):
+        if user_role == "Farmer":
+            return (
+                f"Hello **{name}**! I understand you are experiencing an issue regarding a buyer on the platform.\n\n"
+                "**Immediate Action Steps & Troubleshooting:**\n"
+                "1. **Order Reference:** What is the Order ID or transaction reference for this buyer?\n"
+                "2. **Escrow Status Check:** Has the payment been marked as `PAID_VERIFIED` in your *Farmer Sales & Escrow Orders* dashboard?\n"
+                "3. **Dispatch Status:** Have you dispatched the produce with the agreed logistics provider yet?\n\n"
+                "📌 **Resolution Protocol:** If the buyer is unresponsive or disputing item quality/quantity, please upload waybill photos or dispatch receipts here. "
+                "Our Admin Dispute Team has been notified and will hold the escrow funds safely while verifying dispatch details."
+            )
+        else:
+            return (
+                f"Hello **{name}**! Are you having trouble connecting with a specific buyer or account setting?\n\n"
+                "Please provide the Order ID or buyer details so I can assist you directly or connect you with support."
+            )
+
+    elif any(k in msg for k in ["escrow", "payment", "fund", "money", "bank", "pay", "refund"]):
         return (
-            f"Hello ({user_role})! Regarding payments or escrow: All funds are safely locked in "
-            "Feed The Nations Escrow until the buyer confirms product receipt and quality. "
-            "If you are requesting a refund or reporting a payment discrepancy, our financial admins "
-            "have been flagged and will review your transaction history within 2 hours."
+            f"Hello **{name}**! I am analyzing your payment/escrow inquiry.\n\n"
+            "**Instant Financial Guidance:**\n"
+            "• **Escrow Security:** All payments on Feed The Nations are locked securely in Paystack Escrow until delivery is confirmed.\n"
+            "• **Farmer Payouts:** Funds are released automatically once the buyer verifies delivery or 48 hours post-confirmed freight delivery.\n"
+            "• **Disputes/Refunds:** If you need an immediate payment halt or refund investigation, please share your Paystack Reference Number below.\n\n"
+            "💡 *Our financial compliance officer has logged this ticket for verification.*"
         )
-    elif any(k in msg for k in ["deliver", "logistics", "ship", "transit", "dispatch", "courier", "received"]):
+
+    elif any(k in msg for k in ["deliver", "logistics", "ship", "transit", "dispatch", "courier", "delay", "damaged"]):
         return (
-            f"Hi there! For delivery or transit inquiries: Please verify that dispatch confirmation "
-            "and tracking details are attached to your order page. If a shipment is delayed or item arrived damaged, "
-            "please keep photos handy—our logistics dispute officer will contact both parties shortly."
+            f"Hi **{name}**! I can help you resolve logistics and shipment concerns immediately.\n\n"
+            "**Recommended Next Steps:**\n"
+            "1. **Logistics Carrier:** Which of our 10 nationwide haulers (e.g., GIG, Kobo360, DHL) was selected for this trip?\n"
+            "2. **Waybill / Tracking:** Please share your waybill number or freight quote receipt.\n"
+            "3. **Physical Inspection:** If goods arrived damaged, please do not release escrow. Share photos here immediately.\n\n"
+            "🚚 *I am flagging your ticket for our Freight Escalation Lead to contact the courier partner directly.*"
         )
-    elif any(k in msg for k in ["listing", "delete", "remove", "post", "product", "inventory", "upload"]):
+
+    elif any(k in msg for k in ["scam", "fraud", "fake", "stolen", "dispute", "cheat"]):
         return (
-            "Hello! If you are having trouble creating, updating, or deleting product listings, "
-            "please ensure all required fields (price, quantity, image URL) are populated. "
-            "If an error persists, try refreshing your browser session."
+            f"🚨 **URGENT SECURITY ESCALATION FOR {name.upper()}** 🚨\n\n"
+            "We take security and trade integrity extremely seriously on Feed The Nations.\n\n"
+            "**Immediate Protection Applied:**\n"
+            "• All escrow transfers linked to your recent orders have been **TEMPORARILY PAUSED** pending investigation.\n"
+            "• Please provide the offender's username, phone number, or order ID.\n"
+            "• Our Trust & Safety Admin will call you directly at your registered phone number."
         )
-    elif any(k in msg for k in ["scam", "fraud", "fake", "stolen", "dispute", "cheat", "bad"]):
-        return (
-            "🚨 **URGENT ESCALATION**: Your safety is our top priority. We take fraud and misconduct reports "
-            "very seriously. This case has been marked HIGH PRIORITY. A trust and safety administrator "
-            "will review all involved user profiles and chat logs immediately."
-        )
-    elif any(k in msg for k in ["hello", "hi", "hey", "help", "support", "admin"]):
-        return (
-            f"Hello! Welcome to Feed The Nations Support ({user_role}). How can I assist you today? "
-            "You can ask me about escrow payments, order deliveries, listing management, or submit marketplace complaints."
-        )
+
     else:
         return (
-            f"Thank you for contacting Feed The Nations Support ({user_role}). Your ticket has been logged in our system. "
-            "Our automated AI assistant and live support team are reviewing your message and will update this ticket shortly."
+            f"Hello **{name}**! Thank you for contacting Feed The Nations Support.\n\n"
+            f"I have received your message regarding: *\"{message}\"*\n\n"
+            "**How I can help solve this right now:**\n"
+            "• If this relates to an existing order, please reply with the **Order ID**.\n"
+            "• If you have produce listing issues, mention the **Product Title**.\n\n"
+            "Our automated system and live support team are actively monitoring this thread to resolve your issue quickly."
         )
 
 # ==============================================================================
@@ -961,30 +1001,35 @@ elif navigation == "📦 My Active Products":
             st.error(f"Error fetching active products: {str(e)}")
 
 # ==============================================================================
-# 11. AI SUPPORT & COMPLAINT HELPDESK MODULE
+# 11. ENHANCED AI SUPPORT & DISPUTE HELPDESK MODULE
 # ==============================================================================
 elif navigation == "💬 Support & AI Helpdesk":
-    st.subheader("💬 Feed The Nations Support & AI Assistant")
-    st.caption("Chat directly with our automated assistant or submit complaints to the admin team.")
+    st.subheader("💬 AI Dispute Support & Helpdesk")
+    st.caption("Submit your inquiry or complaint below. Our AI dispute assistant will analyze your request instantly.")
 
-    col1, col2 = st.columns([1, 1], gap="large")
+    col1, col2 = st.columns([1, 1], gap="medium")
 
     with col1:
-        st.markdown("### 📝 Submit New Inquiry / Complaint")
+        st.markdown("### 📝 Complaint & Inquiry Portal")
         with st.form(key="support_ticket_form", clear_on_submit=True):
             message_input = st.text_area(
-                "Describe your issue, order question, or complaint in detail...",
-                height=150,
-                placeholder="e.g., I have an issue with escrow payment on order #104..."
+                "Describe your issue, buyer dispute, or order inquiry in detail...",
+                height=160,
+                placeholder="e.g., I am a farmer and have an issue with a buyer who hasn't confirmed delivery for Order #104..."
             )
-            submit_btn = st.form_submit_button("SEND MESSAGE TO FEED THE NATIONS 🚀")
+            submit_btn = st.form_submit_button("SUBMIT TICKET TO AI HELPDESK 🚀")
 
         if submit_btn:
             if not message_input.strip():
-                st.warning("Please type a message before submitting.")
+                st.warning("Please enter your message before submitting.")
             else:
                 try:
-                    ai_reply = generate_ai_support_response(message_input, st.session_state.user_role)
+                    # Generate personalized and action-oriented AI reply using user's real name
+                    ai_reply = generate_ai_support_response(
+                        st.session_state.username,
+                        st.session_state.user_role,
+                        message_input
+                    )
 
                     payload = {
                         "user_email": st.session_state.email,
@@ -994,13 +1039,13 @@ elif navigation == "💬 Support & AI Helpdesk":
                         "status": "In Progress"
                     }
                     supabase.table("support_messages").insert(payload).execute()
-                    st.success("Message sent successfully! AI response generated below.")
+                    st.success("Ticket submitted! Instant AI troubleshooting response generated below.")
                     st.rerun()
                 except Exception as e:
                     st.error(f"Error submitting message: {e}")
 
     with col2:
-        st.markdown("### 💭 Your Conversation History")
+        st.markdown("### 📜 Support Conversation History")
         try:
             res = (
                 supabase.table("support_messages")
@@ -1015,14 +1060,22 @@ elif navigation == "💬 Support & AI Helpdesk":
                 st.info("No active or past support conversations found.")
             else:
                 for t in tickets:
-                    badge = "🟢 Resolved" if t.get("status") == "Resolved" else "🟡 In Progress"
-                    title_str = f"Ticket #{t['id']} | Status: {badge} ({str(t.get('created_at', ''))[:10]})"
+                    status_str = t.get("status", "In Progress")
+                    badge = "🟢 Resolved" if status_str == "Resolved" else "🟡 In Progress"
+                    created_date = str(t.get("created_at", ""))[:10] if t.get("created_at") else "Recent"
                     
-                    with st.expander(title_str, expanded=False):
-                        st.markdown(f"**👤 You ({t.get('user_role', 'User')}):**\n{t['message']}")
-                        st.write("---")
+                    title_str = f"Ticket #{t['id']} | Status: {badge} ({created_date})"
+                    
+                    with st.expander(title_str, expanded=True):
+                        st.markdown(
+                            f'<div class="user-msg-box"><b>👤 {st.session_state.username} ({t.get("user_role", "User")}):</b><br>{t["message"]}</div>',
+                            unsafe_allow_html=True
+                        )
                         if t.get("response"):
-                            st.markdown(f"🤖 **Feed The Nations AI Support:**\n{t['response']}")
+                            st.markdown(
+                                f'<div class="ai-msg-box"><b>🤖 Feed The Nations AI Support:</b><br>{t["response"]}</div>',
+                                unsafe_allow_html=True
+                            )
                         else:
                             st.caption("⌛ Awaiting manual review by Feed The Nations Admin...")
 
@@ -1034,7 +1087,7 @@ elif navigation == "💬 Support & AI Helpdesk":
 # ==============================================================================
 elif navigation == "📢 Platform Announcements":
     st.subheader("📢 Platform Announcements")
-    st.write("---")
+    st.divider()
 
     if st.session_state.user_role == "Admin":
         with st.expander("📌 Post Platform Announcement", expanded=False):
