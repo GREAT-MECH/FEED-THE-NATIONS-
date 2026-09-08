@@ -12,13 +12,13 @@ from supabase import Client, create_client
 # ==============================================================================
 # 🗝️ CONFIGURATION & API KEYS
 # ==============================================================================
-SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://hsqgtgbdxrwcvicuysqr.supabase.co")
+# Updated to match the active Supabase Project (rewewstbknigolxiozwp)
+SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://rewewstbknigolxiozwp.supabase.co")
 
+# IMPORTANT: Paste your project's anon key here or set SUPABASE_KEY in your Render Environment Variables
 SUPABASE_KEY = os.environ.get(
     "SUPABASE_KEY",
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9."
-    "eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhzcWd0Z2JkeHJ3Y3ZpY3V5c3FyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA2NzM4ODYsImV4cCI6MjA5NjI0OTg4Nn0."
-    "je8U_NUHtuZK4nPvW1MupwtNw5CpOz9uR3RGutXKOAQ",
+    "YOUR_ANON_PUBLIC_KEY_FROM_REWEWSTBKNIGOLXIOZWP",
 )
 
 PAYSTACK_SECRET_KEY = os.environ.get(
@@ -375,7 +375,6 @@ def verify_paystack_payment(reference):
 def generate_ai_support_response(user_name: str, user_role: str, message: str) -> str:
     name = user_name if user_name else "Valued User"
     
-    # Check if Gemini API key is provided
     if GEMINI_API_KEY:
         try:
             url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
@@ -393,9 +392,8 @@ def generate_ai_support_response(user_name: str, user_role: str, message: str) -
                 reply = res_data["candidates"][0]["content"]["parts"][0]["text"]
                 return reply
         except Exception:
-            pass # Fall through to heuristic AI fallback if API call fails
+            pass
 
-    # Rule-Based Fallback AI
     msg = message.lower().strip()
     if any(k in msg for k in ["buyer", "customer", "client"]):
         return (
@@ -506,7 +504,7 @@ if not st.session_state.authenticated:
                             supabase.table("profiles").upsert({
                                 "id": res.user.id, "email": email_input, "full_name": full_name, "phone": phone_input, "role": role_str, "category": farming_cat
                             }).execute()
-                        st.success("🎉 Account created! If email confirmation is enabled in Supabase, verify your email before logging in.")
+                        st.success("🎉 Account created successfully! You can now log in.")
                     except Exception as e:
                         st.error(f"Registration error: {e}")
                 else:
@@ -519,7 +517,6 @@ if not st.session_state.authenticated:
                         if res.user:
                             meta = res.user.user_metadata or {}
                             
-                            # Fallback profile query if auth metadata is missing
                             prof_data = supabase.table("profiles").select("*").eq("email", email_input).execute().data
                             profile = prof_data[0] if prof_data else {}
 
@@ -532,7 +529,7 @@ if not st.session_state.authenticated:
                     except Exception as e:
                         err_str = str(e)
                         if "Invalid login credentials" in err_str:
-                            st.error("❌ Invalid credentials. Please check password or verify if email confirmation is enabled in your Supabase Auth settings.")
+                            st.error("❌ Invalid credentials. If you haven't created this account in this Supabase project yet, please select 'Register Account' first.")
                         else:
                             st.error(f"Login error: {e}")
                 else:
