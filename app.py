@@ -18,7 +18,7 @@ SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://rewewstbknigolxiozwp.supa
 # IMPORTANT: Paste your project's anon key here or set SUPABASE_KEY in your Render Environment Variables
 SUPABASE_KEY = os.environ.get(
     "SUPABASE_KEY",
-    "YOUR_ANON_PUBLIC_KEY_FROM_REWEWSTBKNIGOLXIOZWP",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJld2V3c3Ria25pZ29seGlvendwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgzNDU5MTUsImV4cCI6MjEwMzkyMTkxNX0.s1reBkT9vmYSKGM0yPJTJiAWxT0xxdO446GVOI6ib3U",
 )
 
 PAYSTACK_SECRET_KEY = os.environ.get(
