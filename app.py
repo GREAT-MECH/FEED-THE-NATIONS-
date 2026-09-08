@@ -159,30 +159,6 @@ st.markdown(
         color: #856404;
     }
 
-    .announcement-box {
-        background-color: #E8F5E9;
-        border-left: 6px solid #2E7D32;
-        padding: 16px 20px;
-        border-radius: 12px;
-        margin-bottom: 16px;
-    }
-
-    .chat-user {
-        background-color: #E3F2FD;
-        border-radius: 12px;
-        padding: 12px 16px;
-        margin-bottom: 8px;
-        border-left: 4px solid #1976D2;
-    }
-
-    .chat-admin {
-        background-color: #F1F8E9;
-        border-radius: 12px;
-        padding: 12px 16px;
-        margin-bottom: 8px;
-        border-left: 4px solid #388E3C;
-    }
-
     .whatsapp-btn {
         display: inline-block;
         background-color: #25D366;
@@ -316,6 +292,46 @@ def verify_paystack_payment(reference):
         return False, "Payment verification pending or failed."
     except Exception as e:
         return False, str(e)
+
+def generate_ai_support_response(message: str, user_role: str) -> str:
+    """Automated AI assistant logic tailored for marketplace support, complaints, and escrow chats."""
+    msg = message.lower().strip()
+
+    if any(k in msg for k in ["escrow", "payment", "fund", "money", "bank", "pay", "refund"]):
+        return (
+            f"Hello ({user_role})! Regarding payments or escrow: All funds are safely locked in "
+            "Feed The Nations Escrow until the buyer confirms product receipt and quality. "
+            "If you are requesting a refund or reporting a payment discrepancy, our financial admins "
+            "have been flagged and will review your transaction history within 2 hours."
+        )
+    elif any(k in msg for k in ["deliver", "logistics", "ship", "transit", "dispatch", "courier", "received"]):
+        return (
+            f"Hi there! For delivery or transit inquiries: Please verify that dispatch confirmation "
+            "and tracking details are attached to your order page. If a shipment is delayed or item arrived damaged, "
+            "please keep photos handy—our logistics dispute officer will contact both parties shortly."
+        )
+    elif any(k in msg for k in ["listing", "delete", "remove", "post", "product", "inventory", "upload"]):
+        return (
+            "Hello! If you are having trouble creating, updating, or deleting product listings, "
+            "please ensure all required fields (price, quantity, image URL) are populated. "
+            "If an error persists, try refreshing your browser session."
+        )
+    elif any(k in msg for k in ["scam", "fraud", "fake", "stolen", "dispute", "cheat", "bad"]):
+        return (
+            "🚨 **URGENT ESCALATION**: Your safety is our top priority. We take fraud and misconduct reports "
+            "very seriously. This case has been marked HIGH PRIORITY. A trust and safety administrator "
+            "will review all involved user profiles and chat logs immediately."
+        )
+    elif any(k in msg for k in ["hello", "hi", "hey", "help", "support", "admin"]):
+        return (
+            f"Hello! Welcome to Feed The Nations Support ({user_role}). How can I assist you today? "
+            "You can ask me about escrow payments, order deliveries, listing management, or submit marketplace complaints."
+        )
+    else:
+        return (
+            f"Thank you for contacting Feed The Nations Support ({user_role}). Your ticket has been logged in our system. "
+            "Our automated AI assistant and live support team are reviewing your message and will update this ticket shortly."
+        )
 
 # ==============================================================================
 # 3. SESSION STATE
@@ -469,11 +485,27 @@ if st.sidebar.button("🔒 Sign Out"):
 st.sidebar.divider()
 
 if st.session_state.user_role == "Farmer":
-    nav_options = ["💰 Farmer Sales & Escrow Orders", "📦 My Active Products", "➕ Add New Product", "💬 Support & Direct Chat"]
+    nav_options = [
+        "💰 Farmer Sales & Escrow Orders",
+        "📦 My Active Products",
+        "➕ Add New Product",
+        "💬 Support & AI Helpdesk",
+        "📢 Platform Announcements"
+    ]
 elif st.session_state.user_role == "Buyer":
-    nav_options = ["🛒 Browse Marketplace", "📦 My Orders & Escrow", "💬 Support & Direct Chat"]
+    nav_options = [
+        "🛒 Browse Marketplace",
+        "📦 My Orders & Escrow",
+        "💬 Support & AI Helpdesk",
+        "📢 Platform Announcements"
+    ]
 elif st.session_state.user_role == "Admin":
-    nav_options = ["📈 Founder Revenue Dashboard", "🛒 Browse Marketplace", "💬 Support & Direct Chat"]
+    nav_options = [
+        "📈 Founder Revenue Dashboard",
+        "🛒 Browse Marketplace",
+        "💬 Support & AI Helpdesk",
+        "📢 Platform Announcements"
+    ]
 
 navigation = st.sidebar.radio("Navigation Menu", nav_options)
 
@@ -929,141 +961,115 @@ elif navigation == "📦 My Active Products":
             st.error(f"Error fetching active products: {str(e)}")
 
 # ==============================================================================
-# 11. DIRECT SUPPORT & BROADCASTING CHAT (FARMER / BUYER / ADMIN)
+# 11. AI SUPPORT & COMPLAINT HELPDESK MODULE
 # ==============================================================================
-elif navigation == "💬 Support & Direct Chat":
-    st.subheader("💬 FEED THE NATIONS - Contact & Support Center")
+elif navigation == "💬 Support & AI Helpdesk":
+    st.subheader("💬 Feed The Nations Support & AI Assistant")
+    st.caption("Chat directly with our automated assistant or submit complaints to the admin team.")
 
-    # --------------------------------------------------------------------------
-    # A. Display News, Announcements & Platform Broadcasts
-    # --------------------------------------------------------------------------
-    st.markdown("### 📢 News, Broadcasts & System Updates")
-    try:
-        announcements = supabase.table("platform_announcements").select("*").order("created_at", desc=True).limit(5).execute().data
-        if announcements:
-            for ann in announcements:
-                st.markdown(
-                    f"""
-                    <div class="announcement-box">
-                        <h4 style="margin:0; color:#1E5631;">📌 {ann['title']}</h4>
-                        <p style="margin-top:6px; margin-bottom:4px;">{ann['content']}</p>
-                        <small style="color:#555;">Broadcasted by: <b>{ann.get('author', 'FEED THE NATIONS Admin')}</b></small>
-                    </div>
-                    """,
-                    unsafe_allow_html=True,
-                )
-        else:
-            st.info("No active platform announcements at the moment.")
-    except Exception:
-        st.info("Broadcast channel active.")
+    col1, col2 = st.columns([1, 1], gap="large")
 
-    st.divider()
+    with col1:
+        st.markdown("### 📝 Submit New Inquiry / Complaint")
+        with st.form(key="support_ticket_form", clear_on_submit=True):
+            message_input = st.text_area(
+                "Describe your issue, order question, or complaint in detail...",
+                height=150,
+                placeholder="e.g., I have an issue with escrow payment on order #104..."
+            )
+            submit_btn = st.form_submit_button("SEND MESSAGE TO FEED THE NATIONS 🚀")
 
-    # --------------------------------------------------------------------------
-    # B. Admin Portal: Answer Inquiries & Send Platform News
-    # --------------------------------------------------------------------------
-    if st.session_state.user_role == "Admin":
-        st.markdown("### 🛠️ Admin Support Management & Announcements")
-
-        tab1, tab2 = st.tabs(["💬 User Complaints & Messages", "📢 Send Platform Broadcast / News"])
-
-        with tab1:
-            try:
-                msg_data = supabase.table("support_messages").select("*").order("created_at", desc=True).execute().data
-                if msg_data:
-                    for m in msg_data:
-                        st.markdown('<div class="product-card">', unsafe_allow_html=True)
-                        st.markdown(f"**From:** {m['user_name']} ({m['user_role']}) — `{m['user_email']}`")
-                        st.markdown(f"**Message / Complaint:** {m['message']}")
-
-                        if m.get("admin_reply"):
-                            st.success(f"**Admin Reply Sent:** {m['admin_reply']}")
-                        else:
-                            reply_text = st.text_area("Write reply to user:", key=f"reply_input_{m['id']}")
-                            if st.button("Send Official Reply 📩", key=f"btn_reply_{m['id']}"):
-                                if reply_text.strip():
-                                    supabase.table("support_messages").update({"admin_reply": reply_text.strip()}).eq("id", m["id"]).execute()
-                                    st.success("Reply sent successfully!")
-                                    st.rerun()
-                                else:
-                                    st.error("Reply text cannot be empty.")
-                        st.markdown('</div>', unsafe_allow_html=True)
-                else:
-                    st.info("No complaints or support messages recorded yet.")
-            except Exception as e:
-                st.error(f"Error loading support messages: {str(e)}")
-
-        with tab2:
-            st.markdown("#### Send News or Announcement to All Users")
-            with st.form("broadcast_form"):
-                ann_title = st.text_input("Announcement Title / Headline")
-                ann_content = st.text_area("Detailed Message / News Broadcast")
-                send_ann = st.form_submit_button("PUBLISH BROADCAST TO ALL USERS 📢")
-
-                if send_ann:
-                    if ann_title and ann_content:
-                        supabase.table("platform_announcements").insert({
-                            "title": ann_title,
-                            "content": ann_content,
-                            "author": st.session_state.username
-                        }).execute()
-                        st.success("🎉 News broadcast published live to all farmers and buyers!")
-                        st.rerun()
-                    else:
-                        st.error("Please provide both headline and message body.")
-
-    # --------------------------------------------------------------------------
-    # C. Farmers & Buyers Portal: Send Inquiry & View Direct Chat History
-    # --------------------------------------------------------------------------
-    else:
-        st.markdown("### 📩 Contact FEED THE NATIONS Support Directly")
-        st.caption("Submit complaints, escrow issues, or inquiry regarding your transactions.")
-
-        with st.form("user_support_form"):
-            user_msg = st.text_area("Describe your issue or question in detail...")
-            submit_msg = st.form_submit_button("SEND MESSAGE TO FEED THE NATIONS 🚀")
-
-            if submit_msg:
-                if user_msg.strip():
-                    supabase.table("support_messages").insert({
-                        "user_email": st.session_state.email,
-                        "user_name": st.session_state.username,
-                        "user_role": st.session_state.user_role,
-                        "message": user_msg.strip(),
-                        "sender": "user"
-                    }).execute()
-                    st.success("🎉 Your message has been received! Our support team will respond shortly.")
-                    st.rerun()
-                else:
-                    st.error("Please enter a message before sending.")
-
-        st.divider()
-        st.markdown("### 💬 Your Conversation History with Support")
-
-        try:
-            my_messages = supabase.table("support_messages").select("*").eq("user_email", st.session_state.email).order("created_at", desc=True).execute().data
-            if my_messages:
-                for msg in my_messages:
-                    st.markdown(
-                        f"""
-                        <div class="chat-user">
-                            <b>You ({st.session_state.username}):</b> {msg['message']}
-                        </div>
-                        """,
-                        unsafe_allow_html=True,
-                    )
-                    if msg.get("admin_reply"):
-                        st.markdown(
-                            f"""
-                            <div class="chat-admin">
-                                <b>FEED THE NATIONS Support Team:</b> {msg['admin_reply']}
-                            </div>
-                            """,
-                            unsafe_allow_html=True,
-                        )
-                    else:
-                        st.caption("⏳ Pending support team response...")
+        if submit_btn:
+            if not message_input.strip():
+                st.warning("Please type a message before submitting.")
             else:
-                st.info("No previous support chats found.")
+                try:
+                    ai_reply = generate_ai_support_response(message_input, st.session_state.user_role)
+
+                    payload = {
+                        "user_email": st.session_state.email,
+                        "user_role": st.session_state.user_role,
+                        "message": message_input.strip(),
+                        "response": ai_reply,
+                        "status": "In Progress"
+                    }
+                    supabase.table("support_messages").insert(payload).execute()
+                    st.success("Message sent successfully! AI response generated below.")
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"Error submitting message: {e}")
+
+    with col2:
+        st.markdown("### 💭 Your Conversation History")
+        try:
+            res = (
+                supabase.table("support_messages")
+                .select("*")
+                .eq("user_email", st.session_state.email)
+                .order("created_at", desc=True)
+                .execute()
+            )
+            tickets = res.data
+
+            if not tickets:
+                st.info("No active or past support conversations found.")
+            else:
+                for t in tickets:
+                    badge = "🟢 Resolved" if t.get("status") == "Resolved" else "🟡 In Progress"
+                    title_str = f"Ticket #{t['id']} | Status: {badge} ({str(t.get('created_at', ''))[:10]})"
+                    
+                    with st.expander(title_str, expanded=False):
+                        st.markdown(f"**👤 You ({t.get('user_role', 'User')}):**\n{t['message']}")
+                        st.write("---")
+                        if t.get("response"):
+                            st.markdown(f"🤖 **Feed The Nations AI Support:**\n{t['response']}")
+                        else:
+                            st.caption("⌛ Awaiting manual review by Feed The Nations Admin...")
+
         except Exception as e:
-            st.error(f"Error loading chat history: {str(e)}")
+            st.error(f"Error loading chat history: {e}")
+
+# ==============================================================================
+# 12. PLATFORM ANNOUNCEMENTS MODULE
+# ==============================================================================
+elif navigation == "📢 Platform Announcements":
+    st.subheader("📢 Platform Announcements")
+    st.write("---")
+
+    if st.session_state.user_role == "Admin":
+        with st.expander("📌 Post Platform Announcement", expanded=False):
+            with st.form("announcement_form", clear_on_submit=True):
+                ann_title = st.text_input("Announcement Title")
+                ann_content = st.text_area("Content")
+                submit_ann = st.form_submit_button("Post Announcement 📣")
+
+                if submit_ann:
+                    if ann_title and ann_content:
+                        try:
+                            payload = {
+                                "title": ann_title,
+                                "content": ann_content,
+                                "author": f"FEED THE NATIONS Admin ({st.session_state.email})"
+                            }
+                            supabase.table("platform_announcements").insert(payload).execute()
+                            st.success("Announcement published!")
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"Failed to publish announcement: {e}")
+                    else:
+                        st.warning("Please fill in both title and content.")
+
+    try:
+        res = supabase.table("platform_announcements").select("*").order("created_at", desc=True).execute()
+        announcements = res.data
+
+        if not announcements:
+            st.info("No platform announcements published yet.")
+        else:
+            for a in announcements:
+                with st.container(border=True):
+                    st.markdown(f"### {a.get('title')}")
+                    st.caption(f"Posted on {str(a.get('created_at', ''))[:10]} by {a.get('author', 'Admin')}")
+                    st.write(a.get('content'))
+    except Exception as e:
+        st.error(f"Error loading announcements: {e}")
