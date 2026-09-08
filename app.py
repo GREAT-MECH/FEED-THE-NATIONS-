@@ -10,23 +10,26 @@ import streamlit as st
 from supabase import Client, create_client
 
 # ==============================================================================
-# 🗝️ CONFIGURATION & API KEYS
+# 🗝️ CONFIGURATION & API KEYS (UPDATED)
 # ==============================================================================
-SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://rewewstbknigolxiozwp.supabase.co")
+SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://hsqgtgbdxrwcvicuysqr.supabase.co")
 
-# Make sure to replace this placeholder string with your real public anon key from Supabase Dashboard
-DEFAULT_KEY = (
+SUPABASE_KEY = os.environ.get(
+    "SUPABASE_KEY",
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9."
-    "eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJld2V3c3Ria25pZ29seGlvendwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgzNDU5MTUsImV4cCI6MjA0MzkyMTkxNX0."
-    "1234567890abcdefghijklmnopqrstuvwxyz"
+    "eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhzcWd0Z2JkeHJ3Y3ZpY3V5c3FyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA2NzM4ODYsImV4cCI6MjA5NjI0OTg4Nn0."
+    "je8U_NUHtuZK4nPvW1MupwtNw5CpOz9uR3RGutXKOAQ",
 )
-SUPABASE_KEY = os.environ.get("SUPABASE_KEY", DEFAULT_KEY)
 
-PAYSTACK_SECRET_KEY = os.environ.get("PAYSTACK_SECRET_KEY", "sk_live_5d70f03c20eea14b71be5b116e453e6a6848eebe")
+PAYSTACK_SECRET_KEY = os.environ.get(
+    "PAYSTACK_SECRET_KEY",
+    "sk_live_5d70f03c20eea14b71be5b116e453e6a6848eebe",
+)
+
 PAYSTACK_CALLBACK_URL = os.environ.get("PAYSTACK_CALLBACK_URL", "https://feed-the-nations.onrender.com")
 
 # ==============================================================================
-# 1. PAGE CONFIG & STYLING (ANIMATED GREEN BACKGROUND & INTENSE WHITE SHINE)
+# 1. PAGE CONFIG & STYLING
 # ==============================================================================
 st.set_page_config(
     page_title="FEED THE NATIONS - Direct Agri Marketplace",
@@ -105,21 +108,6 @@ st.markdown(
         100% { left: 220%; }
     }
 
-    .brand-badge {
-        display: inline-block;
-        background: rgba(212, 163, 115, 0.25);
-        border: 1px solid #E6C594;
-        color: #FFF3E0;
-        padding: 6px 18px;
-        border-radius: 30px;
-        font-size: 0.85rem;
-        font-weight: 800;
-        letter-spacing: 1.5px;
-        text-transform: uppercase;
-        margin-bottom: 12px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-    }
-
     .brand-title {
         color: #FFFFFF !important;
         font-family: 'Montserrat', sans-serif;
@@ -143,9 +131,24 @@ st.markdown(
         color: #E2E8F0;
         font-size: 1.15rem;
         font-weight: 600;
-        margin-top: 10px;
+        margin-top: 5px;
+        margin-bottom: 18px;
         letter-spacing: 0.5px;
         text-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    }
+
+    .brand-badge {
+        display: inline-block;
+        background: rgba(212, 163, 115, 0.25);
+        border: 1px solid #E6C594;
+        color: #FFF3E0;
+        padding: 8px 22px;
+        border-radius: 30px;
+        font-size: 0.85rem;
+        font-weight: 800;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
     }
 
     /* Sidebar & Profile Styling */
@@ -412,15 +415,15 @@ if "reference" in query_params or "trxref" in query_params:
         st.query_params.clear()
 
 # ==============================================================================
-# 4. LUXURY HEADER (ANIMATED GREEN BG + BRIGHT SHINE + EMOJIS & ESCROW BADGE)
+# 4. LUXURY HEADER (BADGE AT VERY BOTTOM)
 # ==============================================================================
 st.markdown(
     """
 <div class="brand-header-container">
-    <div class="brand-badge">🌾 Official Agricultural Escrow Platform</div>
     <h1 class="brand-title">FEED THE NATIONS</h1>
     <div class="header-emojis">🌾 🌽 🐂 🐓</div>
     <p class="brand-subtext">Direct Farm-to-Buyer Marketplace • Verified Produce • Instant Logistics Freight</p>
+    <div class="brand-badge">🌾 Official Agricultural Escrow Platform</div>
 </div>
 """,
     unsafe_allow_html=True,
@@ -475,7 +478,7 @@ if not st.session_state.authenticated:
                         st.session_state.email = email_input
                         st.rerun()
                     except Exception as e:
-                        st.error(f"Login error: {e}. Ensure SUPABASE_KEY in Render Environment Variables is set to your full anon key.")
+                        st.error(f"Login error: {e}")
                 else:
                     st.error("Please enter email and password.")
     st.stop()
