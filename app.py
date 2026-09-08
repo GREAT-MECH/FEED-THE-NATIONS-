@@ -10,7 +10,7 @@ import streamlit as st
 from supabase import Client, create_client
 
 # ==============================================================================
-# 🗝️ CONFIGURATION & API KEYS (UPDATED)
+# 🗝️ CONFIGURATION & API KEYS
 # ==============================================================================
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://hsqgtgbdxrwcvicuysqr.supabase.co")
 
@@ -29,7 +29,7 @@ PAYSTACK_SECRET_KEY = os.environ.get(
 PAYSTACK_CALLBACK_URL = os.environ.get("PAYSTACK_CALLBACK_URL", "https://feed-the-nations.onrender.com")
 
 # ==============================================================================
-# 1. PAGE CONFIG & STYLING
+# 1. PAGE CONFIG & RESPONSIVE SCREEN-FITTING STYLING
 # ==============================================================================
 st.set_page_config(
     page_title="FEED THE NATIONS - Direct Agri Marketplace",
@@ -54,10 +54,14 @@ st.markdown(
         --border-color: #E2E8F0;
     }
 
+    /* GLOBAL RESPONSIVE CONTAINER ADJUSTMENTS */
     .stApp {
         background-color: var(--bg-main);
         font-family: 'Plus Jakarta Sans', sans-serif;
         color: var(--text-dark);
+        margin: 0 auto;
+        max-width: 100vw;
+        overflow-x: hidden;
     }
 
     /* ANIMATED DEEP GREEN GRADIENT HEADER */
@@ -66,13 +70,15 @@ st.markdown(
         background: linear-gradient(-45deg, #062319, #0E3A2B, #1B4D3E, #2D6A4F, #124131);
         background-size: 400% 400%;
         animation: bgShift 10s ease infinite;
-        padding: 45px 24px;
+        padding: clamp(20px, 4vw, 45px) clamp(12px, 3vw, 24px);
         border-radius: 22px;
         text-align: center;
-        margin-bottom: 30px;
+        margin-bottom: 25px;
         box-shadow: 0 16px 36px rgba(10, 47, 35, 0.35);
         border: 1px solid rgba(255, 255, 255, 0.18);
         overflow: hidden;
+        width: 100%;
+        box-sizing: border-box;
     }
 
     @keyframes bgShift {
@@ -111,25 +117,26 @@ st.markdown(
     .brand-title {
         color: #FFFFFF !important;
         font-family: 'Montserrat', sans-serif;
-        font-size: clamp(2.3rem, 5.5vw, 3.8rem);
+        font-size: clamp(1.8rem, 5vw, 3.8rem);
         font-weight: 900;
-        letter-spacing: 2px;
+        letter-spacing: 1px;
         margin: 5px 0 10px 0;
         text-transform: uppercase;
         text-shadow: 0 4px 15px rgba(0,0,0,0.4);
+        word-break: break-word;
     }
 
     .header-emojis {
-        font-size: 2.1rem;
-        margin: 12px 0;
-        letter-spacing: 12px;
+        font-size: clamp(1.4rem, 3.5vw, 2.1rem);
+        margin: 10px 0;
+        letter-spacing: clamp(6px, 1.5vw, 12px);
         display: inline-block;
         filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
     }
 
     .brand-subtext {
         color: #E2E8F0;
-        font-size: 1.15rem;
+        font-size: clamp(0.9rem, 2vw, 1.15rem);
         font-weight: 600;
         margin-top: 5px;
         margin-bottom: 18px;
@@ -142,11 +149,11 @@ st.markdown(
         background: rgba(212, 163, 115, 0.25);
         border: 1px solid #E6C594;
         color: #FFF3E0;
-        padding: 8px 22px;
+        padding: clamp(6px, 1.5vw, 8px) clamp(14px, 2.5vw, 22px);
         border-radius: 30px;
-        font-size: 0.85rem;
+        font-size: clamp(0.75rem, 1.5vw, 0.85rem);
         font-weight: 800;
-        letter-spacing: 1.5px;
+        letter-spacing: 1px;
         text-transform: uppercase;
         box-shadow: 0 2px 10px rgba(0,0,0,0.2);
     }
@@ -165,34 +172,35 @@ st.markdown(
         margin-bottom: 16px;
     }
 
-    /* Product Grid Cards */
+    /* Responsive Product Grid Cards */
     .product-grid-card {
         background-color: #FFFFFF;
         border: 1px solid #E2E8F0;
         border-radius: 18px;
-        padding: 18px;
+        padding: 16px;
         transition: transform 0.25s ease, box-shadow 0.25s ease;
         height: 100%;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
         box-shadow: 0 6px 16px rgba(0,0,0,0.04);
+        box-sizing: border-box;
     }
 
     .product-grid-card:hover {
-        transform: translateY(-5px);
+        transform: translateY(-4px);
         box-shadow: 0 16px 32px rgba(0,0,0,0.1);
         border-color: #CBD5E1;
     }
 
-    /* Buttons Style */
+    /* Responsive Buttons */
     div.stButton > button {
         background: linear-gradient(135deg, #1B4D3E 0%, #2C6E49 100%) !important;
         color: #FFFFFF !important;
         font-weight: 700 !important;
-        font-size: 0.92rem !important;
+        font-size: clamp(0.85rem, 1.2vw, 0.95rem) !important;
         border-radius: 10px !important;
-        padding: 11px 18px !important;
+        padding: 10px 16px !important;
         border: none !important;
         transition: all 0.2s ease !important;
         width: 100%;
@@ -223,21 +231,15 @@ st.markdown(
         background-color: #128C7E;
     }
 
-    /* Support Chat Bubbles */
-    .user-msg-box {
-        background-color: #E8F5E9;
-        border-left: 4px solid #2E7D32;
-        padding: 12px 16px;
-        border-radius: 8px;
-        margin-bottom: 10px;
-    }
-    .ai-msg-box {
-        background-color: #F1F8E9;
-        border-left: 4px solid #1B4D3E;
-        padding: 12px 16px;
-        border-radius: 8px;
-        margin-top: 6px;
-        margin-bottom: 16px;
+    /* Mobile Layout Tweaks */
+    @media (max-width: 768px) {
+        .stMainBlockContainer {
+            padding-left: 0.8rem !important;
+            padding-right: 0.8rem !important;
+        }
+        .product-grid-card {
+            margin-bottom: 14px;
+        }
     }
 </style>
 """,
@@ -430,7 +432,7 @@ st.markdown(
 )
 
 # ==============================================================================
-# 5. AUTHENTICATION PORTAL
+# 5. AUTHENTICATION PORTAL (WITH ENHANCED PROFILE FALLBACK)
 # ==============================================================================
 if not st.session_state.authenticated:
     c_auth, _ = st.columns([1, 0.1])
@@ -460,7 +462,7 @@ if not st.session_state.authenticated:
                             supabase.table("profiles").upsert({
                                 "id": res.user.id, "email": email_input, "full_name": full_name, "phone": phone_input, "role": role_str, "category": farming_cat
                             }).execute()
-                        st.success("🎉 Account created! Please log in.")
+                        st.success("🎉 Account created! If email confirmation is enabled in your Supabase settings, check your inbox first before logging in.")
                     except Exception as e:
                         st.error(f"Registration error: {e}")
                 else:
@@ -470,15 +472,25 @@ if not st.session_state.authenticated:
                 if email_input and password_input:
                     try:
                         res = supabase.auth.sign_in_with_password({"email": email_input, "password": password_input})
-                        meta = res.user.user_metadata if res.user else {}
-                        st.session_state.authenticated = True
-                        st.session_state.user_role = meta.get("role", "Buyer")
-                        st.session_state.username = meta.get("full_name", email_input)
-                        st.session_state.phone = meta.get("phone", "")
-                        st.session_state.email = email_input
-                        st.rerun()
+                        if res.user:
+                            meta = res.user.user_metadata or {}
+                            
+                            # Fallback profile lookup if metadata is incomplete
+                            prof_data = supabase.table("profiles").select("*").eq("email", email_input).execute().data
+                            profile = prof_data[0] if prof_data else {}
+
+                            st.session_state.authenticated = True
+                            st.session_state.user_role = meta.get("role") or profile.get("role", "Buyer")
+                            st.session_state.username = meta.get("full_name") or profile.get("full_name", email_input)
+                            st.session_state.phone = meta.get("phone") or profile.get("phone", "")
+                            st.session_state.email = email_input
+                            st.rerun()
                     except Exception as e:
-                        st.error(f"Login error: {e}")
+                        err_str = str(e)
+                        if "Invalid login credentials" in err_str:
+                            st.error("❌ Invalid credentials. If you just registered, please verify if email confirmation is enabled in your Supabase Auth dashboard.")
+                        else:
+                            st.error(f"Login error: {e}")
                 else:
                     st.error("Please enter email and password.")
     st.stop()
