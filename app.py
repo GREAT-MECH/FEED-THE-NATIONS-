@@ -189,28 +189,6 @@ st.markdown(
         color: #166534;
     }
 
-    /* BROWN SIGN-OFF BUTTON STYLING */
-    div.stButton > button.brown-signoff-btn {
-        background: linear-gradient(135deg, #7F4F24 0%, #582F0E 100%) !important;
-        color: #FFFFFF !important;
-        font-weight: 800 !important;
-        font-size: 1rem !important;
-        border-radius: 12px !important;
-        padding: 14px 20px !important;
-        border: 2px solid #3D200A !important;
-        box-shadow: 0 6px 18px rgba(88, 47, 14, 0.35) !important;
-        transition: all 0.25s ease-in-out !important;
-        width: 100%;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    div.stButton > button.brown-signoff-btn:hover {
-        background: linear-gradient(135deg, #935E31 0%, #6F3C13 100%) !important;
-        transform: translateY(-2px) !important;
-        box-shadow: 0 10px 22px rgba(88, 47, 14, 0.45) !important;
-    }
-
     section[data-testid="stSidebar"] {
         background-color: #FFFFFF;
         border-right: 1px solid var(--border-color);
@@ -528,7 +506,6 @@ if not st.session_state.authenticated:
         password_input = st.text_input("Password", type="password")
 
         if auth_mode == "Register Account":
-            # NOTE: "Platform Admin" option has been erased from public registration
             selected_role = st.selectbox("Account Role", ["Buyer (Wholesaler/Processor)", "Farmer / Producer"])
             full_name = st.text_input("Full Name / Business Name")
             phone_input = st.text_input("Phone Number (WhatsApp Enabled)", placeholder="+2348000000000").strip()
@@ -567,9 +544,15 @@ if not st.session_state.authenticated:
 
                             st.session_state.authenticated = True
                             st.session_state.user_role = db_role
-                            st.session_state.username = profile.get("full_name") or meta.get("full_name", email_input)
                             st.session_state.phone = profile.get("phone") or meta.get("phone", "")
                             st.session_state.email = email_input
+
+                            # AUTOMATIC FOUNDER NAME ASSIGNMENT UPON LOGIN
+                            if email_input == "nwokejianthony2@gmail.com" or db_role == "Admin":
+                                st.session_state.username = "FOUNDER NWOKEJI CHUKWUKA ANTHONY"
+                            else:
+                                st.session_state.username = profile.get("full_name") or meta.get("full_name", email_input)
+
                             st.rerun()
                     except Exception as e:
                         st.error(f"Login error: {e}")
