@@ -16,9 +16,8 @@ SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://rewewstbknigolxiozwp.supa
 
 SUPABASE_KEY = os.environ.get(
     "SUPABASE_KEY",
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJld2V3c3Ria25pZ29seGlvendwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgzNDU5MTUsImV4cCI6MjEwMzkyMTkxNX0.s1reBkT9vmYSKGM0yPJTJiAWxT0xxdO446GVOI6ib3U",
+    "YOUR_ANON_PUBLIC_KEY_FROM_REWEWSTBKNIGOLXIOZWP",
 )
-
 
 PAYSTACK_SECRET_KEY = os.environ.get(
     "PAYSTACK_SECRET_KEY",
@@ -517,7 +516,7 @@ st.markdown(
 )
 
 # ==============================================================================
-# 6. AUTHENTICATION PORTAL
+# 6. AUTHENTICATION PORTAL (ADMIN REMOVED FROM REGISTRATION)
 # ==============================================================================
 if not st.session_state.authenticated:
     c_auth, _ = st.columns([1, 0.1])
@@ -529,7 +528,8 @@ if not st.session_state.authenticated:
         password_input = st.text_input("Password", type="password")
 
         if auth_mode == "Register Account":
-            selected_role = st.selectbox("Account Role", ["Buyer (Wholesaler/Processor)", "Farmer / Producer", "Platform Admin"])
+            # NOTE: "Platform Admin" option has been erased from public registration
+            selected_role = st.selectbox("Account Role", ["Buyer (Wholesaler/Processor)", "Farmer / Producer"])
             full_name = st.text_input("Full Name / Business Name")
             phone_input = st.text_input("Phone Number (WhatsApp Enabled)", placeholder="+2348000000000").strip()
             farming_cat = st.selectbox("Primary Category", AGRI_CATEGORIES) if "Farmer" in selected_role else "All Categories"
@@ -537,7 +537,7 @@ if not st.session_state.authenticated:
             if st.button("CREATE ACCOUNT 🚀"):
                 if email_input and password_input and full_name and phone_input:
                     try:
-                        role_str = "Farmer" if "Farmer" in selected_role else ("Admin" if "Admin" in selected_role else "Buyer")
+                        role_str = "Farmer" if "Farmer" in selected_role else "Buyer"
                         res = supabase.auth.sign_up({
                             "email": email_input,
                             "password": password_input,
@@ -562,10 +562,13 @@ if not st.session_state.authenticated:
                             prof_data = supabase.table("profiles").select("*").eq("email", email_input).execute().data
                             profile = prof_data[0] if prof_data else {}
 
+                            # Fetch role from database profile (allows SQL admin upgrades)
+                            db_role = profile.get("role") or meta.get("role", "Buyer")
+
                             st.session_state.authenticated = True
-                            st.session_state.user_role = meta.get("role") or profile.get("role", "Buyer")
-                            st.session_state.username = meta.get("full_name") or profile.get("full_name", email_input)
-                            st.session_state.phone = meta.get("phone") or profile.get("phone", "")
+                            st.session_state.user_role = db_role
+                            st.session_state.username = profile.get("full_name") or meta.get("full_name", email_input)
+                            st.session_state.phone = profile.get("phone") or meta.get("phone", "")
                             st.session_state.email = email_input
                             st.rerun()
                     except Exception as e:
@@ -597,12 +600,29 @@ with st.sidebar:
 
     st.divider()
 
-    if st.session_state.user_role == "Farmer":
-        nav_options = ["🛒 Produce Marketplace", "💰 Farmer Sales & Escrow", "📦 Manage Farm Listings", "💬 Support & AI Helpdesk"]
-    elif st.session_state.user_role == "Buyer":
-        nav_options = ["🛒 Produce Marketplace", "📦 My Orders & Escrow", "💬 Support & AI Helpdesk"]
-    else:
-        nav_options = ["📈 Revenue Dashboard", "🛒 Produce Marketplace", "💬 Support & AI Helpdesk"]
+    # Dynamic Navigation Based on Role
+    if st.session_state.user_role == "Admin":
+        nav_options = [
+            "📈 Revenue Dashboard",
+            "🛒 Produce Marketplace",
+            "💰 Farmer Sales & Escrow",
+            "📦 Manage Farm Listings",
+            "📦 My Orders & Escrow",
+            "💬 Support & AI Helpdesk"
+        ]
+    elif st.session_state.user_role == "Farmer":
+        nav_options = [
+            "🛒 Produce Marketplace",
+            "💰 Farmer Sales & Escrow",
+            "📦 Manage Farm Listings",
+            "💬 Support & AI Helpdesk"
+        ]
+    else:  # Buyer
+        nav_options = [
+            "🛒 Produce Marketplace",
+            "📦 My Orders & Escrow",
+            "💬 Support & AI Helpdesk"
+        ]
 
     navigation = st.radio("Navigation Menu", nav_options)
 
@@ -778,9 +798,13 @@ elif navigation == "📦 Manage Farm Listings":
 
     with tab_active:
         try:
-            my_items = supabase.table("listings").select("*").eq("seller", st.session_state.username).execute().data
+            if st.session_state.user_role == "Admin":
+                my_items = supabase.table("listings").select("*").execute().data
+            else:
+                my_items = supabase.table("listings").select("*").eq("seller", st.session_state.username).execute().data
+                
             if not my_items:
-                st.info("You haven't listed any produce yet.")
+                st.info("No produce listings found.")
             else:
                 for item in my_items:
                     with st.container(border=True):
@@ -792,6 +816,7 @@ elif navigation == "📦 Manage Farm Listings":
                             st.write(f"**Category:** {item.get('category')}")
                             st.write(f"**Price:** ₦{float(item['price_ngn']):,.2f} | **Stock:** {item.get('quantity')} units")
                             st.write(f"**Location:** {item.get('location')} ({item.get('exact_farm_address', 'N/A')})")
+                            st.caption(f"Seller: {item.get('seller')}")
                         with c3:
                             if st.button("🗑️ Delete Listing", key=f"del_{item['id']}"):
                                 supabase.table("transactions").delete().eq("listing_id", item["id"]).execute()
@@ -869,7 +894,7 @@ elif navigation == "📦 Manage Farm Listings":
                         st.success("🎉 Produce listed successfully with verified logistics location!")
 
 # ==============================================================================
-# 11. FARMER SALES & ESCROW LEDGER WITH DUAL SIGN-OFF & PAYSTACK WITHDRAWAL
+# 11. FARMER SALES & ESCROW LEDGER
 # ==============================================================================
 elif navigation == "💰 Farmer Sales & Escrow":
     st.subheader("💰 Confirmed Sales & Escrow Ledger")
@@ -878,77 +903,79 @@ elif navigation == "💰 Farmer Sales & Escrow":
 
     with tab_sales:
         try:
-            farmer_listings = supabase.table("listings").select("id").eq("seller", st.session_state.username).execute().data
-            if farmer_listings:
-                f_ids = [l["id"] for l in farmer_listings]
-                tx_res = supabase.table("transactions").select("*").in_("listing_id", f_ids).execute().data
-
-                if tx_res:
-                    df_tx = pd.DataFrame(tx_res)
-                    paid_df = df_tx[df_tx["status"].isin(["PAID_VERIFIED", "FARMER_DISPATCHED", "DELIVERED_VERIFIED"])]
-                    total_sales = paid_df["amount"].sum() if not paid_df.empty else 0.0
-
-                    m1, m2, m3 = st.columns(3)
-                    with m1:
-                        st.metric("Total Confirmed Sales", f"₦{total_sales:,.2f}")
-                    with m2:
-                        st.metric("Active Escrow Orders", len(paid_df))
-                    with m3:
-                        st.metric("Total Transactions", len(tx_res))
-
-                    st.divider()
-
-                    for tx in tx_res:
-                        with st.container(border=True):
-                            tc1, tc2, tc3 = st.columns([2, 2, 1.5])
-                            with tc1:
-                                st.markdown(f"**Order ID:** `{tx['id']}`")
-                                st.markdown(f"**Item:** {tx['item']} ({tx.get('quantity_bought', 1)} units)")
-                                st.markdown(f"**Buyer Name:** {tx['buyer']}")
-                            with tc2:
-                                st.markdown(f"**Subtotal:** ₦{float(tx['amount']):,.2f}")
-                                st.markdown(f"**Delivery Destination:** {tx.get('delivery_address', 'N/A')}")
-                                
-                                f_sign = tx.get("farmer_signoff", False)
-                                b_sign = tx.get("buyer_signoff", False)
-                                
-                                st.markdown(f"**Farmer Dispatch Sign-Off:** {'🟢 Complete' if f_sign else '⏳ Pending'}")
-                                st.markdown(f"**Buyer Delivery Sign-Off:** {'🟢 Complete' if b_sign else '⏳ Pending'}")
-
-                            with tc3:
-                                status_str = tx.get("status", "PENDING")
-                                
-                                # FARMER MANUAL SIGN-OFF BUTTON IN BROWN
-                                if not f_sign and status_str in ["PAID_VERIFIED", "PAYMENT_INITIATED"]:
-                                    st.markdown(
-                                        '<div class="warning-box" style="padding:8px; font-size:0.8rem; margin-bottom:8px;">'
-                                        '<b>Farmer Action Required:</b> Click below only when produce is handed over to logistics carrier.'
-                                        '</div>',
-                                        unsafe_allow_html=True
-                                    )
-                                    if st.button("🚚 CONFIRM DISPATCH TO CARRIER", key=f"f_sign_{tx['id']}"):
-                                        supabase.table("transactions").update({
-                                            "farmer_signoff": True,
-                                            "status": "FARMER_DISPATCHED" if not b_sign else "DELIVERED_VERIFIED"
-                                        }).eq("id", tx["id"]).execute()
-                                        st.success("Dispatch confirmed! Awaiting buyer receipt sign-off.")
-                                        st.rerun()
-
-                                elif f_sign and not b_sign:
-                                    st.info("🚚 Dispatched to carrier. Awaiting buyer inspection & sign-off.")
-                                
-                                elif f_sign and b_sign:
-                                    st.markdown(
-                                        '<div class="alert-success-box" style="padding:10px; font-size:0.85rem;">'
-                                        '🎉 <b>Buyer Confirmed Receipt!</b><br>Funds fully unlocked in your wallet.'
-                                        '</div>',
-                                        unsafe_allow_html=True
-                                    )
-
-                else:
-                    st.info("No sales records found.")
+            if st.session_state.user_role == "Admin":
+                tx_res = supabase.table("transactions").select("*").execute().data
             else:
-                st.info("No active listings found.")
+                farmer_listings = supabase.table("listings").select("id").eq("seller", st.session_state.username).execute().data
+                if farmer_listings:
+                    f_ids = [l["id"] for l in farmer_listings]
+                    tx_res = supabase.table("transactions").select("*").in_("listing_id", f_ids).execute().data
+                else:
+                    tx_res = []
+
+            if tx_res:
+                df_tx = pd.DataFrame(tx_res)
+                paid_df = df_tx[df_tx["status"].isin(["PAID_VERIFIED", "FARMER_DISPATCHED", "DELIVERED_VERIFIED"])]
+                total_sales = paid_df["amount"].sum() if not paid_df.empty else 0.0
+
+                m1, m2, m3 = st.columns(3)
+                with m1:
+                    st.metric("Total Confirmed Sales", f"₦{total_sales:,.2f}")
+                with m2:
+                    st.metric("Active Escrow Orders", len(paid_df))
+                with m3:
+                    st.metric("Total Transactions", len(tx_res))
+
+                st.divider()
+
+                for tx in tx_res:
+                    with st.container(border=True):
+                        tc1, tc2, tc3 = st.columns([2, 2, 1.5])
+                        with tc1:
+                            st.markdown(f"**Order ID:** `{tx['id']}`")
+                            st.markdown(f"**Item:** {tx['item']} ({tx.get('quantity_bought', 1)} units)")
+                            st.markdown(f"**Buyer Name:** {tx['buyer']}")
+                        with tc2:
+                            st.markdown(f"**Subtotal:** ₦{float(tx['amount']):,.2f}")
+                            st.markdown(f"**Delivery Destination:** {tx.get('delivery_address', 'N/A')}")
+                            
+                            f_sign = tx.get("farmer_signoff", False)
+                            b_sign = tx.get("buyer_signoff", False)
+                            
+                            st.markdown(f"**Farmer Dispatch Sign-Off:** {'🟢 Complete' if f_sign else '⏳ Pending'}")
+                            st.markdown(f"**Buyer Delivery Sign-Off:** {'🟢 Complete' if b_sign else '⏳ Pending'}")
+
+                        with tc3:
+                            status_str = tx.get("status", "PENDING")
+                            
+                            if not f_sign and status_str in ["PAID_VERIFIED", "PAYMENT_INITIATED"]:
+                                st.markdown(
+                                    '<div class="warning-box" style="padding:8px; font-size:0.8rem; margin-bottom:8px;">'
+                                    '<b>Action Required:</b> Click below when produce is handed over to logistics carrier.'
+                                    '</div>',
+                                    unsafe_allow_html=True
+                                )
+                                if st.button("🚚 CONFIRM DISPATCH TO CARRIER", key=f"f_sign_{tx['id']}"):
+                                    supabase.table("transactions").update({
+                                        "farmer_signoff": True,
+                                        "status": "FARMER_DISPATCHED" if not b_sign else "DELIVERED_VERIFIED"
+                                    }).eq("id", tx["id"]).execute()
+                                    st.success("Dispatch confirmed! Awaiting buyer receipt sign-off.")
+                                    st.rerun()
+
+                            elif f_sign and not b_sign:
+                                st.info("🚚 Dispatched to carrier. Awaiting buyer inspection & sign-off.")
+                            
+                            elif f_sign and b_sign:
+                                st.markdown(
+                                    '<div class="alert-success-box" style="padding:10px; font-size:0.85rem;">'
+                                    '🎉 <b>Buyer Confirmed Receipt!</b><br>Funds fully unlocked in wallet.'
+                                    '</div>',
+                                    unsafe_allow_html=True
+                                )
+
+            else:
+                st.info("No sales records found.")
         except Exception as e:
             st.error(f"Error loading sales: {e}")
 
@@ -956,23 +983,28 @@ elif navigation == "💰 Farmer Sales & Escrow":
         st.markdown("### 🏦 Withdraw Unlocked Earnings to Bank (Paystack)")
         
         try:
-            farmer_listings = supabase.table("listings").select("id").eq("seller", st.session_state.username).execute().data
+            if st.session_state.user_role == "Admin":
+                all_tx = supabase.table("transactions").select("*").execute().data
+            else:
+                farmer_listings = supabase.table("listings").select("id").eq("seller", st.session_state.username).execute().data
+                if farmer_listings:
+                    f_ids = [l["id"] for l in farmer_listings]
+                    all_tx = supabase.table("transactions").select("*").in_("listing_id", f_ids).execute().data
+                else:
+                    all_tx = []
+
             unlocked_balance = 0.0
             pending_balance = 0.0
 
-            if farmer_listings:
-                f_ids = [l["id"] for l in farmer_listings]
-                all_tx = supabase.table("transactions").select("*").in_("listing_id", f_ids).execute().data
+            for tx in all_tx:
+                amt = float(tx.get("amount", 0.0))
+                f_sign = tx.get("farmer_signoff", False)
+                b_sign = tx.get("buyer_signoff", False)
                 
-                for tx in all_tx:
-                    amt = float(tx.get("amount", 0.0))
-                    f_sign = tx.get("farmer_signoff", False)
-                    b_sign = tx.get("buyer_signoff", False)
-                    
-                    if f_sign and b_sign:
-                        unlocked_balance += amt
-                    elif tx.get("status") in ["PAID_VERIFIED", "FARMER_DISPATCHED"]:
-                        pending_balance += amt
+                if f_sign and b_sign:
+                    unlocked_balance += amt
+                elif tx.get("status") in ["PAID_VERIFIED", "FARMER_DISPATCHED"]:
+                    pending_balance += amt
 
             b1, b2 = st.columns(2)
             with b1:
@@ -984,7 +1016,7 @@ elif navigation == "💰 Farmer Sales & Escrow":
                 st.markdown(
                     """
                     <div class="alert-success-box">
-                        <b>✅ NOTIFICATION TO FARMER:</b> The buyer has received and confirmed your produce delivery! Your escrow earnings are now fully unlocked. You may request your Paystack bank transfer below.
+                        <b>✅ NOTIFICATION:</b> Escrow earnings are fully unlocked. You may request a Paystack bank transfer below.
                     </div>
                     """,
                     unsafe_allow_html=True,
@@ -1028,7 +1060,7 @@ elif navigation == "💰 Farmer Sales & Escrow":
             st.error(f"Error processing payouts: {e}")
 
 # ==============================================================================
-# 12. BUYER ORDERS VIEW WITH DUAL SIGN-OFF & WARNING BANNER
+# 12. BUYER ORDERS VIEW
 # ==============================================================================
 elif navigation == "📦 My Orders & Escrow":
     st.subheader("📦 My Purchased Orders & Delivery Sign-Off")
@@ -1045,7 +1077,11 @@ elif navigation == "📦 My Orders & Escrow":
     )
 
     try:
-        orders = supabase.table("transactions").select("*").eq("buyer", st.session_state.username).execute().data
+        if st.session_state.user_role == "Admin":
+            orders = supabase.table("transactions").select("*").execute().data
+        else:
+            orders = supabase.table("transactions").select("*").eq("buyer", st.session_state.username).execute().data
+            
         if not orders:
             st.info("No orders found.")
         else:
@@ -1067,7 +1103,6 @@ elif navigation == "📦 My Orders & Escrow":
 
                     with oc3:
                         if not b_sign:
-                            # DISTINCT BROWN SIGN-OFF BUTTON FOR BUYER
                             if st.button("✅ CONFIRM DELIVERY RECEIVED", key=f"b_sign_{ord_item['id']}"):
                                 new_status = "DELIVERED_VERIFIED" if f_sign else "BUYER_RECEIVED_PENDING_FARMER"
                                 supabase.table("transactions").update({
@@ -1088,7 +1123,7 @@ elif navigation == "📦 My Orders & Escrow":
         st.error(f"Error loading orders: {e}")
 
 # ==============================================================================
-# 13. REVENUE DASHBOARD (ADMIN)
+# 13. REVENUE DASHBOARD (ADMIN ONLY)
 # ==============================================================================
 elif navigation == "📈 Revenue Dashboard":
     st.subheader("📈 Marketplace GMV & Platform Revenue")
@@ -1142,14 +1177,17 @@ elif navigation == "💬 Support & AI Helpdesk":
     with col2:
         st.markdown("### 📜 Support History")
         try:
-            tickets = (
-                supabase.table("support_messages")
-                .select("*")
-                .eq("user_email", st.session_state.email)
-                .order("created_at", desc=True)
-                .execute()
-                .data
-            )
+            if st.session_state.user_role == "Admin":
+                tickets = supabase.table("support_messages").select("*").order("created_at", desc=True).execute().data
+            else:
+                tickets = (
+                    supabase.table("support_messages")
+                    .select("*")
+                    .eq("user_email", st.session_state.email)
+                    .order("created_at", desc=True)
+                    .execute()
+                    .data
+                )
 
             if not tickets:
                 st.info("No previous support chats.")
@@ -1157,7 +1195,7 @@ elif navigation == "💬 Support & AI Helpdesk":
                 for t in tickets:
                     with st.expander(f"Ticket #{t['id']} | {t.get('created_at', '')[:10]}", expanded=True):
                         st.markdown(
-                            f'<div class="user-msg-box"><b>👤 {st.session_state.username}:</b><br>{t["message"]}</div>',
+                            f'<div class="user-msg-box"><b>👤 {t.get("user_email", st.session_state.username)}:</b><br>{t["message"]}</div>',
                             unsafe_allow_html=True
                         )
                         if t.get("response"):
