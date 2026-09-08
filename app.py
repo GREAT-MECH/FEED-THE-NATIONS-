@@ -22,7 +22,7 @@ PAYSTACK_SECRET_KEY = os.environ.get("PAYSTACK_SECRET_KEY", "sk_live_5d70f03c20e
 PAYSTACK_CALLBACK_URL = os.environ.get("PAYSTACK_CALLBACK_URL", "https://feed-the-nations.onrender.com")
 
 # ==============================================================================
-# 1. PAGE CONFIG & STYLING (MODERN APP DESIGN)
+# 1. PAGE CONFIG & RESTORED BEAUTIFUL HEADER STYLING
 # ==============================================================================
 st.set_page_config(
     page_title="FEED THE NATIONS - Direct Agri Marketplace",
@@ -53,34 +53,62 @@ st.markdown(
         color: var(--text-dark);
     }
 
-    /* Brand Header Banner */
-    .brand-header {
+    /* RESTORED LUXURY BRAND HEADER */
+    .brand-header-container {
         position: relative;
-        background: linear-gradient(135deg, #103B2B 0%, #1B4D3E 50%, #2D6A4F 100%);
-        padding: 30px 20px;
-        border-radius: 18px;
+        background: linear-gradient(135deg, #0A2F23 0%, #1B4D3E 50%, #2D6A4F 100%);
+        padding: 40px 24px;
+        border-radius: 20px;
         text-align: center;
-        margin-bottom: 24px;
-        color: #FFFFFF !important;
-        box-shadow: 0 10px 25px rgba(27, 77, 62, 0.2);
+        margin-bottom: 28px;
+        box-shadow: 0 12px 30px rgba(27, 77, 62, 0.25);
+        border: 1px solid rgba(255, 255, 255, 0.12);
         overflow: hidden;
+    }
+
+    /* Background glow effect for header */
+    .brand-header-container::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(163, 177, 138, 0.15) 0%, rgba(0,0,0,0) 70%);
+        pointer-events: none;
     }
 
     .brand-title {
         color: #FFFFFF !important;
         font-family: 'Montserrat', sans-serif;
-        font-size: clamp(2rem, 4.5vw, 3.2rem);
+        font-size: clamp(2.2rem, 5vw, 3.6rem);
         font-weight: 900;
-        letter-spacing: 1.5px;
+        letter-spacing: 2px;
         margin: 0;
         text-transform: uppercase;
+        text-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+
+    .brand-badge {
+        display: inline-block;
+        background: rgba(212, 163, 115, 0.2);
+        border: 1px solid #D4A373;
+        color: #FFE8D6;
+        padding: 4px 14px;
+        border-radius: 30px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        margin-bottom: 10px;
     }
 
     .brand-subtext {
-        color: #A3B18A;
-        font-size: 1.05rem;
+        color: #E2E8F0;
+        font-size: 1.1rem;
         font-weight: 500;
-        margin-top: 6px;
+        margin-top: 10px;
+        letter-spacing: 0.5px;
     }
 
     /* Sidebar Styling */
@@ -91,13 +119,13 @@ st.markdown(
     
     .user-profile-badge {
         background: #F1F5F9;
-        padding: 14px;
-        border-radius: 12px;
+        padding: 16px;
+        border-radius: 14px;
         border: 1px solid #E2E8F0;
         margin-bottom: 16px;
     }
 
-    /* Compact Grid Product Cards */
+    /* Product Cards Layout */
     .product-grid-card {
         background-color: #FFFFFF;
         border: 1px solid #E2E8F0;
@@ -108,7 +136,7 @@ st.markdown(
         display: flex;
         flex-direction: column;
         justify-content: space-between;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.03);
     }
 
     .product-grid-card:hover {
@@ -117,18 +145,7 @@ st.markdown(
         border-color: #CBD5E1;
     }
 
-    .badge-tag {
-        display: inline-block;
-        padding: 3px 10px;
-        border-radius: 20px;
-        font-size: 0.75rem;
-        font-weight: 700;
-        text-transform: uppercase;
-    }
-    .badge-green { background: #E8F5E9; color: #2E7D32; }
-    .badge-amber { background: #FFF8E1; color: #F57F17; }
-
-    /* Button Customization */
+    /* Streamlit Buttons Customization */
     div.stButton > button {
         background: linear-gradient(135deg, #1B4D3E 0%, #2C6E49 100%) !important;
         color: #FFFFFF !important;
@@ -147,16 +164,6 @@ st.markdown(
         box-shadow: 0 4px 12px rgba(27, 77, 62, 0.25) !important;
     }
 
-    /* Metric Cards */
-    .metric-card {
-        background: #FFFFFF;
-        padding: 20px;
-        border-radius: 14px;
-        border: 1px solid #E2E8F0;
-        border-left: 5px solid #1B4D3E;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.02);
-    }
-
     /* WhatsApp Button */
     .whatsapp-btn {
         display: block;
@@ -164,12 +171,13 @@ st.markdown(
         background-color: #25D366;
         color: white !important;
         font-weight: 700;
-        padding: 10px 16px;
+        padding: 12px 18px;
         border-radius: 10px;
         text-decoration: none;
         margin-top: 10px;
         margin-bottom: 10px;
-        font-size: 0.9rem;
+        font-size: 0.95rem;
+        box-shadow: 0 4px 10px rgba(37, 211, 102, 0.2);
     }
     .whatsapp-btn:hover {
         background-color: #128C7E;
@@ -364,13 +372,14 @@ if "reference" in query_params or "trxref" in query_params:
         st.query_params.clear()
 
 # ==============================================================================
-# 4. BRAND HEADER
+# 4. RESTORED BRAND HEADER
 # ==============================================================================
 st.markdown(
     """
-<div class="brand-header">
+<div class="brand-header-container">
+    <div class="brand-badge">🌾 Official Agricultural Escrow Platform</div>
     <h1 class="brand-title">FEED THE NATIONS</h1>
-    <p class="brand-subtext">Direct Farm-to-Buyer Marketplace • Escrow Protection • Integrated Logistics</p>
+    <p class="brand-subtext">Direct Farm-to-Buyer Marketplace • Verified Produce • Instant Logistics Freight</p>
 </div>
 """,
     unsafe_allow_html=True,
@@ -570,7 +579,7 @@ def show_product_detail_modal(product_id):
         st.error(f"Error opening modal: {e}")
 
 # ==============================================================================
-# 8. MARKETPLACE VIEW (CLEAN COMPACT GRID)
+# 8. MARKETPLACE VIEW
 # ==============================================================================
 if navigation == "🛒 Produce Marketplace":
     st.subheader("🛒 Farm Produce Marketplace")
@@ -595,7 +604,6 @@ if navigation == "🛒 Produce Marketplace":
         if not listings:
             st.info("No active produce listings available.")
         else:
-            # Grid Layout: 3 Columns for Clean Visual Cards
             cols_per_row = 3
             for i in range(0, len(listings), cols_per_row):
                 row_items = listings[i:i + cols_per_row]
@@ -623,7 +631,7 @@ if navigation == "🛒 Produce Marketplace":
         st.error(f"Marketplace error: {e}")
 
 # ==============================================================================
-# 9. FARMER LISTINGS MANAGEMENT (TABBED INTERFACE)
+# 9. FARMER LISTINGS MANAGEMENT
 # ==============================================================================
 elif navigation == "📦 Manage Farm Listings":
     st.subheader("📦 Farm Produce Inventory")
