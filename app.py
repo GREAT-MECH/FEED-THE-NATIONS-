@@ -206,18 +206,17 @@ NIGERIAN_STATES = [
     "Taraba", "Yobe", "Zamfara"
 ]
 
-# VERIFIED NIGERIAN LOGISTICS & FREIGHT COMPANIES (ACTIVE WHATSAPP SUPPORT LINES)
 LOGISTICS_PARTNERS = {
-    "1. GIG Logistics (Agri-Freight Division)": {"whatsapp": "2347080960441"},
-    "2. Speedaf Express Cargo": {"whatsapp": "2347080636400"},
-    "3. Max.ng Heavy Cargo & Freight": {"whatsapp": "2349088209804"},
-    "4. Kwik Delivery Support Desk": {"whatsapp": "2348101822000"},
-    "5. DHL Express Freight Nigeria": {"whatsapp": "2348039004000"},
-    "6. Red Star Express Freight Services": {"whatsapp": "2348039012345"},
-    "7. IFEX Express Cargo Lines": {"whatsapp": "2348033045678"},
-    "8. FEDEX Nigeria Bulk Haulage": {"whatsapp": "2348022221100"},
-    "9. ABC Cargo & Logistics": {"whatsapp": "2348055554433"},
-    "10. Farmers Union Co-Op Logistics": {"whatsapp": "2348023334455"},
+    "1. GIG Logistics (E-commerce & Nationwide Delivery)": {"whatsapp": "13467744344"},
+    "2. Maersk Nigeria (International Shipping & Bulk Freight)": {"whatsapp": "2349087848100"},
+    "3. Fortune Global Shipping (Freight Forwarding & Warehousing)": {"whatsapp": "2348182784572"},
+    "4. CourierPlus (Nationwide Express Courier)": {"whatsapp": "2347033074129"},
+    "5. Kobo360 (Haulage & Heavy Cargo Platform)": {"whatsapp": "2348186780000"},
+    "6. DHL Express Nigeria (Express Courier & Freight)": {"whatsapp": "2347011126221"},
+    "7. Red Star Express (Express Delivery Services)": {"whatsapp": "2347007337827"},
+    "8. SkyNet Worldwide Express (Shipping & Logistics)": {"whatsapp": "2349056533136"},
+    "9. Tranex (Cargo & Heavy Haulage)": {"whatsapp": "2348123682573"},
+    "10. Sendbox (Local & International Delivery)": {"whatsapp": "23417006150"},
 }
 
 def verify_farm_photo(image):
@@ -281,7 +280,6 @@ def initialize_paystack_payment(email, amount_ngn, reference):
     return response.json()
 
 def verify_paystack_payment(reference):
-    """Verifies payment with Paystack API before registering order on farmer dashboard."""
     url = f"https://api.paystack.co/transaction/verify/{reference}"
     headers = {
         "Authorization": f"Bearer {PAYSTACK_SECRET_KEY}",
@@ -319,15 +317,12 @@ if "reference" in query_params or "trxref" in query_params:
     pay_ref = query_params.get("reference") or query_params.get("trxref")
     is_success, msg_or_data = verify_paystack_payment(pay_ref)
     if is_success:
-        # Check if transaction exists in Supabase
         existing_tx = supabase.table("transactions").select("*").eq("paystack_ref", pay_ref).execute().data
         if existing_tx and existing_tx[0].get("status") != "PAID_VERIFIED":
             tx_item = existing_tx[0]
             
-            # Update transaction status to PAID_VERIFIED
             supabase.table("transactions").update({"status": "PAID_VERIFIED"}).eq("paystack_ref", pay_ref).execute()
             
-            # Deduct inventory stock from active listing
             listing_res = supabase.table("listings").select("quantity").eq("id", tx_item["listing_id"]).execute().data
             if listing_res:
                 current_qty = int(listing_res[0].get("quantity", 0))
@@ -346,7 +341,7 @@ st.markdown(
 <div class="brand-header">
     <h1 class="brand-title">FEED THE NATIONS</h1>
     <div class="brand-emojis">🌾 🌽 🐂 🐓</div>
-    <p class="brand-subtext">Direct Farm-to-Buyer Agricultural Marketplace • Escrow Protection • Real-Time Freight</p>
+    <p class="brand-subtext">Direct Farm-to-Buyer Agricultural Marketplace • Escrow Protection • Managed Freight Delivery</p>
 </div>
 """,
     unsafe_allow_html=True,
@@ -507,7 +502,6 @@ elif navigation == "💰 Farmer Sales & Escrow Orders":
         if farmer_listings:
             farmer_listing_ids = [l["id"] for l in farmer_listings]
             
-            # Fetch transactions filtered by listing IDs and PAID_VERIFIED status
             tx_response = (
                 supabase.table("transactions")
                 .select("*")
@@ -548,6 +542,7 @@ elif navigation == "💰 Farmer Sales & Escrow Orders":
                     with c1:
                         st.write(f"**Buyer Username:** `{order.get('buyer', 'N/A')}`")
                         st.write(f"**Quantity Purchased:** {order.get('quantity_bought', 1)} units")
+                        st.write(f"**Delivery Address:** {order.get('delivery_address', 'N/A')}")
                     with c2:
                         st.write(f"**Produce Subtotal:** ₦{float(order.get('amount', 0)):,.2f}")
                         st.write(f"**Payment Verification:** ✅ `PAID_VERIFIED`")
@@ -564,7 +559,7 @@ elif navigation == "💰 Farmer Sales & Escrow Orders":
         st.error(f"Error loading sales ledger: {str(e)}")
 
 # ==============================================================================
-# 9. BUYER MARKETPLACE WITH LIVE INVENTORY & VERIFIED ESCROW
+# 9. BUYER MARKETPLACE WITH EXACT DESTINATION ADDRESS & LOGISTICS ESCROW
 # ==============================================================================
 elif navigation == "🛒 Browse Marketplace":
     st.subheader("🛒 Direct Farm Produce Marketplace")
@@ -578,7 +573,7 @@ elif navigation == "🛒 Browse Marketplace":
     st.divider()
 
     try:
-        query = supabase.table("listings").select("*").gt("quantity", 0)  # Exclude out-of-stock items
+        query = supabase.table("listings").select("*").gt("quantity", 0)
         if buying_scale != "All Scales":
             query = query.eq("scale", buying_scale)
         if category_filter != "All Categories":
@@ -600,7 +595,7 @@ elif navigation == "🛒 Browse Marketplace":
             with col2:
                 st.markdown(f"### {item['item']}")
                 st.write(f"**Sector:** `{item.get('category')}`")
-                st.write(f"**Producer:** {item['seller']} | 📍 **Origin:** {item['location']}")
+                st.write(f"**Producer:** {item['seller']} | 📍 **Pickup Origin:** {item['location']}")
 
                 unit_price = float(item["price_ngn"])
                 available_stock = int(item.get("quantity", 1))
@@ -609,7 +604,6 @@ elif navigation == "🛒 Browse Marketplace":
                 st.markdown(f"**Unit Price:** ₦{unit_price:,.2f}")
                 st.markdown(f"🟢 **Available Stock:** **{available_stock} units left** (Est. {unit_weight} kg per unit)")
 
-                # Quantity selection bounded by available inventory
                 desired_qty = st.number_input(
                     "Select Quantity to Purchase",
                     min_value=1,
@@ -626,14 +620,24 @@ elif navigation == "🛒 Browse Marketplace":
                 st.markdown(f"**Subtotal ({desired_qty} units • Est. {total_weight_kg:,.1f} kg):** ₦{product_subtotal:,.2f}")
                 st.markdown(f"**Platform Escrow Fee (10%):** ₦{platform_fee:,.2f}")
 
-                st.markdown("#### 🚚 Step 1: Request Freight Quote from Logistics Partner")
+                st.markdown("#### 🚚 Step 1: Input Delivery Destination & Negotiate Freight")
                 
-                delivery_destination = st.selectbox(
-                    f"Select Delivery State for {item['item']}",
-                    NIGERIAN_STATES,
-                    index=24,
-                    key=f"dest_{item['id']}"
-                )
+                c_dest1, c_dest2 = st.columns([1, 2])
+                with c_dest1:
+                    delivery_state = st.selectbox(
+                        f"Destination State",
+                        NIGERIAN_STATES,
+                        index=24,
+                        key=f"dest_state_{item['id']}"
+                    )
+                with c_dest2:
+                    delivery_street = st.text_input(
+                        "Exact Delivery Address (Street, Landmark, City)",
+                        placeholder="e.g., 14 Commercial Avenue, Yaba, Lagos",
+                        key=f"dest_street_{item['id']}"
+                    )
+
+                full_delivery_address = f"{delivery_street.strip()}, {delivery_state}" if delivery_street.strip() else delivery_state
 
                 selected_partner = st.selectbox(
                     f"Select Freight Carrier (Top 10 Nationwide Haulers)",
@@ -648,14 +652,14 @@ elif navigation == "🛒 Browse Marketplace":
                     f"• Item: {item['item']}\n"
                     f"• Quantity: {desired_qty} units\n"
                     f"• Est. Total Weight: {total_weight_kg} kg\n"
-                    f"• Pickup Location (Farm): {item['location']}\n"
-                    f"• Delivery Destination: {delivery_destination} State\n\n"
-                    f"Please provide an official freight cost quote for this delivery."
+                    f"• Pickup Farm Location: {item['location']}\n"
+                    f"• Exact Delivery Destination: {full_delivery_address}\n\n"
+                    f"Please provide an official freight quote for this delivery. Note: FEED THE NATIONS marketplace pays freight fees directly from escrow upon delivery completion."
                 )
                 wa_url = f"https://wa.me/{partner_info['whatsapp']}?text={urllib.parse.quote(wa_msg_text)}"
 
                 st.markdown(
-                    f'<a href="{wa_url}" target="_blank" class="whatsapp-btn">💬 Send Freight Details to {selected_partner} on WhatsApp</a>',
+                    f'<a href="{wa_url}" target="_blank" class="whatsapp-btn">💬 Send Delivery Details to {selected_partner} on WhatsApp</a>',
                     unsafe_allow_html=True,
                 )
 
@@ -672,31 +676,35 @@ elif navigation == "🛒 Browse Marketplace":
                 st.markdown(f"### **Total Amount Payable (Produce + Escrow + Freight): ₦{final_total:,.2f}**")
 
                 if st.button("BUY WITH ESCROW 💳", key=f"pay_{item['id']}"):
-                    ref = f"FTN-TX-{random.randint(100000, 999999)}"
-                    tx_record = {
-                        "id": ref,
-                        "listing_id": item["id"],
-                        "category": item["category"],
-                        "item": item["item"],
-                        "quantity_bought": desired_qty,
-                        "amount": product_subtotal,
-                        "commission": platform_fee,
-                        "freight": agreed_freight,
-                        "total_paid": final_total,
-                        "buyer": st.session_state.username,
-                        "status": "PAYMENT_INITIATED",  # Status starts as INITIATED until Paystack verifies
-                        "paystack_ref": ref,
-                    }
-                    supabase.table("transactions").insert(tx_record).execute()
-                    pay_resp = initialize_paystack_payment(st.session_state.email, final_total, ref)
+                    if not delivery_street.strip():
+                        st.error("⚠️ Please enter your exact delivery address before proceeding to payment.")
+                    else:
+                        ref = f"FTN-TX-{random.randint(100000, 999999)}"
+                        tx_record = {
+                            "id": ref,
+                            "listing_id": item["id"],
+                            "category": item["category"],
+                            "item": item["item"],
+                            "quantity_bought": desired_qty,
+                            "amount": product_subtotal,
+                            "commission": platform_fee,
+                            "freight": agreed_freight,
+                            "total_paid": final_total,
+                            "buyer": st.session_state.username,
+                            "delivery_address": full_delivery_address,
+                            "status": "PAYMENT_INITIATED",
+                            "paystack_ref": ref,
+                        }
+                        supabase.table("transactions").insert(tx_record).execute()
+                        pay_resp = initialize_paystack_payment(st.session_state.email, final_total, ref)
 
-                    if pay_resp.get("status"):
-                        auth_url = pay_resp["data"]["authorization_url"]
-                        st.success("🔒 Checkout initialized! Click link below to complete payment.")
-                        st.markdown(
-                            f'<a href="{auth_url}" target="_blank" style="display:inline-block; background: #1E5631; color:white; padding:12px 24px; border-radius:8px; text-decoration:none; font-weight:bold;">Proceed to Paystack Checkout ➔</a>',
-                            unsafe_allow_html=True,
-                        )
+                        if pay_resp.get("status"):
+                            auth_url = pay_resp["data"]["authorization_url"]
+                            st.success("🔒 Checkout initialized! Click link below to complete payment.")
+                            st.markdown(
+                                f'<a href="{auth_url}" target="_blank" style="display:inline-block; background: #1E5631; color:white; padding:12px 24px; border-radius:8px; text-decoration:none; font-weight:bold;">Proceed to Paystack Checkout ➔</a>',
+                                unsafe_allow_html=True,
+                            )
 
             st.markdown("</div>", unsafe_allow_html=True)
     except Exception as e:
@@ -717,6 +725,7 @@ elif navigation == "📦 My Orders & Escrow":
                 st.markdown('<div class="product-card">', unsafe_allow_html=True)
                 st.markdown(f"### Order ID: `{order['id']}` - {order.get('item', 'Farm Produce')}")
                 st.write(f"**Quantity Purchased:** {order.get('quantity_bought', 1)} units")
+                st.write(f"**Delivery Destination:** {order.get('delivery_address', 'N/A')}")
                 st.write(f"**Verification Status:** `{order.get('status', 'PENDING')}`")
                 st.write(f"**Freight Paid:** ₦{float(order.get('freight', 0)):,.2f}")
                 st.write(f"**Total Amount Paid:** ₦{float(order.get('total_paid', 0)):,.2f}")
@@ -726,12 +735,11 @@ elif navigation == "📦 My Orders & Escrow":
         st.info("There are no active orders.")
 
 # ==============================================================================
-# 10. FARMER PRODUCT MANAGEMENT
+# 10. FARMER PRODUCT MANAGEMENT (FULL EDITABLE CATEGORY & DETAILS)
 # ==============================================================================
 elif navigation == "➕ Add New Product":
     st.subheader("🚜 Post New Farm Produce Listing")
 
-    # MANDATORY WARNING BANNER FOR FARMERS
     st.markdown(
         """
         <div class="warning-banner">
@@ -747,7 +755,7 @@ elif navigation == "➕ Add New Product":
     )
 
     with st.form("add_product_form"):
-        farming_cat = st.selectbox("Agricultural Sector", AGRI_CATEGORIES)
+        farming_cat = st.selectbox("Agricultural Sector / Category", AGRI_CATEGORIES)
         prod_scale = st.selectbox("Supply Scale Category", ["Large Scale / Commercial Wholesale", "Small Scale / Retail"])
         title = st.text_input("Product Title (e.g. 50kg Bags of White Maize)")
 
@@ -807,12 +815,29 @@ elif navigation == "📦 My Active Products":
             edit_item = supabase.table("listings").select("*").eq("id", st.session_state.editing_listing_id).execute().data
             if edit_item:
                 item_data = edit_item[0]
+                
+                # Determine current category index safely
+                current_cat = item_data.get("category", AGRI_CATEGORIES[0])
+                cat_index = AGRI_CATEGORIES.index(current_cat) if current_cat in AGRI_CATEGORIES else 0
+                
+                current_scale = item_data.get("scale", "Large Scale / Commercial Wholesale")
+                scale_options = ["Large Scale / Commercial Wholesale", "Small Scale / Retail"]
+                scale_index = scale_options.index(current_scale) if current_scale in scale_options else 0
+
                 with st.form("edit_product_form"):
+                    e_category = st.selectbox("Agricultural Sector / Category", AGRI_CATEGORIES, index=cat_index)
+                    e_scale = st.selectbox("Supply Scale Category", scale_options, index=scale_index)
                     e_title = st.text_input("Product Title", value=item_data.get("item", ""))
-                    e_price = st.number_input("Unit Price (₦)", value=float(item_data.get("price_ngn", 1000)), step=1000.0)
-                    e_location = st.text_input("Farm Location", value=item_data.get("location", ""))
-                    e_quantity = st.number_input("Available Quantity", value=int(item_data.get("quantity", 1)))
-                    e_weight = st.number_input("Unit Weight (KG)", value=float(item_data.get("unit_weight_kg", 50.0)))
+                    
+                    c1, c2, c3 = st.columns(3)
+                    with c1:
+                        e_price = st.number_input("Unit Price (₦)", value=float(item_data.get("price_ngn", 1000)), step=1000.0)
+                    with c2:
+                        e_quantity = st.number_input("Available Stock Quantity", value=int(item_data.get("quantity", 1)), min_value=0)
+                    with c3:
+                        e_weight = st.number_input("Unit Weight (KG)", value=float(item_data.get("unit_weight_kg", 50.0)), min_value=0.1)
+
+                    e_location = st.text_input("Farm Pickup Location / State", value=item_data.get("location", ""))
 
                     c_save, c_cancel = st.columns(2)
                     save_changes = c_save.form_submit_button("💾 SAVE CHANGES")
@@ -820,6 +845,8 @@ elif navigation == "📦 My Active Products":
 
                     if save_changes:
                         updated_fields = {
+                            "category": e_category,
+                            "scale": e_scale,
                             "item": e_title,
                             "price_ngn": e_price,
                             "location": e_location,
@@ -828,6 +855,7 @@ elif navigation == "📦 My Active Products":
                         }
                         supabase.table("listings").update(updated_fields).eq("id", item_data["id"]).execute()
                         st.session_state.editing_listing_id = None
+                        st.success("✅ Product updated successfully!")
                         st.rerun()
 
                     if cancel_changes:
