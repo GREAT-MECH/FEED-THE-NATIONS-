@@ -21,7 +21,7 @@ PAYSTACK_SECRET_KEY = os.environ.get("PAYSTACK_SECRET_KEY", "sk_live_5d70f03c20e
 PAYSTACK_CALLBACK_URL = os.environ.get("PAYSTACK_CALLBACK_URL", "https://feed-the-nations.onrender.com")
 
 # ==============================================================================
-# 1. PAGE CONFIG & ANIMATED AGRICULTURAL STYLING
+# 1. PAGE CONFIG & STYLING
 # ==============================================================================
 st.set_page_config(
     page_title="FEED THE NATIONS - Direct Agri Marketplace",
@@ -38,8 +38,6 @@ st.markdown(
     :root {
         --primary-agri: #1E5631;
         --accent-green: #4C9A2A;
-        --leaf-green: #76BA1B;
-        --warm-earth: #A47148;
         --card-bg: #FFFFFF;
         --light-bg: #F4F7F4;
     }
@@ -97,7 +95,6 @@ st.markdown(
         text-transform: uppercase;
         position: relative;
         z-index: 2;
-        text-shadow: 0 3px 10px rgba(0,0,0,0.3);
     }
 
     .brand-emojis {
@@ -143,12 +140,6 @@ st.markdown(
         box-shadow: 0 6px 18px rgba(0,0,0,0.05);
         border: 1px solid #E2E8F0;
         margin-bottom: 22px;
-        transition: border-color 0.2s ease, box-shadow 0.2s ease;
-    }
-
-    .product-card:hover {
-        border-color: var(--accent-green);
-        box-shadow: 0 8px 24px rgba(76, 154, 42, 0.12);
     }
 
     .metric-box {
@@ -180,7 +171,7 @@ st.markdown(
 )
 
 # ==============================================================================
-# 2. SUPABASE INITIALIZATION & HELPERS
+# 2. SUPABASE INITIALIZATION & CONSTANTS
 # ==============================================================================
 @st.cache_resource
 def init_supabase() -> Client:
@@ -206,11 +197,18 @@ NIGERIAN_STATES = [
     "Taraba", "Yobe", "Zamfara"
 ]
 
+# TOP 10 NIGERIAN LOGISTICS & FREIGHT COMPANIES FOR AGRI-HAULAGE
 LOGISTICS_PARTNERS = {
-    "GIG Logistics (Agri-Freight Division)": {"whatsapp": "2348130001122", "display": "+234 813 000 1122"},
-    "Kwik Delivery (Heavy Haulage)": {"whatsapp": "2348092223344", "display": "+234 809 222 3344"},
-    "Max.ng Freight & Inter-State": {"whatsapp": "2347008009000", "display": "+234 700 800 9000"},
-    "Farmers Union Transport Desk": {"whatsapp": "2348023334455", "display": "+234 802 333 4455"},
+    "1. GIG Logistics (Agri-Freight Division)": {"whatsapp": "2348130001122"},
+    "2. Kwik Delivery (Heavy Haulage Desk)": {"whatsapp": "2348092223344"},
+    "3. DHL Express Cargo (Interstate)": {"whatsapp": "2348039004000"},
+    "4. Red Star Express (FedEx Partner)": {"whatsapp": "2348039012345"},
+    "5. Max.ng Heavy Haulage": {"whatsapp": "2347008009000"},
+    "6. Speedaf Express Nigeria": {"whatsapp": "2348007733323"},
+    "7. IFEX Express Cargo": {"whatsapp": "2348033045678"},
+    "8. FEDEX Nigeria (Agri-Logistics)": {"whatsapp": "2348022221100"},
+    "9. ABC Cargo & Transport Services": {"whatsapp": "2348055554433"},
+    "10. Farmers Union Co-op Logistics": {"whatsapp": "2348023334455"},
 }
 
 def verify_farm_photo(image):
@@ -403,7 +401,7 @@ if st.sidebar.button("🔒 Sign Out"):
 st.sidebar.divider()
 
 if st.session_state.user_role == "Farmer":
-    nav_options = ["📦 My Active Products", "➕ Add New Product"]
+    nav_options = ["💰 Farmer Sales & Escrow Orders", "📦 My Active Products", "➕ Add New Product"]
 elif st.session_state.user_role == "Buyer":
     nav_options = ["🛒 Browse Marketplace", "📦 My Orders & Escrow"]
 elif st.session_state.user_role == "Admin":
@@ -448,7 +446,70 @@ if navigation == "📈 Founder Revenue Dashboard":
         st.error(f"Error loading revenue ledger: {str(e)}")
 
 # ==============================================================================
-# 8. BUYER MARKETPLACE WITH QUANTITY SELECTION, LOGISTICS & PAYSTACK ESCROW
+# 8. FARMER SALES & ESCROW MONITORING (NEWLY ADDED)
+# ==============================================================================
+elif navigation == "💰 Farmer Sales & Escrow Orders":
+    st.subheader("💰 Purchased Items & Escrow Status")
+    st.markdown("Monitor items bought by customers, escrow payments held, and shipment details.")
+
+    try:
+        # Fetch all product listings by this farmer
+        farmer_listings = supabase.table("listings").select("id").eq("seller", st.session_state.username).execute().data
+        
+        if farmer_listings:
+            farmer_listing_ids = [l["id"] for l in farmer_listings]
+            
+            # Get transactions where listing_id is in farmer's listings
+            tx_response = supabase.table("transactions").select("*").in_("listing_id", farmer_listing_ids).execute().data
+            
+            if tx_response:
+                df_farmer_tx = pd.DataFrame(tx_response)
+                
+                total_sales_val = df_farmer_tx["amount"].sum()
+                held_escrow_val = df_farmer_tx[df_farmer_tx["status"] == "ESCROW_HELD"]["amount"].sum()
+
+                m1, m2, m3 = st.columns(3)
+                with m1:
+                    st.markdown('<div class="metric-box">', unsafe_allow_html=True)
+                    st.metric("Total Sales Volume", f"₦{total_sales_val:,.2f}")
+                    st.markdown('</div>', unsafe_allow_html=True)
+                with m2:
+                    st.markdown('<div class="metric-box">', unsafe_allow_html=True)
+                    st.metric("Escrow Held Funds", f"₦{held_escrow_val:,.2f}")
+                    st.markdown('</div>', unsafe_allow_html=True)
+                with m3:
+                    st.markdown('<div class="metric-box">', unsafe_allow_html=True)
+                    st.metric("Total Orders Received", len(tx_response))
+                    st.markdown('</div>', unsafe_allow_html=True)
+
+                st.divider()
+                st.markdown("### 📦 Detailed Customer Sales Ledger")
+
+                for order in tx_response:
+                    st.markdown('<div class="product-card">', unsafe_allow_html=True)
+                    st.markdown(f"### Order Reference: `{order['id']}` - Produce: **{order.get('item', 'N/A')}**")
+                    
+                    c1, c2, c3 = st.columns(3)
+                    with c1:
+                        st.write(f"**Buyer Username:** `{order.get('buyer', 'N/A')}`")
+                        st.write(f"**Quantity Purchased:** {order.get('quantity_bought', 1)} units")
+                    with c2:
+                        st.write(f"**Produce Subtotal:** ₦{float(order.get('amount', 0)):,.2f}")
+                        st.write(f"**Escrow Status:** `{order.get('status', 'ESCROW_HELD')}`")
+                    with c3:
+                        st.write(f"**Agreed Freight Fee:** ₦{float(order.get('freight', 0)):,.2f}")
+                        st.write(f"**Grand Total Paid:** ₦{float(order.get('total_paid', 0)):,.2f}")
+
+                    st.markdown("</div>", unsafe_allow_html=True)
+            else:
+                st.info("No orders have been placed for your produce yet.")
+        else:
+            st.info("You haven't listed any produce yet. Go to 'Add New Product' to start selling.")
+    except Exception as e:
+        st.error(f"Error loading sales ledger: {str(e)}")
+
+# ==============================================================================
+# 9. BUYER MARKETPLACE WITH QUANTITY SELECTION, LOGISTICS & PAYSTACK ESCROW
 # ==============================================================================
 elif navigation == "🛒 Browse Marketplace":
     st.subheader("🛒 Direct Farm Produce Marketplace")
@@ -522,7 +583,7 @@ elif navigation == "🛒 Browse Marketplace":
                 )
 
                 selected_partner = st.selectbox(
-                    f"Select Preferred Freight Carrier",
+                    f"Select Freight Carrier (Top 10 Nationwide Haulers)",
                     list(LOGISTICS_PARTNERS.keys()),
                     key=f"sel_{item['id']}",
                 )
@@ -605,6 +666,7 @@ elif navigation == "📦 My Orders & Escrow":
                 st.markdown(f"### Order ID: `{order['id']}` - {order.get('item', 'Farm Produce')}")
                 st.write(f"**Quantity Purchased:** {order.get('quantity_bought', 1)} units")
                 st.write(f"**Escrow Status:** `{order.get('status', 'ESCROW_HELD')}`")
+                st.write(f"**Freight Paid:** ₦{float(order.get('freight', 0)):,.2f}")
                 st.write(f"**Total Amount Paid:** ₦{float(order.get('total_paid', 0)):,.2f}")
                 st.write(f"**Paystack Reference:** `{order.get('paystack_ref', 'N/A')}`")
                 st.markdown("</div>", unsafe_allow_html=True)
@@ -612,7 +674,7 @@ elif navigation == "📦 My Orders & Escrow":
         st.info("There are no active orders.")
 
 # ==============================================================================
-# 9. FARMER PRODUCT MANAGEMENT (ADD / EDIT / DELETE WITH CASCADE CLEANUP)
+# 10. FARMER PRODUCT MANAGEMENT
 # ==============================================================================
 elif navigation == "➕ Add New Product":
     st.subheader("🚜 Post New Farm Produce Listing")
@@ -732,7 +794,6 @@ elif navigation == "📦 My Active Products":
                         with b_col2:
                             if st.button("🗑️ Delete Product", key=f"del_{item['id']}"):
                                 try:
-                                    # Permanent deletion: deletes referencing transaction entries first before deleting product
                                     supabase.table("transactions").delete().eq("listing_id", item["id"]).execute()
                                     supabase.table("listings").delete().eq("id", item["id"]).execute()
 
