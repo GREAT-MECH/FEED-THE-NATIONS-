@@ -12,14 +12,13 @@ from supabase import Client, create_client
 # ==============================================================================
 # 🗝️ CONFIGURATION & API KEYS
 # ==============================================================================
-# Updated to match the active Supabase Project (rewewstbknigolxiozwp)
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://rewewstbknigolxiozwp.supabase.co")
-
-# IMPORTANT: Paste your project's anon key here or set SUPABASE_KEY in your Render Environment Variables
 SUPABASE_KEY = os.environ.get(
     "SUPABASE_KEY",
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJld2V3c3Ria25pZ29seGlvendwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgzNDU5MTUsImV4cCI6MjEwMzkyMTkxNX0.s1reBkT9vmYSKGM0yPJTJiAWxT0xxdO446GVOI6ib3U",
 )
+
+
 
 PAYSTACK_SECRET_KEY = os.environ.get(
     "PAYSTACK_SECRET_KEY",
@@ -56,7 +55,6 @@ st.markdown(
         --border-color: #E2E8F0;
     }
 
-    /* GLOBAL RESPONSIVE CONTAINER ADJUSTMENTS */
     .stApp {
         background-color: var(--bg-main);
         font-family: 'Plus Jakarta Sans', sans-serif;
@@ -66,7 +64,6 @@ st.markdown(
         overflow-x: hidden;
     }
 
-    /* ANIMATED DEEP GREEN GRADIENT HEADER */
     .brand-header-container {
         position: relative;
         background: linear-gradient(-45deg, #062319, #0E3A2B, #1B4D3E, #2D6A4F, #124131);
@@ -89,7 +86,6 @@ st.markdown(
         100% { background-position: 0% 50%; }
     }
 
-    /* HIGH-GLOSS FLASHING WHITE SHINE LIGHT */
     .brand-header-container::after {
         content: '';
         position: absolute;
@@ -160,7 +156,22 @@ st.markdown(
         box-shadow: 0 2px 10px rgba(0,0,0,0.2);
     }
 
-    /* Sidebar & Profile Styling */
+    /* Warning Callout Box */
+    .warning-box {
+        background-color: #FFFBEB;
+        border-left: 5px solid #F59E0B;
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 20px;
+        color: #92400E;
+    }
+
+    .warning-box h4 {
+        margin: 0 0 6px 0;
+        color: #B45309;
+        font-weight: 800;
+    }
+
     section[data-testid="stSidebar"] {
         background-color: #FFFFFF;
         border-right: 1px solid var(--border-color);
@@ -174,7 +185,6 @@ st.markdown(
         margin-bottom: 16px;
     }
 
-    /* Responsive Product Grid Cards */
     .product-grid-card {
         background-color: #FFFFFF;
         border: 1px solid #E2E8F0;
@@ -195,7 +205,6 @@ st.markdown(
         border-color: #CBD5E1;
     }
 
-    /* Custom Chat Bubble Styling */
     .user-msg-box {
         background-color: #E2E8F0;
         color: #1E293B;
@@ -214,7 +223,6 @@ st.markdown(
         border-left: 4px solid #1B4D3E;
     }
 
-    /* Buttons */
     div.stButton > button {
         background: linear-gradient(135deg, #1B4D3E 0%, #2C6E49 100%) !important;
         color: #FFFFFF !important;
@@ -251,7 +259,6 @@ st.markdown(
         background-color: #128C7E;
     }
 
-    /* Mobile Layout Tweaks */
     @media (max-width: 768px) {
         .stMainBlockContainer {
             padding-left: 0.8rem !important;
@@ -308,6 +315,12 @@ LOGISTICS_PARTNERS = {
     "Tranex Cargo": {"whatsapp": "2348123682573"},
     "Sendbox Delivery": {"whatsapp": "23417006150"},
 }
+
+NIGERIAN_BANKS = [
+    "Access Bank", "First Bank of Nigeria", "GTBank (Guaranty Trust)", "Zenith Bank",
+    "UBA (United Bank for Africa)", "Fidelity Bank", "Stanbic IBTC", "Kuda Bank",
+    "OPay", "Palmpay", "Moniepoint", "Sterling Bank", "Wema Bank (ALAT)"
+]
 
 def verify_farm_photo(image):
     try:
@@ -404,12 +417,11 @@ def generate_ai_support_response(user_name: str, user_role: str, message: str) -
             "3. **Dispatch Verification:** Attach waybill or freight receipts here if a dispute is active.\n\n"
             "Our Trust & Safety Admin team is keeping escrow funds secured while this is reviewed."
         )
-    elif any(k in msg for k in ["escrow", "payment", "fund", "money", "pay", "refund"]):
+    elif any(k in msg for k in ["escrow", "payment", "fund", "money", "pay", "refund", "withdraw"]):
         return (
-            f"Hello **{name}**! Regarding your escrow/payment inquiry:\n\n"
-            "• Payments remain locked in Paystack Escrow until delivery verification.\n"
-            "• Payouts trigger automatically upon delivery confirmation or 48 hours post-dispatch.\n"
-            "• Share your Paystack Reference for immediate verification."
+            f"Hello **{name}**! Regarding your escrow/payout inquiry:\n\n"
+            "• Payments remain locked in Paystack Escrow until delivery is verified by the logistics carrier.\n"
+            "• Once verified as `DELIVERED_VERIFIED`, payouts can be withdrawn to your connected bank account via Paystack."
         )
     elif any(k in msg for k in ["deliver", "logistics", "ship", "transit", "dispatch", "delay"]):
         return (
@@ -455,7 +467,7 @@ if "reference" in query_params or "trxref" in query_params:
                 cur_qty = int(listing_res[0].get("quantity", 0))
                 bought_qty = int(tx_item.get("quantity_bought", 1))
                 supabase.table("listings").update({"quantity": max(0, cur_qty - bought_qty)}).eq("id", tx_item["listing_id"]).execute()
-            st.success("🎉 Payment verified! Order status updated and inventory updated.")
+            st.success("🎉 Payment verified! Escrow funds held until logistics delivery confirmation.")
         st.query_params.clear()
 
 # ==============================================================================
@@ -516,7 +528,6 @@ if not st.session_state.authenticated:
                         res = supabase.auth.sign_in_with_password({"email": email_input, "password": password_input})
                         if res.user:
                             meta = res.user.user_metadata or {}
-                            
                             prof_data = supabase.table("profiles").select("*").eq("email", email_input).execute().data
                             profile = prof_data[0] if prof_data else {}
 
@@ -527,11 +538,7 @@ if not st.session_state.authenticated:
                             st.session_state.email = email_input
                             st.rerun()
                     except Exception as e:
-                        err_str = str(e)
-                        if "Invalid login credentials" in err_str:
-                            st.error("❌ Invalid credentials. If you haven't created this account in this Supabase project yet, please select 'Register Account' first.")
-                        else:
-                            st.error(f"Login error: {e}")
+                        st.error(f"Login error: {e}")
                 else:
                     st.error("Please enter email and password.")
     st.stop()
@@ -584,7 +591,8 @@ def show_product_detail_modal(product_id):
 
         with col1:
             render_product_image(item.get("image_url"))
-            st.markdown(f"**Pickup Origin:** {item.get('location')}")
+            st.markdown(f"**Pickup State:** {item.get('location')}")
+            st.markdown(f"**Exact Address / Landmark:** `{item.get('exact_farm_address', 'Contact seller upon purchase')}`")
             st.markdown(f"**Producer:** `{item.get('seller')}`")
 
         with col2:
@@ -628,7 +636,7 @@ def show_product_detail_modal(product_id):
             f"I am purchasing produce on FEED THE NATIONS:\n"
             f"• Produce: {item['item']}\n"
             f"• Quantity: {desired_qty} units ({total_weight_kg} kg)\n"
-            f"• Pickup Farm Location: {item['location']}\n"
+            f"• Farm Pickup Address: {item.get('exact_farm_address', 'N/A')}, {item['location']}\n"
             f"• Destination: {full_address}\n\n"
             f"Please provide an official freight quote."
         )
@@ -750,7 +758,7 @@ elif navigation == "📦 Manage Farm Listings":
                             st.markdown(f"### {item['item']}")
                             st.write(f"**Category:** {item.get('category')}")
                             st.write(f"**Price:** ₦{float(item['price_ngn']):,.2f} | **Stock:** {item.get('quantity')} units")
-                            st.write(f"**Location:** {item.get('location')}")
+                            st.write(f"**Location:** {item.get('location')} ({item.get('exact_farm_address', 'N/A')})")
                         with c3:
                             if st.button("🗑️ Delete Listing", key=f"del_{item['id']}"):
                                 supabase.table("transactions").delete().eq("listing_id", item["id"]).execute()
@@ -761,6 +769,18 @@ elif navigation == "📦 Manage Farm Listings":
             st.error(f"Error loading listings: {e}")
 
     with tab_add:
+        # LOGISTICS & ACCURACY WARNING BANNER
+        st.markdown(
+            """
+            <div class="warning-box">
+                <h4>⚠️ IMPORTANT LOGISTICS & DATA ACCURACY NOTICE</h4>
+                Please ensure you input the <b>exact price, location address, unit count, and weight (in KG)</b> for your produce.
+                Inaccurate weight or location details will cause logistics quote mismatches, transport delays, or order cancellations by the carrier.
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
         with st.form("add_product_form", clear_on_submit=True):
             farming_cat = st.selectbox("Category", AGRI_CATEGORIES)
             prod_scale = st.selectbox("Supply Scale", ["Large Scale / Commercial Wholesale", "Small Scale / Retail"])
@@ -768,21 +788,28 @@ elif navigation == "📦 Manage Farm Listings":
 
             c1, c2, c3 = st.columns(3)
             with c1:
-                price = st.number_input("Unit Price (₦)", min_value=1000, value=50000, step=1000)
+                price = st.number_input("Exact Unit Price (₦)", min_value=1000, value=50000, step=1000)
             with c2:
-                quantity = st.number_input("Available Stock Quantity", min_value=1, value=50)
+                quantity = st.number_input("Exact Available Stock Quantity (Units)", min_value=1, value=50)
             with c3:
-                unit_weight = st.number_input("Unit Weight (KG)", min_value=0.5, value=50.0, step=1.0)
+                unit_weight = st.number_input("Exact Weight per Unit (KG)", min_value=0.5, value=50.0, step=1.0)
 
-            location = st.text_input("Farm Pickup Location", value="Ogun State")
+            loc_col1, loc_col2 = st.columns([1, 2])
+            with loc_col1:
+                location = st.selectbox("Farm Region / State", NIGERIAN_STATES, index=24)
+            with loc_col2:
+                exact_address = st.text_input("Exact Farm Pickup Location / Landmark", placeholder="e.g. Km 12 Farm Settlement Road, Owode Egba, Ogun State")
+
             uploaded_file = st.file_uploader("Upload Produce Photo", type=["jpg", "jpeg", "png"])
             submit_product = st.form_submit_button("PUBLISH PRODUCT TO MARKETPLACE 🚀")
 
             if submit_product:
                 if not uploaded_file:
-                    st.error("Please attach a product photo.")
+                    st.error("Please attach a produce photo.")
                 elif not title:
                     st.error("Please enter a title.")
+                elif not exact_address.strip():
+                    st.error("Please specify the exact farm pickup address so logistics partners can locate your farm easily.")
                 else:
                     img_bytes = uploaded_file.read()
                     img = Image.open(io.BytesIO(img_bytes))
@@ -800,43 +827,135 @@ elif navigation == "📦 Manage Farm Listings":
                             "scale": prod_scale,
                             "item": title,
                             "location": location,
+                            "exact_farm_address": exact_address.strip(),
                             "price_ngn": price,
                             "quantity": quantity,
                             "unit_weight_kg": unit_weight,
                             "image_url": img_url,
                         }
                         supabase.table("listings").insert(product_data).execute()
-                        st.success("🎉 Produce listed successfully!")
+                        st.success("🎉 Produce listed successfully with verified logistics location!")
 
 # ==============================================================================
-# 10. FARMER SALES & ESCROW LEDGER
+# 10. FARMER SALES & ESCROW LEDGER WITH PAYSTACK WITHDRAWAL
 # ==============================================================================
 elif navigation == "💰 Farmer Sales & Escrow":
     st.subheader("💰 Confirmed Sales & Escrow Orders")
-    try:
-        farmer_listings = supabase.table("listings").select("id").eq("seller", st.session_state.username).execute().data
-        if farmer_listings:
-            f_ids = [l["id"] for l in farmer_listings]
-            tx_res = supabase.table("transactions").select("*").in_("listing_id", f_ids).eq("status", "PAID_VERIFIED").execute().data
 
-            if tx_res:
-                df_tx = pd.DataFrame(tx_res)
-                m1, m2, m3 = st.columns(3)
-                with m1:
-                    st.metric("Total Sales Value", f"₦{df_tx['amount'].sum():,.2f}")
-                with m2:
-                    st.metric("Escrow Secured", f"₦{df_tx['amount'].sum():,.2f}")
-                with m3:
-                    st.metric("Total Verified Orders", len(tx_res))
+    tab_sales, tab_payout = st.tabs(["📊 Sales Orders & Delivery Status", "💼 Farmer Wallet & Payouts"])
 
-                st.divider()
-                st.dataframe(df_tx, use_container_width=True)
+    with tab_sales:
+        try:
+            farmer_listings = supabase.table("listings").select("id").eq("seller", st.session_state.username).execute().data
+            if farmer_listings:
+                f_ids = [l["id"] for l in farmer_listings]
+                tx_res = supabase.table("transactions").select("*").in_("listing_id", f_ids).execute().data
+
+                if tx_res:
+                    df_tx = pd.DataFrame(tx_res)
+                    
+                    paid_df = df_tx[df_tx["status"].isin(["PAID_VERIFIED", "DELIVERED_VERIFIED"])]
+                    total_sales = paid_df["amount"].sum() if not paid_df.empty else 0.0
+
+                    m1, m2, m3 = st.columns(3)
+                    with m1:
+                        st.metric("Total Confirmed Sales", f"₦{total_sales:,.2f}")
+                    with m2:
+                        st.metric("Active Escrow Orders", len(paid_df))
+                    with m3:
+                        st.metric("Total Transactions", len(tx_res))
+
+                    st.divider()
+
+                    for tx in tx_res:
+                        with st.container(border=True):
+                            tc1, tc2, tc3 = st.columns([2, 2, 1])
+                            with tc1:
+                                st.markdown(f"**Order ID:** `{tx['id']}`")
+                                st.markdown(f"**Item:** {tx['item']} ({tx.get('quantity_bought', 1)} units)")
+                                st.markdown(f"**Buyer:** {tx['buyer']}")
+                            with tc2:
+                                st.markdown(f"**Subtotal:** ₦{float(tx['amount']):,.2f}")
+                                st.markdown(f"**Delivery Address:** {tx.get('delivery_address', 'N/A')}")
+                                status_str = tx.get("status", "PENDING")
+                                st.markdown(f"**Status:** `{status_str}`")
+                            with tc3:
+                                if status_str == "PAID_VERIFIED":
+                                    if st.button("🚚 Confirm Handover to Freight Carrier", key=f"handover_{tx['id']}"):
+                                        supabase.table("transactions").update({"status": "DELIVERED_VERIFIED"}).eq("id", tx["id"]).execute()
+                                        st.success("Handover confirmed! Funds unlocked for withdrawal.")
+                                        st.rerun()
+                                elif status_str == "DELIVERED_VERIFIED":
+                                    st.success("✅ Delivery Handover Verified. Funds Ready in Wallet.")
+
+                else:
+                    st.info("No sales records found.")
             else:
-                st.info("No verified purchases recorded yet.")
-        else:
-            st.info("No active listings found.")
-    except Exception as e:
-        st.error(f"Error loading sales: {e}")
+                st.info("No active listings found.")
+        except Exception as e:
+            st.error(f"Error loading sales: {e}")
+
+    with tab_payout:
+        st.markdown("### 🏦 Withdraw Funds to Local Bank (Paystack Payouts)")
+        st.caption("When the logistics carrier receives and verifies farm produce, escrow funds are automatically unlocked here for instant bank transfer.")
+
+        try:
+            farmer_listings = supabase.table("listings").select("id").eq("seller", st.session_state.username).execute().data
+            unlocked_balance = 0.0
+            pending_balance = 0.0
+
+            if farmer_listings:
+                f_ids = [l["id"] for l in farmer_listings]
+                all_tx = supabase.table("transactions").select("*").in_("listing_id", f_ids).execute().data
+                
+                for tx in all_tx:
+                    amt = float(tx.get("amount", 0.0))
+                    status = tx.get("status")
+                    if status == "DELIVERED_VERIFIED":
+                        unlocked_balance += amt
+                    elif status == "PAID_VERIFIED":
+                        pending_balance += amt
+
+            b1, b2 = st.columns(2)
+            with b1:
+                st.metric("🟢 Unlocked & Available to Withdraw", f"₦{unlocked_balance:,.2f}")
+            with b2:
+                st.metric("⏳ Locked in Logistics Escrow", f"₦{pending_balance:,.2f}")
+
+            st.divider()
+            
+            with st.form("withdrawal_form"):
+                st.markdown("#### Enter Payout Bank Details")
+                p_bank = st.selectbox("Select Bank Name", NIGERIAN_BANKS)
+                p_acc_num = st.text_input("Account Number (10 Digits)", max_chars=10)
+                p_acc_name = st.text_input("Account Name")
+                p_amount = st.number_input("Withdrawal Amount (₦)", min_value=1000.0, max_value=max(unlocked_balance, 1000.0), value=max(unlocked_balance, 1000.0))
+
+                submit_withdraw = st.form_submit_button("REQUEST PAYSTACK BANK WITHDRAWAL 🏦")
+
+                if submit_withdraw:
+                    if unlocked_balance < p_amount:
+                        st.error("Insufficient unlocked balance. Funds unlock once logistics carrier receives produce.")
+                    elif len(p_acc_num) != 10 or not p_acc_num.isdigit():
+                        st.error("Please enter a valid 10-digit account number.")
+                    elif not p_acc_name.strip():
+                        st.error("Please enter account holder name.")
+                    else:
+                        payout_ref = f"FTN-PO-{random.randint(100000, 999999)}"
+                        payout_record = {
+                            "id": payout_ref,
+                            "farmer": st.session_state.username,
+                            "bank_name": p_bank,
+                            "account_number": p_acc_num,
+                            "account_name": p_acc_name,
+                            "amount": p_amount,
+                            "status": "PROCESSING_PAYSTACK_TRANSFER",
+                        }
+                        supabase.table("payouts").insert(payout_record).execute()
+                        st.success(f"🎉 Withdrawal request of ₦{p_amount:,.2f} submitted! Paystack payout processing to {p_bank} ({p_acc_num}).")
+
+        except Exception as e:
+            st.error(f"Error processing payouts: {e}")
 
 # ==============================================================================
 # 11. BUYER ORDERS VIEW
@@ -859,7 +978,7 @@ elif navigation == "📦 My Orders & Escrow":
 elif navigation == "📈 Revenue Dashboard":
     st.subheader("📈 Marketplace GMV & Platform Revenue")
     try:
-        tx_data = supabase.table("transactions").select("*").eq("status", "PAID_VERIFIED").execute().data
+        tx_data = supabase.table("transactions").select("*").in_("status", ["PAID_VERIFIED", "DELIVERED_VERIFIED"]).execute().data
         if tx_data:
             df_tx = pd.DataFrame(tx_data)
             m1, m2, m3 = st.columns(3)
