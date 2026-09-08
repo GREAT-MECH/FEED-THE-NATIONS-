@@ -159,6 +159,30 @@ st.markdown(
         color: #856404;
     }
 
+    .announcement-box {
+        background-color: #E8F5E9;
+        border-left: 6px solid #2E7D32;
+        padding: 16px 20px;
+        border-radius: 12px;
+        margin-bottom: 16px;
+    }
+
+    .chat-user {
+        background-color: #E3F2FD;
+        border-radius: 12px;
+        padding: 12px 16px;
+        margin-bottom: 8px;
+        border-left: 4px solid #1976D2;
+    }
+
+    .chat-admin {
+        background-color: #F1F8E9;
+        border-radius: 12px;
+        padding: 12px 16px;
+        margin-bottom: 8px;
+        border-left: 4px solid #388E3C;
+    }
+
     .whatsapp-btn {
         display: inline-block;
         background-color: #25D366;
@@ -445,11 +469,11 @@ if st.sidebar.button("🔒 Sign Out"):
 st.sidebar.divider()
 
 if st.session_state.user_role == "Farmer":
-    nav_options = ["💰 Farmer Sales & Escrow Orders", "📦 My Active Products", "➕ Add New Product"]
+    nav_options = ["💰 Farmer Sales & Escrow Orders", "📦 My Active Products", "➕ Add New Product", "💬 Support & Direct Chat"]
 elif st.session_state.user_role == "Buyer":
-    nav_options = ["🛒 Browse Marketplace", "📦 My Orders & Escrow"]
+    nav_options = ["🛒 Browse Marketplace", "📦 My Orders & Escrow", "💬 Support & Direct Chat"]
 elif st.session_state.user_role == "Admin":
-    nav_options = ["📈 Founder Revenue Dashboard", "🛒 Browse Marketplace"]
+    nav_options = ["📈 Founder Revenue Dashboard", "🛒 Browse Marketplace", "💬 Support & Direct Chat"]
 
 navigation = st.sidebar.radio("Navigation Menu", nav_options)
 
@@ -816,7 +840,6 @@ elif navigation == "📦 My Active Products":
             if edit_item:
                 item_data = edit_item[0]
                 
-                # Determine current category index safely
                 current_cat = item_data.get("category", AGRI_CATEGORIES[0])
                 cat_index = AGRI_CATEGORIES.index(current_cat) if current_cat in AGRI_CATEGORIES else 0
                 
@@ -904,3 +927,143 @@ elif navigation == "📦 My Active Products":
                 st.info("You currently have no active listings. Select 'Add New Product' to post your produce!")
         except Exception as e:
             st.error(f"Error fetching active products: {str(e)}")
+
+# ==============================================================================
+# 11. DIRECT SUPPORT & BROADCASTING CHAT (FARMER / BUYER / ADMIN)
+# ==============================================================================
+elif navigation == "💬 Support & Direct Chat":
+    st.subheader("💬 FEED THE NATIONS - Contact & Support Center")
+
+    # --------------------------------------------------------------------------
+    # A. Display News, Announcements & Platform Broadcasts
+    # --------------------------------------------------------------------------
+    st.markdown("### 📢 News, Broadcasts & System Updates")
+    try:
+        announcements = supabase.table("platform_announcements").select("*").order("created_at", desc=True).limit(5).execute().data
+        if announcements:
+            for ann in announcements:
+                st.markdown(
+                    f"""
+                    <div class="announcement-box">
+                        <h4 style="margin:0; color:#1E5631;">📌 {ann['title']}</h4>
+                        <p style="margin-top:6px; margin-bottom:4px;">{ann['content']}</p>
+                        <small style="color:#555;">Broadcasted by: <b>{ann.get('author', 'FEED THE NATIONS Admin')}</b></small>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+        else:
+            st.info("No active platform announcements at the moment.")
+    except Exception:
+        st.info("Broadcast channel active.")
+
+    st.divider()
+
+    # --------------------------------------------------------------------------
+    # B. Admin Portal: Answer Inquiries & Send Platform News
+    # --------------------------------------------------------------------------
+    if st.session_state.user_role == "Admin":
+        st.markdown("### 🛠️ Admin Support Management & Announcements")
+
+        tab1, tab2 = st.tabs(["💬 User Complaints & Messages", "📢 Send Platform Broadcast / News"])
+
+        with tab1:
+            try:
+                msg_data = supabase.table("support_messages").select("*").order("created_at", desc=True).execute().data
+                if msg_data:
+                    for m in msg_data:
+                        st.markdown('<div class="product-card">', unsafe_allow_html=True)
+                        st.markdown(f"**From:** {m['user_name']} ({m['user_role']}) — `{m['user_email']}`")
+                        st.markdown(f"**Message / Complaint:** {m['message']}")
+
+                        if m.get("admin_reply"):
+                            st.success(f"**Admin Reply Sent:** {m['admin_reply']}")
+                        else:
+                            reply_text = st.text_area("Write reply to user:", key=f"reply_input_{m['id']}")
+                            if st.button("Send Official Reply 📩", key=f"btn_reply_{m['id']}"):
+                                if reply_text.strip():
+                                    supabase.table("support_messages").update({"admin_reply": reply_text.strip()}).eq("id", m["id"]).execute()
+                                    st.success("Reply sent successfully!")
+                                    st.rerun()
+                                else:
+                                    st.error("Reply text cannot be empty.")
+                        st.markdown('</div>', unsafe_allow_html=True)
+                else:
+                    st.info("No complaints or support messages recorded yet.")
+            except Exception as e:
+                st.error(f"Error loading support messages: {str(e)}")
+
+        with tab2:
+            st.markdown("#### Send News or Announcement to All Users")
+            with st.form("broadcast_form"):
+                ann_title = st.text_input("Announcement Title / Headline")
+                ann_content = st.text_area("Detailed Message / News Broadcast")
+                send_ann = st.form_submit_button("PUBLISH BROADCAST TO ALL USERS 📢")
+
+                if send_ann:
+                    if ann_title and ann_content:
+                        supabase.table("platform_announcements").insert({
+                            "title": ann_title,
+                            "content": ann_content,
+                            "author": st.session_state.username
+                        }).execute()
+                        st.success("🎉 News broadcast published live to all farmers and buyers!")
+                        st.rerun()
+                    else:
+                        st.error("Please provide both headline and message body.")
+
+    # --------------------------------------------------------------------------
+    # C. Farmers & Buyers Portal: Send Inquiry & View Direct Chat History
+    # --------------------------------------------------------------------------
+    else:
+        st.markdown("### 📩 Contact FEED THE NATIONS Support Directly")
+        st.caption("Submit complaints, escrow issues, or inquiry regarding your transactions.")
+
+        with st.form("user_support_form"):
+            user_msg = st.text_area("Describe your issue or question in detail...")
+            submit_msg = st.form_submit_button("SEND MESSAGE TO FEED THE NATIONS 🚀")
+
+            if submit_msg:
+                if user_msg.strip():
+                    supabase.table("support_messages").insert({
+                        "user_email": st.session_state.email,
+                        "user_name": st.session_state.username,
+                        "user_role": st.session_state.user_role,
+                        "message": user_msg.strip(),
+                        "sender": "user"
+                    }).execute()
+                    st.success("🎉 Your message has been received! Our support team will respond shortly.")
+                    st.rerun()
+                else:
+                    st.error("Please enter a message before sending.")
+
+        st.divider()
+        st.markdown("### 💬 Your Conversation History with Support")
+
+        try:
+            my_messages = supabase.table("support_messages").select("*").eq("user_email", st.session_state.email).order("created_at", desc=True).execute().data
+            if my_messages:
+                for msg in my_messages:
+                    st.markdown(
+                        f"""
+                        <div class="chat-user">
+                            <b>You ({st.session_state.username}):</b> {msg['message']}
+                        </div>
+                        """,
+                        unsafe_allow_html=True,
+                    )
+                    if msg.get("admin_reply"):
+                        st.markdown(
+                            f"""
+                            <div class="chat-admin">
+                                <b>FEED THE NATIONS Support Team:</b> {msg['admin_reply']}
+                            </div>
+                            """,
+                            unsafe_allow_html=True,
+                        )
+                    else:
+                        st.caption("⏳ Pending support team response...")
+            else:
+                st.info("No previous support chats found.")
+        except Exception as e:
+            st.error(f"Error loading chat history: {str(e)}")
