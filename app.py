@@ -13,17 +13,20 @@ from supabase import Client, create_client
 # 🗝️ CONFIGURATION & API KEYS
 # ==============================================================================
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://rewewstbknigolxiozwp.supabase.co")
-# Replace the default string below with your complete Supabase anon/public key if not using env vars
-SUPABASE_KEY = os.environ.get(
-    "SUPABASE_KEY",
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJld2V3c3Ria25pZ29seGlvendwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgzNDU5MTUsImV4cCI6MjA0MzkyMTkxNX0.1234567890abcdefghijklmnopqrstuvwxyz"
+
+# Make sure to replace this placeholder string with your real public anon key from Supabase Dashboard
+DEFAULT_KEY = (
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9."
+    "eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJld2V3c3Ria25pZ29seGlvendwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgzNDU5MTUsImV4cCI6MjA0MzkyMTkxNX0."
+    "1234567890abcdefghijklmnopqrstuvwxyz"
 )
+SUPABASE_KEY = os.environ.get("SUPABASE_KEY", DEFAULT_KEY)
 
 PAYSTACK_SECRET_KEY = os.environ.get("PAYSTACK_SECRET_KEY", "sk_live_5d70f03c20eea14b71be5b116e453e6a6848eebe")
 PAYSTACK_CALLBACK_URL = os.environ.get("PAYSTACK_CALLBACK_URL", "https://feed-the-nations.onrender.com")
 
 # ==============================================================================
-# 1. PAGE CONFIG & STYLING (WITH FLASHING LIGHT & HEADER RESTORATION)
+# 1. PAGE CONFIG & STYLING (ANIMATED GREEN BACKGROUND & INTENSE WHITE SHINE)
 # ==============================================================================
 st.set_page_config(
     page_title="FEED THE NATIONS - Direct Agri Marketplace",
@@ -41,7 +44,7 @@ st.markdown(
         --primary: #1B4D3E;
         --primary-light: #2C6E49;
         --accent: #D4A373;
-        --bg-main: #F8FAF8;
+        --bg-main: #F4F7F4;
         --card-bg: #FFFFFF;
         --text-dark: #1E293B;
         --text-muted: #64748B;
@@ -54,81 +57,95 @@ st.markdown(
         color: var(--text-dark);
     }
 
-    /* RESTORED LUXURY HEADER WITH CONTINUOUS END-TO-END FLASHING LIGHT */
+    /* ANIMATED DEEP GREEN GRADIENT HEADER */
     .brand-header-container {
         position: relative;
-        background: linear-gradient(135deg, #0A2F23 0%, #1B4D3E 50%, #2D6A4F 100%);
-        padding: 40px 24px;
-        border-radius: 20px;
+        background: linear-gradient(-45deg, #062319, #0E3A2B, #1B4D3E, #2D6A4F, #124131);
+        background-size: 400% 400%;
+        animation: bgShift 10s ease infinite;
+        padding: 45px 24px;
+        border-radius: 22px;
         text-align: center;
-        margin-bottom: 28px;
-        box-shadow: 0 12px 30px rgba(27, 77, 62, 0.25);
-        border: 1px solid rgba(255, 255, 255, 0.12);
+        margin-bottom: 30px;
+        box-shadow: 0 16px 36px rgba(10, 47, 35, 0.35);
+        border: 1px solid rgba(255, 255, 255, 0.18);
         overflow: hidden;
     }
 
-    /* END-TO-END WHITE FLASHING LIGHT ANIMATION */
+    @keyframes bgShift {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    /* INTENSE HIGH-GLOSS FLASHING WHITE SHINE LIGHT */
     .brand-header-container::after {
         content: '';
         position: absolute;
         top: 0;
-        left: -100%;
-        width: 60%;
+        left: -150%;
+        width: 80%;
         height: 100%;
         background: linear-gradient(
             90deg,
             rgba(255, 255, 255, 0) 0%,
-            rgba(255, 255, 255, 0.4) 50%,
+            rgba(255, 255, 255, 0.2) 20%,
+            rgba(255, 255, 255, 0.95) 50%,
+            rgba(255, 255, 255, 0.2) 80%,
             rgba(255, 255, 255, 0) 100%
         );
-        transform: skewX(-25deg);
-        animation: headerGlow 3.5s infinite linear;
+        transform: skewX(-30deg);
+        animation: headerShimmer 3s infinite ease-in-out;
         pointer-events: none;
+        filter: blur(4px);
     }
 
-    @keyframes headerGlow {
-        0% { left: -100%; }
-        100% { left: 200%; }
+    @keyframes headerShimmer {
+        0% { left: -150%; }
+        100% { left: 220%; }
+    }
+
+    .brand-badge {
+        display: inline-block;
+        background: rgba(212, 163, 115, 0.25);
+        border: 1px solid #E6C594;
+        color: #FFF3E0;
+        padding: 6px 18px;
+        border-radius: 30px;
+        font-size: 0.85rem;
+        font-weight: 800;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        margin-bottom: 12px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
     }
 
     .brand-title {
         color: #FFFFFF !important;
         font-family: 'Montserrat', sans-serif;
-        font-size: clamp(2.2rem, 5vw, 3.6rem);
+        font-size: clamp(2.3rem, 5.5vw, 3.8rem);
         font-weight: 900;
         letter-spacing: 2px;
-        margin: 0;
+        margin: 5px 0 10px 0;
         text-transform: uppercase;
-        text-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        text-shadow: 0 4px 15px rgba(0,0,0,0.4);
     }
 
     .header-emojis {
-        font-size: 1.8rem;
-        margin: 10px 0;
-        letter-spacing: 8px;
-        animation: pulse 2s infinite alternate;
-    }
-
-    .brand-badge {
+        font-size: 2.1rem;
+        margin: 12px 0;
+        letter-spacing: 12px;
         display: inline-block;
-        background: rgba(212, 163, 115, 0.2);
-        border: 1px solid #D4A373;
-        color: #FFE8D6;
-        padding: 4px 14px;
-        border-radius: 30px;
-        font-size: 0.85rem;
-        font-weight: 700;
-        letter-spacing: 1px;
-        text-transform: uppercase;
-        margin-bottom: 10px;
+        filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
     }
 
     .brand-subtext {
         color: #E2E8F0;
-        font-size: 1.1rem;
-        font-weight: 500;
+        font-size: 1.15rem;
+        font-weight: 600;
         margin-top: 10px;
         letter-spacing: 0.5px;
+        text-shadow: 0 2px 6px rgba(0,0,0,0.3);
     }
 
     /* Sidebar & Profile Styling */
@@ -145,34 +162,34 @@ st.markdown(
         margin-bottom: 16px;
     }
 
-    /* Product Cards Layout */
+    /* Product Grid Cards */
     .product-grid-card {
         background-color: #FFFFFF;
         border: 1px solid #E2E8F0;
-        border-radius: 16px;
-        padding: 16px;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        border-radius: 18px;
+        padding: 18px;
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
         height: 100%;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+        box-shadow: 0 6px 16px rgba(0,0,0,0.04);
     }
 
     .product-grid-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 12px 24px rgba(0,0,0,0.08);
+        transform: translateY(-5px);
+        box-shadow: 0 16px 32px rgba(0,0,0,0.1);
         border-color: #CBD5E1;
     }
 
-    /* Streamlit Buttons Customization */
+    /* Buttons Style */
     div.stButton > button {
         background: linear-gradient(135deg, #1B4D3E 0%, #2C6E49 100%) !important;
         color: #FFFFFF !important;
         font-weight: 700 !important;
-        font-size: 0.9rem !important;
+        font-size: 0.92rem !important;
         border-radius: 10px !important;
-        padding: 10px 18px !important;
+        padding: 11px 18px !important;
         border: none !important;
         transition: all 0.2s ease !important;
         width: 100%;
@@ -181,7 +198,7 @@ st.markdown(
     div.stButton > button:hover {
         background: linear-gradient(135deg, #2C6E49 0%, #3A8659 100%) !important;
         transform: translateY(-1px) !important;
-        box-shadow: 0 4px 12px rgba(27, 77, 62, 0.25) !important;
+        box-shadow: 0 6px 16px rgba(27, 77, 62, 0.3) !important;
     }
 
     /* WhatsApp Button */
@@ -197,7 +214,7 @@ st.markdown(
         margin-top: 10px;
         margin-bottom: 10px;
         font-size: 0.95rem;
-        box-shadow: 0 4px 10px rgba(37, 211, 102, 0.2);
+        box-shadow: 0 4px 12px rgba(37, 211, 102, 0.25);
     }
     .whatsapp-btn:hover {
         background-color: #128C7E;
@@ -231,7 +248,10 @@ st.markdown(
 def init_supabase() -> Client:
     return create_client(SUPABASE_URL, SUPABASE_KEY)
 
-supabase = init_supabase()
+try:
+    supabase = init_supabase()
+except Exception as e:
+    st.error(f"Supabase Client Initialization Warning: {e}")
 
 AGRI_CATEGORIES = [
     "🌾 Crop Farming (Rice, Beans, Maize, Grains)",
@@ -392,7 +412,7 @@ if "reference" in query_params or "trxref" in query_params:
         st.query_params.clear()
 
 # ==============================================================================
-# 4. RESTORED HEADER WITH EMOJIS & FLASHING LIGHT
+# 4. LUXURY HEADER (ANIMATED GREEN BG + BRIGHT SHINE + EMOJIS & ESCROW BADGE)
 # ==============================================================================
 st.markdown(
     """
@@ -455,7 +475,7 @@ if not st.session_state.authenticated:
                         st.session_state.email = email_input
                         st.rerun()
                     except Exception as e:
-                        st.error(f"Login error: {e}. Please ensure SUPABASE_KEY in Render Environment Variables is valid.")
+                        st.error(f"Login error: {e}. Ensure SUPABASE_KEY in Render Environment Variables is set to your full anon key.")
                 else:
                     st.error("Please enter email and password.")
     st.stop()
