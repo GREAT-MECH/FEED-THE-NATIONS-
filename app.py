@@ -63,6 +63,7 @@ st.markdown(
         overflow-x: hidden;
     }
 
+    /* Vibrant Brand Header Container with Radiant Light Sweep Animation */
     .brand-header-container {
         position: relative;
         background: linear-gradient(-45deg, #062319, #0E3A2B, #1B4D3E, #2D6A4F, #124131);
@@ -77,6 +78,33 @@ st.markdown(
         overflow: hidden;
         width: 100%;
         box-sizing: border-box;
+    }
+
+    /* Bright Radiant Moving Light Sweep */
+    .brand-header-container::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -150%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+            90deg, 
+            transparent 0%, 
+            rgba(255, 255, 255, 0.1) 20%, 
+            rgba(255, 255, 255, 0.75) 50%, 
+            rgba(255, 255, 255, 0.1) 80%, 
+            transparent 100%
+        );
+        transform: skewX(-25deg);
+        animation: shine 3.5s infinite;
+        pointer-events: none;
+    }
+
+    @keyframes shine {
+        0% { left: -150%; }
+        60% { left: 150%; }
+        100% { left: 150%; }
     }
 
     @keyframes bgShift {
@@ -95,6 +123,8 @@ st.markdown(
         text-transform: uppercase;
         text-shadow: 0 4px 15px rgba(0,0,0,0.4);
         word-break: break-word;
+        position: relative;
+        z-index: 1;
     }
 
     .header-emojis {
@@ -103,6 +133,8 @@ st.markdown(
         letter-spacing: clamp(6px, 1.5vw, 12px);
         display: inline-block;
         filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+        position: relative;
+        z-index: 1;
     }
 
     .brand-subtext {
@@ -113,6 +145,8 @@ st.markdown(
         margin-bottom: 18px;
         letter-spacing: 0.5px;
         text-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        position: relative;
+        z-index: 1;
     }
 
     .brand-badge {
@@ -127,6 +161,8 @@ st.markdown(
         letter-spacing: 1px;
         text-transform: uppercase;
         box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        position: relative;
+        z-index: 1;
     }
 
     .warning-box {
@@ -510,12 +546,14 @@ if not st.session_state.authenticated:
                         if res.user:
                             meta = res.user.user_metadata or {}
                             profile = {}
+                            
+                            # SAFE QUERY FALLBACK: Prevents 'Database error querying schema' from crashing login
                             try:
                                 prof_data = supabase.table("profiles").select("*").eq("email", email_input).execute().data
                                 if prof_data:
                                     profile = prof_data[0]
                             except Exception:
-                                pass # Safe fallback if profiles table query fails
+                                pass
 
                             # AUTOMATIC FOUNDER & ADMIN ELEVATION
                             if email_input == "nwokejianthony2@gmail.com":
@@ -591,7 +629,7 @@ with st.sidebar:
     navigation = st.radio("Navigation Menu", nav_options)
 
 # ==============================================================================
-# 8. PRODUCT DETAIL & BUY MODAL
+# 8. PRODUCT DETAIL & BUY MODAL (WITH BUYER SELF-LOGISTICS OPTION)
 # ==============================================================================
 @st.dialog("🌾 Produce Details & Escrow Purchase")
 def show_product_detail_modal(product_id):
@@ -633,39 +671,53 @@ def show_product_detail_modal(product_id):
             st.markdown(f"**Platform Escrow Fee (10%):** ₦{platform_fee:,.2f}")
 
         st.divider()
-        st.markdown("#### 🚚 Step 1: Delivery Destination & Freight Quote")
+        st.markdown("#### 🚚 Step 1: Delivery Destination & Freight Method")
 
-        d_col1, d_col2 = st.columns([1, 2])
-        with d_col1:
-            delivery_state = st.selectbox("Destination State", NIGERIAN_STATES, index=24, key="modal_state")
-        with d_col2:
-            delivery_street = st.text_input("Exact Delivery Address", placeholder="Street, City, Landmark", key="modal_street")
-
-        full_address = f"{delivery_street.strip()}, {delivery_state}" if delivery_street.strip() else delivery_state
-
-        selected_partner = st.selectbox("Freight Carrier Partner", list(LOGISTICS_PARTNERS.keys()), key="modal_carrier")
-        partner_info = LOGISTICS_PARTNERS[selected_partner]
-
-        wa_msg_text = (
-            f"Hello {selected_partner},\n\n"
-            f"I am purchasing produce on FEED THE NATIONS:\n"
-            f"• Produce: {item['item']}\n"
-            f"• Quantity: {desired_qty} units ({total_weight_kg} kg)\n"
-            f"• Farm Pickup Address: {item.get('exact_farm_address', 'N/A')}, {item['location']}\n"
-            f"• Destination: {full_address}\n\n"
-            f"Please provide an official freight quote."
+        # LOGISTICS CHOICE: Self-Arranged vs Partner Logistics
+        logistics_choice = st.radio(
+            "Logistics Method",
+            ["Use Partnered Logistics Carrier", "Self-Arranged Pickup / Buyer's Own Logistics"],
+            key="modal_logistics_choice",
+            horizontal=True
         )
-        wa_url = f"https://wa.me/{partner_info['whatsapp']}?text={urllib.parse.quote(wa_msg_text)}"
-        st.markdown(f'<a href="{wa_url}" target="_blank" class="whatsapp-btn">💬 Request Freight Quote on WhatsApp</a>', unsafe_allow_html=True)
 
-        st.markdown("#### 🚚 Step 2: Agreed Freight & Checkout")
-        agreed_freight = st.number_input("Enter Agreed Freight Fee (₦)", min_value=0, value=25000, step=5000, key="modal_freight")
+        agreed_freight = 0.0
+
+        if logistics_choice == "Use Partnered Logistics Carrier":
+            d_col1, d_col2 = st.columns([1, 2])
+            with d_col1:
+                delivery_state = st.selectbox("Destination State", NIGERIAN_STATES, index=24, key="modal_state")
+            with d_col2:
+                delivery_street = st.text_input("Exact Delivery Address", placeholder="Street, City, Landmark", key="modal_street")
+
+            full_address = f"{delivery_street.strip()}, {delivery_state}" if delivery_street.strip() else delivery_state
+
+            selected_partner = st.selectbox("Freight Carrier Partner", list(LOGISTICS_PARTNERS.keys()), key="modal_carrier")
+            partner_info = LOGISTICS_PARTNERS[selected_partner]
+
+            wa_msg_text = (
+                f"Hello {selected_partner},\n\n"
+                f"I am purchasing produce on FEED THE NATIONS:\n"
+                f"• Produce: {item['item']}\n"
+                f"• Quantity: {desired_qty} units ({total_weight_kg} kg)\n"
+                f"• Farm Pickup Address: {item.get('exact_farm_address', 'N/A')}, {item['location']}\n"
+                f"• Destination: {full_address}\n\n"
+                f"Please provide an official freight quote."
+            )
+            wa_url = f"https://wa.me/{partner_info['whatsapp']}?text={urllib.parse.quote(wa_msg_text)}"
+            st.markdown(f'<a href="{wa_url}" target="_blank" class="whatsapp-btn">💬 Request Freight Quote on WhatsApp</a>', unsafe_allow_html=True)
+
+            st.markdown("#### 🚚 Step 2: Agreed Freight & Checkout")
+            agreed_freight = st.number_input("Enter Agreed Freight Fee (₦)", min_value=0, value=25000, step=5000, key="modal_freight")
+        else:
+            full_address = f"Self-Pickup at Farm Address ({item.get('exact_farm_address', 'N/A')}, {item['location']})"
+            st.info("ℹ️ **Self-Pickup Selected:** You will handle transport and pickup directly at the farm address. Freight fee set to ₦0.00.")
 
         grand_total = product_subtotal + platform_fee + agreed_freight
         st.markdown(f"### **Total Amount: ₦{grand_total:,.2f}**")
 
         if st.button("PROCEED TO PAYSTACK CHECKOUT 💳", key="modal_checkout"):
-            if not delivery_street.strip():
+            if logistics_choice == "Use Partnered Logistics Carrier" and not delivery_street.strip():
                 st.error("⚠️ Please enter a delivery address.")
             else:
                 ref = f"FTN-TX-{random.randint(100000, 999999)}"
@@ -918,11 +970,11 @@ elif navigation == "💰 Farmer Sales & Escrow":
                             if not f_sign and status_str in ["PAID_VERIFIED", "PAYMENT_INITIATED"]:
                                 st.markdown(
                                     '<div class="warning-box" style="padding:8px; font-size:0.8rem; margin-bottom:8px;">'
-                                    '<b>Action Required:</b> Click below when produce is handed over to logistics carrier.'
+                                    '<b>Action Required:</b> Click below when produce is handed over to logistics carrier or picked up.'
                                     '</div>',
                                     unsafe_allow_html=True
                                 )
-                                if st.button("🚚 CONFIRM DISPATCH TO CARRIER", key=f"f_sign_{tx['id']}"):
+                                if st.button("🚚 CONFIRM DISPATCH TO CARRIER / PICKUP", key=f"f_sign_{tx['id']}"):
                                     supabase.table("transactions").update({
                                         "farmer_signoff": True,
                                         "status": "FARMER_DISPATCHED" if not b_sign else "DELIVERED_VERIFIED"
@@ -931,7 +983,7 @@ elif navigation == "💰 Farmer Sales & Escrow":
                                     st.rerun()
 
                             elif f_sign and not b_sign:
-                                st.info("🚚 Dispatched to carrier. Awaiting buyer inspection & sign-off.")
+                                st.info("🚚 Dispatched / Picked Up. Awaiting buyer inspection & sign-off.")
                             
                             elif f_sign and b_sign:
                                 st.markdown(
@@ -1039,7 +1091,7 @@ elif navigation == "📦 My Orders & Escrow":
         """
         <div class="alert-danger-box">
             <h4>🛑 CRITICAL SECURITY WARNING TO BUYERS</h4>
-            <b>DO NOT CLICK</b> the delivery confirmation sign-off button below until you have <b>physically received and inspected</b> your farm produce from the freight carrier.
+            <b>DO NOT CLICK</b> the delivery confirmation sign-off button below until you have <b>physically received and inspected</b> your farm produce from the freight carrier or farm pickup.
             <br>Clicking sign-off immediately unlocks escrow funds to the farmer and completes the contract.
         </div>
         """,
