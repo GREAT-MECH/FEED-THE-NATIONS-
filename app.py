@@ -498,7 +498,7 @@ st.markdown(
 )
 
 # ==============================================================================
-# 6. AUTHENTICATION PORTAL (FOUNDER + BUYER + FARMER SIGN-IN)
+# 6. AUTHENTICATION PORTAL (WITH ZERO SCHEMA-QUERY ADMIN BYPASS)
 # ==============================================================================
 if not st.session_state.authenticated:
     c_auth, _ = st.columns([1, 0.1])
@@ -540,25 +540,35 @@ if not st.session_state.authenticated:
             if st.button("LOG IN ➔"):
                 if email_input and password_input:
                     try:
-                        res = supabase.auth.sign_in_with_password({"email": email_input, "password": password_input})
+                        # 1. Authenticate credentials with Supabase Auth
+                        res = supabase.auth.sign_in_with_password({
+                            "email": email_input, 
+                            "password": password_input
+                        })
+                        
                         if res.user:
+                            # 2. FOUNDER / ADMIN OVERRIDE (Bypasses all schema/RLS queries)
+                            if email_input == "nwokejianthony2@gmail.com":
+                                st.session_state.authenticated = True
+                                st.session_state.user_role = "Admin"
+                                st.session_state.username = "FOUNDER NWOKEJI CHUKWUKA ANTHONY"
+                                st.session_state.phone = "+2348000000000"
+                                st.session_state.email = email_input
+                                st.rerun()
+
+                            # 3. Standard User Login Handling with Safe Fallback
                             meta = res.user.user_metadata or {}
                             profile = {}
-                            
-                            # FOUNDER / ADMIN OVERRIDE CHECK
-                            if email_input == "nwokejianthony2@gmail.com":
-                                db_role = "Admin"
-                                display_name = "FOUNDER NWOKEJI CHUKWUKA ANTHONY"
-                            else:
-                                try:
-                                    prof_data = supabase.table("profiles").select("*").eq("email", email_input).execute().data
-                                    if prof_data:
-                                        profile = prof_data[0]
-                                except Exception:
-                                    pass
 
-                                db_role = profile.get("role") or meta.get("role", "Buyer")
-                                display_name = profile.get("full_name") or meta.get("full_name", email_input)
+                            try:
+                                prof_data = supabase.table("profiles").select("*").eq("id", res.user.id).execute().data
+                                if prof_data:
+                                    profile = prof_data[0]
+                            except Exception:
+                                pass  # Gracefully fall back if schema query is blocked
+
+                            db_role = profile.get("role") or meta.get("role", "Buyer")
+                            display_name = profile.get("full_name") or meta.get("full_name", email_input)
 
                             st.session_state.authenticated = True
                             st.session_state.user_role = db_role
@@ -567,6 +577,7 @@ if not st.session_state.authenticated:
                             st.session_state.email = email_input
 
                             st.rerun()
+
                     except Exception as e:
                         st.error(f"Login error: {e}")
                 else:
@@ -602,7 +613,6 @@ with st.sidebar:
     if st.session_state.user_role == "Admin":
         nav_options = [
             "📈 Revenue Dashboard",
-            "👥 User Management",
             "🛒 Produce Marketplace",
             "💰 Farmer Sales & Escrow",
             "📦 Manage Farm Listings",
@@ -749,74 +759,9 @@ def show_product_detail_modal(product_id):
         st.error(f"Error opening modal: {e}")
 
 # ==============================================================================
-# 9. ADMIN USER MANAGEMENT & PERMANENT DELETION
+# 9. MARKETPLACE VIEW
 # ==============================================================================
-if navigation == "👥 User Management":
-    st.subheader("👥 Admin Control: Permanently Delete Accounts")
-
-    st.markdown(
-        """
-        <div class="alert-danger-box">
-            ⚠️ <b>ADMIN POLICY ENFORCEMENT CONTROL:</b><br>
-            Deleting a user account will <b>permanently delete</b> their authentication record, profile, active listings, transactions, and support messages from FEED THE NATIONS database.
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-    try:
-        users_df = supabase.table("profiles").select("*").execute().data
-        if not users_df:
-            st.info("No registered users found.")
-        else:
-            user_filter = st.selectbox("Filter Users By Role", ["All Accounts", "Farmer", "Buyer", "Admin"])
-            search_query = st.text_input("Search user by Name, Email or Phone").strip().lower()
-
-            filtered_users = []
-            for u in users_df:
-                if user_filter != "All Accounts" and u.get("role") != user_filter:
-                    continue
-                if search_query:
-                    match_name = search_query in str(u.get("full_name", "")).lower()
-                    match_email = search_query in str(u.get("email", "")).lower()
-                    match_phone = search_query in str(u.get("phone", "")).lower()
-                    if not (match_name or match_email or match_phone):
-                        continue
-                filtered_users.append(u)
-
-            st.write(f"Showing **{len(filtered_users)}** registered accounts:")
-
-            for u in filtered_users:
-                with st.container(border=True):
-                    c1, c2, c3 = st.columns([2.5, 2, 1.5])
-                    with c1:
-                        st.markdown(f"**Name:** {u.get('full_name', 'N/A')}")
-                        st.markdown(f"**Email:** `{u.get('email', 'N/A')}`")
-                        st.markdown(f"**Role:** `{u.get('role', 'Buyer')}`")
-                    with c2:
-                        st.markdown(f"**Phone:** {u.get('phone', 'N/A')}")
-                        st.markdown(f"**Category:** {u.get('category', 'All Categories')}")
-                        st.caption(f"User ID: `{u.get('id')}`")
-                    with c3:
-                        if u.get("email") == "nwokejianthony2@gmail.com":
-                            st.info("🛡️ Founder Account (Protected)")
-                        else:
-                            confirm_delete = st.checkbox("Confirm Delete", key=f"chk_del_{u['id']}")
-                            if st.button("❌ PERMANENTLY DELETE", key=f"btn_del_usr_{u['id']}", disabled=not confirm_delete):
-                                try:
-                                    supabase.rpc("delete_user_by_admin", {"target_user_id": u["id"]}).execute()
-                                    st.success(f"User '{u.get('full_name')}' ({u.get('email')}) deleted permanently.")
-                                    st.rerun()
-                                except Exception as err:
-                                    st.error(f"Failed to delete user: {err}")
-
-    except Exception as e:
-        st.error(f"Error loading user profiles: {e}")
-
-# ==============================================================================
-# 10. MARKETPLACE VIEW
-# ==============================================================================
-elif navigation == "🛒 Produce Marketplace":
+if navigation == "🛒 Produce Marketplace":
     st.subheader("🛒 Farm Produce Marketplace")
 
     f1, f2 = st.columns([1, 1])
@@ -866,7 +811,7 @@ elif navigation == "🛒 Produce Marketplace":
         st.error(f"Marketplace error: {e}")
 
 # ==============================================================================
-# 11. FARMER LISTINGS MANAGEMENT
+# 10. FARMER LISTINGS MANAGEMENT
 # ==============================================================================
 elif navigation == "📦 Manage Farm Listings":
     st.subheader("📦 Farm Produce Inventory")
@@ -974,7 +919,7 @@ elif navigation == "📦 Manage Farm Listings":
                         st.success("🎉 Produce listed successfully with verified logistics location!")
 
 # ==============================================================================
-# 12. FARMER SALES & ESCROW LEDGER
+# 11. FARMER SALES & ESCROW LEDGER
 # ==============================================================================
 elif navigation == "💰 Farmer Sales & Escrow":
     st.subheader("💰 Confirmed Sales & Escrow Ledger")
@@ -1143,7 +1088,7 @@ elif navigation == "💰 Farmer Sales & Escrow":
             st.error(f"Error processing payouts: {e}")
 
 # ==============================================================================
-# 13. BUYER ORDERS VIEW
+# 12. BUYER ORDERS VIEW
 # ==============================================================================
 elif navigation == "📦 My Orders & Escrow":
     st.subheader("📦 My Purchased Orders & Delivery Sign-Off")
@@ -1206,7 +1151,7 @@ elif navigation == "📦 My Orders & Escrow":
         st.error(f"Error loading orders: {e}")
 
 # ==============================================================================
-# 14. REVENUE DASHBOARD (ADMIN ONLY)
+# 13. REVENUE DASHBOARD (ADMIN ONLY)
 # ==============================================================================
 elif navigation == "📈 Revenue Dashboard":
     st.subheader("📈 Marketplace GMV & Platform Revenue")
@@ -1230,7 +1175,7 @@ elif navigation == "📈 Revenue Dashboard":
         st.error(f"Error loading revenue metrics: {e}")
 
 # ==============================================================================
-# 15. SUPPORT & AI HELPDESK MODULE
+# 14. SUPPORT & AI HELPDESK MODULE
 # ==============================================================================
 elif navigation == "💬 Support & AI Helpdesk":
     st.subheader("💬 AI Dispute Support & Helpdesk")
