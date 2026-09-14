@@ -496,9 +496,8 @@ st.markdown(
 """,
     unsafe_allow_html=True,
 )
-
 # ==============================================================================
-# 6. AUTHENTICATION PORTAL (WITH ZERO SCHEMA-QUERY ADMIN BYPASS)
+# 6. AUTHENTICATION PORTAL (COMPLETE ADMIN & SCHEMA BYPASS)
 # ==============================================================================
 if not st.session_state.authenticated:
     c_auth, _ = st.columns([1, 0.1])
@@ -539,51 +538,54 @@ if not st.session_state.authenticated:
         else:
             if st.button("LOG IN ➔"):
                 if email_input and password_input:
-                    try:
-                        # 1. Authenticate credentials with Supabase Auth
-                        res = supabase.auth.sign_in_with_password({
-                            "email": email_input, 
-                            "password": password_input
-                        })
-                        
-                        if res.user:
-                            # 2. FOUNDER / ADMIN OVERRIDE (Bypasses all schema/RLS queries)
-                            if email_input == "nwokejianthony2@gmail.com":
+                    # ----------------------------------------------------------
+                    # ⚡ FOUNDER / ADMIN DIRECT PASS (NO SUPABASE AUTH CALLS)
+                    # ----------------------------------------------------------
+                    if email_input == "nwokejianthony2@gmail.com" and password_input == "CHUKWUKa$7":
+                        st.session_state.authenticated = True
+                        st.session_state.user_role = "Admin"
+                        st.session_state.username = "FOUNDER NWOKEJI CHUKWUKA ANTHONY"
+                        st.session_state.phone = "+2348000000000"
+                        st.session_state.email = email_input
+                        st.rerun()
+
+                    # ----------------------------------------------------------
+                    # STANDARD USER AUTHENTICATION
+                    # ----------------------------------------------------------
+                    else:
+                        try:
+                            res = supabase.auth.sign_in_with_password({
+                                "email": email_input, 
+                                "password": password_input
+                            })
+                            
+                            if res.user:
+                                meta = res.user.user_metadata or {}
+                                profile = {}
+
+                                try:
+                                    prof_data = supabase.table("profiles").select("*").eq("id", res.user.id).execute().data
+                                    if prof_data:
+                                        profile = prof_data[0]
+                                except Exception:
+                                    pass
+
+                                db_role = profile.get("role") or meta.get("role", "Buyer")
+                                display_name = profile.get("full_name") or meta.get("full_name", email_input)
+
                                 st.session_state.authenticated = True
-                                st.session_state.user_role = "Admin"
-                                st.session_state.username = "FOUNDER NWOKEJI CHUKWUKA ANTHONY"
-                                st.session_state.phone = "+2348000000000"
+                                st.session_state.user_role = db_role
+                                st.session_state.username = display_name
+                                st.session_state.phone = profile.get("phone") or meta.get("phone", "")
                                 st.session_state.email = email_input
+
                                 st.rerun()
 
-                            # 3. Standard User Login Handling with Safe Fallback
-                            meta = res.user.user_metadata or {}
-                            profile = {}
-
-                            try:
-                                prof_data = supabase.table("profiles").select("*").eq("id", res.user.id).execute().data
-                                if prof_data:
-                                    profile = prof_data[0]
-                            except Exception:
-                                pass  # Gracefully fall back if schema query is blocked
-
-                            db_role = profile.get("role") or meta.get("role", "Buyer")
-                            display_name = profile.get("full_name") or meta.get("full_name", email_input)
-
-                            st.session_state.authenticated = True
-                            st.session_state.user_role = db_role
-                            st.session_state.username = display_name
-                            st.session_state.phone = profile.get("phone") or meta.get("phone", "")
-                            st.session_state.email = email_input
-
-                            st.rerun()
-
-                    except Exception as e:
-                        st.error(f"Login error: {e}")
+                        except Exception as e:
+                            st.error(f"Login error: {e}")
                 else:
                     st.error("Please enter email and password.")
     st.stop()
-
 # ==============================================================================
 # 7. SIDEBAR NAVIGATION
 # ==============================================================================
