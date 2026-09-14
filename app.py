@@ -680,14 +680,12 @@ with st.sidebar:
 
     st.divider()
 
+    # DYNAMIC ROLE-BASED SIDEBAR FILTER
     if st.session_state.user_role == "Admin":
         nav_options = [
             "📈 Revenue Dashboard",
             "📢 Admin Broadcast & Messaging",
             "🛒 Produce Marketplace",
-            "💰 Farmer Sales & Escrow",
-            "📦 Manage Farm Listings",
-            "📦 My Orders & Escrow",
             "💬 Support & AI Helpdesk"
         ]
     elif st.session_state.user_role == "Farmer":
@@ -943,7 +941,7 @@ elif navigation == "📢 Admin Broadcast & Messaging":
     with col_feed:
         st.markdown("### 📥 Live Support Tickets & Dispute Feed")
         try:
-            # Fetch directly from the newly created SQL view
+            # Fetch directly from the detailed SQL view
             feed_tickets = supabase.table("support_tickets_detailed").select("*").order("created_at", desc=True).limit(10).execute().data
             
             if not feed_tickets:
@@ -988,6 +986,7 @@ elif navigation == "📢 Admin Broadcast & Messaging":
 
         except Exception as e:
             st.error(f"Error loading live support feed: {e}")
+
 # ==============================================================================
 # 11. FARMER LISTINGS MANAGEMENT
 # ==============================================================================
@@ -1329,18 +1328,19 @@ elif navigation == "📈 Revenue Dashboard":
         st.error(f"Error loading revenue metrics: {e}")
 
 # ==============================================================================
-# 15. SUPPORT & AI HELPDESK MODULE
+# 15. SUPPORT & AI HELPDESK MODULE (WITH ORDER ID TAGGING)
 # ==============================================================================
 elif navigation == "💬 Support & AI Helpdesk":
-    st.subheader("💬 AI Dispute Support & Helpdesk")
+    st.subheader("💬 Support & Helpdesk Portal")
 
     col1, col2 = st.columns([1, 1], gap="large")
 
     with col1:
         st.markdown("### 📝 Submit Ticket")
         with st.form("support_ticket_form", clear_on_submit=True):
-            msg_input = st.text_area("Describe your issue or order inquiry...", height=140)
-            submit_ticket = st.form_submit_button("SEND TO AI SUPPORT 🚀")
+            order_id_input = st.text_input("Order ID (Optional)", placeholder="e.g. FTN-TX-123456")
+            msg_input = st.text_area("Describe your issue, complaint, or order inquiry...", height=140)
+            submit_ticket = st.form_submit_button("SEND TO SUPPORT 🚀")
 
         if submit_ticket:
             if msg_input.strip():
@@ -1348,15 +1348,16 @@ elif navigation == "💬 Support & AI Helpdesk":
                 payload = {
                     "user_email": st.session_state.email,
                     "user_role": st.session_state.user_role,
+                    "order_id": order_id_input.strip() if order_id_input.strip() else None,
                     "message": msg_input.strip(),
                     "response": ai_reply,
                     "status": "In Progress"
                 }
                 try:
                     supabase.table("support_messages").insert(payload).execute()
-                except Exception:
-                    pass
-                st.success("Ticket submitted! Check history for AI response.")
+                except Exception as e:
+                    st.error(f"Error logging ticket: {e}")
+                st.success("Ticket submitted! Check history for updates.")
                 st.rerun()
 
     with col2:
@@ -1379,14 +1380,16 @@ elif navigation == "💬 Support & AI Helpdesk":
             else:
                 for t in tickets:
                     with st.expander(f"Ticket #{t['id']} | {t.get('created_at', '')[:10]}", expanded=True):
+                        if t.get("order_id"):
+                            st.caption(f"Linked Order: {t['order_id']}")
                         st.markdown(
                             f'<div class="user-msg-box"><b>👤 {t.get("user_email", st.session_state.username)}:</b><br>{t["message"]}</div>',
                             unsafe_allow_html=True
                         )
                         if t.get("response"):
                             st.markdown(
-                                f'<div class="ai-msg-box"><b>🤖 Feed The Nations AI:</b><br>{t["response"]}</div>',
+                                f'<div class="ai-msg-box"><b>🤖 Feed The Nations AI Support:</b><br>{t["response"]}</div>',
                                 unsafe_allow_html=True
                             )
         except Exception as e:
-            st.error(f"Error loading history: {e}")
+            st.error(f"Error loading support history: {e}")
