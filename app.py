@@ -79,38 +79,6 @@ st.markdown(
         box-sizing: border-box;
     }
 
-    .brand-header-container::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -150%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(
-            90deg, 
-            transparent 0%, 
-            rgba(255, 255, 255, 0.1) 20%, 
-            rgba(255, 255, 255, 0.75) 50%, 
-            rgba(255, 255, 255, 0.1) 80%, 
-            transparent 100%
-        );
-        transform: skewX(-25deg);
-        animation: shine 3.5s infinite;
-        pointer-events: none;
-    }
-
-    @keyframes shine {
-        0% { left: -150%; }
-        60% { left: 150%; }
-        100% { left: 150%; }
-    }
-
-    @keyframes bgShift {
-        0% { background-position: 0% 50%; }
-        50% { background-position: 100% 50%; }
-        100% { background-position: 0% 50%; }
-    }
-
     .brand-title {
         color: #FFFFFF !important;
         font-family: 'Montserrat', sans-serif;
@@ -121,18 +89,12 @@ st.markdown(
         text-transform: uppercase;
         text-shadow: 0 4px 15px rgba(0,0,0,0.4);
         word-break: break-word;
-        position: relative;
-        z-index: 1;
     }
 
     .header-emojis {
         font-size: clamp(1.4rem, 3.5vw, 2.1rem);
         margin: 10px 0;
         letter-spacing: clamp(6px, 1.5vw, 12px);
-        display: inline-block;
-        filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
-        position: relative;
-        z-index: 1;
     }
 
     .brand-subtext {
@@ -141,10 +103,6 @@ st.markdown(
         font-weight: 600;
         margin-top: 5px;
         margin-bottom: 18px;
-        letter-spacing: 0.5px;
-        text-shadow: 0 2px 6px rgba(0,0,0,0.3);
-        position: relative;
-        z-index: 1;
     }
 
     .brand-badge {
@@ -156,11 +114,7 @@ st.markdown(
         border-radius: 30px;
         font-size: clamp(0.75rem, 1.5vw, 0.85rem);
         font-weight: 800;
-        letter-spacing: 1px;
         text-transform: uppercase;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-        position: relative;
-        z-index: 1;
     }
 
     .warning-box {
@@ -190,6 +144,17 @@ st.markdown(
         color: #166534;
     }
 
+    .sidebar-notif-box {
+        background: #EFF6FF;
+        border: 1px solid #BFDBFE;
+        border-left: 4px solid #3B82F6;
+        padding: 10px 12px;
+        border-radius: 8px;
+        margin-bottom: 14px;
+        font-size: 0.82rem;
+        color: #1E3A8A;
+    }
+
     section[data-testid="stSidebar"] {
         background-color: #FFFFFF;
         border-right: 1px solid var(--border-color);
@@ -208,19 +173,8 @@ st.markdown(
         border: 1px solid #E2E8F0;
         border-radius: 18px;
         padding: 16px;
-        transition: transform 0.25s ease, box-shadow 0.25s ease;
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
         box-shadow: 0 6px 16px rgba(0,0,0,0.04);
         box-sizing: border-box;
-    }
-
-    .product-grid-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 16px 32px rgba(0,0,0,0.1);
-        border-color: #CBD5E1;
     }
 
     .user-msg-box {
@@ -245,18 +199,10 @@ st.markdown(
         background: linear-gradient(135deg, #1B4D3E 0%, #2C6E49 100%) !important;
         color: #FFFFFF !important;
         font-weight: 700 !important;
-        font-size: clamp(0.85rem, 1.2vw, 0.95rem) !important;
         border-radius: 10px !important;
         padding: 10px 16px !important;
         border: none !important;
-        transition: all 0.2s ease !important;
         width: 100%;
-    }
-
-    div.stButton > button:hover {
-        background: linear-gradient(135deg, #2C6E49 0%, #3A8659 100%) !important;
-        transform: translateY(-1px) !important;
-        box-shadow: 0 6px 16px rgba(27, 77, 62, 0.3) !important;
     }
 
     .whatsapp-btn {
@@ -270,21 +216,6 @@ st.markdown(
         text-decoration: none;
         margin-top: 10px;
         margin-bottom: 10px;
-        font-size: 0.95rem;
-        box-shadow: 0 4px 12px rgba(37, 211, 102, 0.25);
-    }
-    .whatsapp-btn:hover {
-        background-color: #128C7E;
-    }
-
-    @media (max-width: 768px) {
-        .stMainBlockContainer {
-            padding-left: 0.8rem !important;
-            padding-right: 0.8rem !important;
-        }
-        .product-grid-card {
-            margin-bottom: 14px;
-        }
     }
 </style>
 """,
@@ -301,7 +232,7 @@ def init_supabase() -> Client:
 try:
     supabase = init_supabase()
 except Exception as e:
-    st.error(f"Supabase Client Initialization Warning: {e}")
+    st.error(f"Supabase Client Warning: {e}")
 
 AGRI_CATEGORIES = [
     "🌾 Crop Farming (Rice, Beans, Maize, Grains)",
@@ -329,9 +260,6 @@ LOGISTICS_PARTNERS = {
     "Kobo360 Haulage": {"whatsapp": "2348186780000"},
     "DHL Express Nigeria": {"whatsapp": "2347011126221"},
     "Red Star Express": {"whatsapp": "2347007337827"},
-    "SkyNet Worldwide": {"whatsapp": "2349056533136"},
-    "Tranex Cargo": {"whatsapp": "2348123682573"},
-    "Sendbox Delivery": {"whatsapp": "23417006150"},
 }
 
 NIGERIAN_BANKS = [
@@ -346,10 +274,10 @@ def verify_farm_photo(image):
         stat = ImageStat.Stat(img)
         avg_stddev = sum(stat.stddev) / len(stat.stddev)
         if avg_stddev < 15:
-            return False, "Image appears blank or low contrast. Please upload a clear produce photo."
+            return False, "Image appears blank or low contrast."
         w, h = img.size
         if w < 150 or h < 150:
-            return False, "Image resolution too low. Minimum allowed size is 150x150 pixels."
+            return False, "Image resolution too low."
         return True, "Valid farm photo"
     except Exception:
         return False, "Invalid image format."
@@ -410,9 +338,9 @@ def generate_ai_support_response(user_name: str, user_role: str, message: str) -
         try:
             url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
             prompt_text = (
-                f"You are the AI Helpdesk Agent for FEED THE NATIONS, an agricultural marketplace & escrow platform.\n"
+                f"You are the AI Helpdesk Agent for FEED THE NATIONS marketplace.\n"
                 f"User Name: {name}\nUser Role: {user_role}\nUser Message: {message}\n\n"
-                f"Provide a helpful, professional, and concise response assisting them with their inquiry, escrow, or freight delivery."
+                f"Provide a helpful response concerning escrow, freight, or order confirmation."
             )
             payload = {"contents": [{"parts": [{"text": prompt_text}]}]}
             headers = {"Content-Type": "application/json"}
@@ -425,21 +353,14 @@ def generate_ai_support_response(user_name: str, user_role: str, message: str) -
             pass
 
     msg = message.lower().strip()
-    if any(k in msg for k in ["buyer", "customer", "client"]):
+    if any(k in msg for k in ["buyer", "sign", "received", "delivered"]):
         return (
-            f"Hello **{name}**! Regarding your buyer transaction:\n"
-            "• Escrow funds are secured safely by the platform.\n"
-            "• Both Farmer and Buyer must sign off before funds unlock to prevent fraud."
-        )
-    elif any(k in msg for k in ["escrow", "payment", "fund", "money", "pay", "withdraw"]):
-        return (
-            f"Hello **{name}**! Regarding your escrow status:\n"
-            "• Farmer signs off when produce is dispatched.\n"
-            "• Buyer signs off upon inspecting delivered goods.\n"
-            "• Funds unlock automatically to the Farmer Wallet once both confirmations are complete."
+            f"Hello **{name}**!\n"
+            "If you have dispatched the item but the buyer has not signed off, our Admin team has been notified.\n"
+            "An Admin alert is sent to remind the buyer to confirm delivery so your funds unlock."
         )
     else:
-        return f"Hello **{name}**! Re: *\"{message}\"*\nOur support team is reviewing your ticket."
+        return f"Hello **{name}**! Re: *\"{message}\"*\nOur platform support & Admin team are reviewing your ticket."
 
 # ==============================================================================
 # 4. SESSION STATE & PAYSTACK CALLBACK
@@ -450,9 +371,6 @@ for key, default in [
     ("username", ""),
     ("email", ""),
     ("phone", ""),
-    ("selected_product_id", None),
-    ("editing_listing_id", None),
-    ("deleted_msg", None),
 ]:
     if key not in st.session_state:
         st.session_state[key] = default
@@ -479,7 +397,7 @@ if "reference" in query_params or "trxref" in query_params:
                     supabase.table("listings").update({"quantity": max(0, cur_qty - bought_qty)}).eq("id", tx_item["listing_id"]).execute()
                 st.success("🎉 Payment verified! Escrow funds locked safely until dual sign-off.")
         except Exception as e:
-            st.warning(f"Payment processed, but record sync pending: {e}")
+            st.warning(f"Payment sync notice: {e}")
         st.query_params.clear()
 
 # ==============================================================================
@@ -496,6 +414,7 @@ st.markdown(
 """,
     unsafe_allow_html=True,
 )
+
 # ==============================================================================
 # 6. AUTHENTICATION PORTAL (COMPLETE ADMIN & SCHEMA BYPASS)
 # ==============================================================================
@@ -586,8 +505,9 @@ if not st.session_state.authenticated:
                 else:
                     st.error("Please enter email and password.")
     st.stop()
+
 # ==============================================================================
-# 7. SIDEBAR NAVIGATION
+# 7. SIDEBAR NAVIGATION & ANNOUNCEMENT NOTIFICATIONS
 # ==============================================================================
 with st.sidebar:
     st.markdown(
@@ -600,6 +520,36 @@ with st.sidebar:
         """,
         unsafe_allow_html=True,
     )
+
+    # --------------------------------------------------------------------------
+    # 🔔 SIDEBAR NOTIFICATIONS BOX (DISPLAYS MESSAGES FROM ADMIN)
+    # --------------------------------------------------------------------------
+    try:
+        notif_res = supabase.table("notifications").select("*").order("created_at", desc=True).limit(5).execute().data
+        if notif_res:
+            relevant_notifs = []
+            for n in notif_res:
+                recip = n.get("recipient_email", "ALL")
+                t_role = n.get("target_role", "ALL")
+
+                if (
+                    recip == "ALL"
+                    or recip == st.session_state.email
+                    or t_role == "ALL"
+                    or t_role == st.session_state.user_role
+                    or st.session_state.user_role == "Admin"
+                ):
+                    relevant_notifs.append(n)
+
+            if relevant_notifs:
+                st.markdown("**🔔 Announcements & Alerts**")
+                for item in relevant_notifs[:2]:
+                    st.markdown(
+                        f'<div class="sidebar-notif-box"><b>📢 Admin Notice:</b><br>{item["message"]}</div>',
+                        unsafe_allow_html=True,
+                    )
+    except Exception:
+        pass
 
     if st.button("🔒 Sign Out"):
         try:
@@ -615,6 +565,7 @@ with st.sidebar:
     if st.session_state.user_role == "Admin":
         nav_options = [
             "📈 Revenue Dashboard",
+            "📢 Admin Broadcast & Messaging",
             "🛒 Produce Marketplace",
             "💰 Farmer Sales & Escrow",
             "📦 Manage Farm Listings",
@@ -654,7 +605,7 @@ def show_product_detail_modal(product_id):
         with col1:
             render_product_image(item.get("image_url"))
             st.markdown(f"**Pickup State:** {item.get('location')}")
-            st.markdown(f"**Exact Address / Landmark:** `{item.get('exact_farm_address', 'Contact seller upon purchase')}`")
+            st.markdown(f"**Exact Address:** `{item.get('exact_farm_address', 'Contact seller upon purchase')}`")
             st.markdown(f"**Producer:** `{item.get('seller')}`")
 
         with col2:
@@ -719,7 +670,7 @@ def show_product_detail_modal(product_id):
             agreed_freight = st.number_input("Enter Agreed Freight Fee (₦)", min_value=0, value=25000, step=5000, key="modal_freight")
         else:
             full_address = f"Self-Pickup at Farm Address ({item.get('exact_farm_address', 'N/A')}, {item['location']})"
-            st.info("ℹ️ **Self-Pickup Selected:** You will handle transport and pickup directly at the farm address. Freight fee set to ₦0.00.")
+            st.info("ℹ️ **Self-Pickup Selected:** Freight fee set to ₦0.00.")
 
         grand_total = product_subtotal + platform_fee + agreed_freight
         st.markdown(f"### **Total Amount: ₦{grand_total:,.2f}**")
@@ -751,7 +702,7 @@ def show_product_detail_modal(product_id):
 
                 if pay_resp.get("status"):
                     auth_url = pay_resp["data"]["authorization_url"]
-                    st.success("Checkout created! Click button below to complete payment.")
+                    st.success("Checkout created! Click below to pay.")
                     st.markdown(
                         f'<a href="{auth_url}" target="_blank" style="display:block; text-align:center; background: #1B4D3E; color:white; padding:12px; border-radius:8px; text-decoration:none; font-weight:bold;">Pay via Paystack ➔</a>',
                         unsafe_allow_html=True,
@@ -813,7 +764,65 @@ if navigation == "🛒 Produce Marketplace":
         st.error(f"Marketplace error: {e}")
 
 # ==============================================================================
-# 10. FARMER LISTINGS MANAGEMENT
+# 10. ADMIN BROADCAST & MESSAGING (NEW MODULE FOR FOUNDER)
+# ==============================================================================
+elif navigation == "📢 Admin Broadcast & Messaging":
+    st.subheader("📢 Admin Broadcast & User Messaging Center")
+
+    col_send, col_feed = st.columns([1.2, 1], gap="large")
+
+    with col_send:
+        st.markdown("### ✉️ Dispatch Alert / Message")
+        with st.form("admin_notif_form"):
+            target_audience = st.selectbox("Audience Target", ["Specific User (By Email)", "All Farmers", "All Buyers", "Everyone (Platform-Wide)"])
+            user_target_email = ""
+            if target_audience == "Specific User (By Email)":
+                user_target_email = st.text_input("Enter Target User Email", placeholder="buyer@gmail.com").strip().lower()
+
+            notif_msg = st.text_area("Message Content / Action Reminder", placeholder="e.g. Please click the 'Confirm Delivery' button on your order to unlock funds to the farmer.", height=120)
+
+            send_btn = st.form_submit_button("SEND NOTIFICATION ALERT 🚀")
+
+            if send_btn:
+                if not notif_msg.strip():
+                    st.error("Please enter a message.")
+                else:
+                    target_role_str = "ALL"
+                    recip_str = "ALL"
+
+                    if target_audience == "All Farmers":
+                        target_role_str = "Farmer"
+                    elif target_audience == "All Buyers":
+                        target_role_str = "Buyer"
+                    elif target_audience == "Specific User (By Email)":
+                        recip_str = user_target_email
+
+                    notif_payload = {
+                        "recipient_email": recip_str,
+                        "sender_name": "FOUNDER / ADMIN",
+                        "message": notif_msg.strip(),
+                        "target_role": target_role_str,
+                    }
+                    supabase.table("notifications").insert(notif_payload).execute()
+                    st.success("🎉 Alert broadcasted successfully!")
+                    st.rerun()
+
+    with col_feed:
+        st.markdown("### 📥 Live Support Feed & Unresolved Escalations")
+        try:
+            feed_tickets = supabase.table("support_messages").select("*").order("created_at", desc=True).limit(10).execute().data
+            if not feed_tickets:
+                st.info("No incoming helpdesk reports.")
+            else:
+                for t in feed_tickets:
+                    with st.expander(f"📩 Ticket #{t['id']} | {t.get('user_email')}", expanded=True):
+                        st.write(f"**User Message:** {t['message']}")
+                        st.caption(f"Status: {t.get('status')} | Date: {t.get('created_at', '')[:10]}")
+        except Exception as e:
+            st.error(f"Error loading live feed: {e}")
+
+# ==============================================================================
+# 11. FARMER LISTINGS MANAGEMENT
 # ==============================================================================
 elif navigation == "📦 Manage Farm Listings":
     st.subheader("📦 Farm Produce Inventory")
@@ -857,9 +866,8 @@ elif navigation == "📦 Manage Farm Listings":
         st.markdown(
             """
             <div class="warning-box">
-                <h4>⚠️ IMPORTANT LOGISTICS & DATA ACCURACY NOTICE</h4>
-                Please ensure you input the <b>exact price, location address, unit count, and weight (in KG)</b> for your produce.
-                Inaccurate details will cause transport delays or order cancellations.
+                <h4>⚠️ LOGISTICS & DATA ACCURACY NOTICE</h4>
+                Input exact price, farm location address, unit count, and unit weight in KG.
             </div>
             """,
             unsafe_allow_html=True,
@@ -868,32 +876,28 @@ elif navigation == "📦 Manage Farm Listings":
         with st.form("add_product_form", clear_on_submit=True):
             farming_cat = st.selectbox("Category", AGRI_CATEGORIES)
             prod_scale = st.selectbox("Supply Scale", ["Large Scale / Commercial Wholesale", "Small Scale / Retail"])
-            title = st.text_input("Product Title (e.g., 50kg Bags of White Maize)")
+            title = st.text_input("Product Title")
 
             c1, c2, c3 = st.columns(3)
             with c1:
                 price = st.number_input("Exact Unit Price (₦)", min_value=1000, value=50000, step=1000)
             with c2:
-                quantity = st.number_input("Exact Available Stock Quantity (Units)", min_value=1, value=50)
+                quantity = st.number_input("Available Stock (Units)", min_value=1, value=50)
             with c3:
-                unit_weight = st.number_input("Exact Weight per Unit (KG)", min_value=0.5, value=50.0, step=1.0)
+                unit_weight = st.number_input("Weight per Unit (KG)", min_value=0.5, value=50.0, step=1.0)
 
             loc_col1, loc_col2 = st.columns([1, 2])
             with loc_col1:
                 location = st.selectbox("Farm Region / State", NIGERIAN_STATES, index=24)
             with loc_col2:
-                exact_address = st.text_input("Exact Farm Pickup Location / Landmark", placeholder="e.g. Km 12 Farm Settlement Road, Owode Egba, Ogun State")
+                exact_address = st.text_input("Exact Farm Pickup Location / Landmark", placeholder="e.g. Km 12 Farm Settlement, Ogun State")
 
             uploaded_file = st.file_uploader("Upload Produce Photo", type=["jpg", "jpeg", "png"])
             submit_product = st.form_submit_button("PUBLISH PRODUCT TO MARKETPLACE 🚀")
 
             if submit_product:
-                if not uploaded_file:
-                    st.error("Please attach a produce photo.")
-                elif not title:
-                    st.error("Please enter a title.")
-                elif not exact_address.strip():
-                    st.error("Please specify the exact farm pickup address so logistics partners can locate your farm easily.")
+                if not uploaded_file or not title or not exact_address.strip():
+                    st.error("Please complete all fields.")
                 else:
                     img_bytes = uploaded_file.read()
                     img = Image.open(io.BytesIO(img_bytes))
@@ -918,10 +922,10 @@ elif navigation == "📦 Manage Farm Listings":
                             "image_url": img_url,
                         }
                         supabase.table("listings").insert(product_data).execute()
-                        st.success("🎉 Produce listed successfully with verified logistics location!")
+                        st.success("🎉 Produce listed successfully!")
 
 # ==============================================================================
-# 11. FARMER SALES & ESCROW LEDGER
+# 12. FARMER SALES & ESCROW LEDGER
 # ==============================================================================
 elif navigation == "💰 Farmer Sales & Escrow":
     st.subheader("💰 Confirmed Sales & Escrow Ledger")
@@ -976,27 +980,21 @@ elif navigation == "💰 Farmer Sales & Escrow":
                             status_str = tx.get("status", "PENDING")
                             
                             if not f_sign and status_str in ["PAID_VERIFIED", "PAYMENT_INITIATED"]:
-                                st.markdown(
-                                    '<div class="warning-box" style="padding:8px; font-size:0.8rem; margin-bottom:8px;">'
-                                    '<b>Action Required:</b> Click below when produce is handed over to logistics carrier or picked up.'
-                                    '</div>',
-                                    unsafe_allow_html=True
-                                )
-                                if st.button("🚚 CONFIRM DISPATCH TO CARRIER / PICKUP", key=f"f_sign_{tx['id']}"):
+                                if st.button("🚚 CONFIRM DISPATCH TO CARRIER", key=f"f_sign_{tx['id']}"):
                                     supabase.table("transactions").update({
                                         "farmer_signoff": True,
                                         "status": "FARMER_DISPATCHED" if not b_sign else "DELIVERED_VERIFIED"
                                     }).eq("id", tx["id"]).execute()
-                                    st.success("Dispatch confirmed! Awaiting buyer receipt sign-off.")
+                                    st.success("Dispatch confirmed!")
                                     st.rerun()
 
                             elif f_sign and not b_sign:
-                                st.info("🚚 Dispatched / Picked Up. Awaiting buyer inspection & sign-off.")
+                                st.info("🚚 Dispatched. Awaiting buyer receipt sign-off.")
                             
                             elif f_sign and b_sign:
                                 st.markdown(
                                     '<div class="alert-success-box" style="padding:10px; font-size:0.85rem;">'
-                                    '🎉 <b>Buyer Confirmed Receipt!</b><br>Funds fully unlocked in wallet.'
+                                    '🎉 <b>Buyer Confirmed Receipt!</b>'
                                     '</div>',
                                     unsafe_allow_html=True
                                 )
@@ -1007,7 +1005,7 @@ elif navigation == "💰 Farmer Sales & Escrow":
             st.error(f"Error loading sales: {e}")
 
     with tab_payout:
-        st.markdown("### 🏦 Withdraw Unlocked Earnings to Bank (Paystack)")
+        st.markdown("### 🏦 Withdraw Unlocked Earnings to Bank")
         
         try:
             if st.session_state.user_role == "Admin":
@@ -1039,22 +1037,10 @@ elif navigation == "💰 Farmer Sales & Escrow":
             with b2:
                 st.metric("⏳ Locked in Dual-Signoff Escrow", f"₦{pending_balance:,.2f}")
 
-            if unlocked_balance > 0:
-                st.markdown(
-                    """
-                    <div class="alert-success-box">
-                        <b>✅ NOTIFICATION:</b> Escrow earnings are fully unlocked. You may request a Paystack bank transfer below.
-                    </div>
-                    """,
-                    unsafe_allow_html=True,
-                )
-            else:
-                st.caption("🔒 Funds unlock automatically as soon as the buyer clicks their confirmation sign-off upon receiving produce.")
-
             st.divider()
             
             with st.form("withdrawal_form"):
-                st.markdown("#### Enter Payout Bank Details")
+                st.markdown("#### Payout Bank Details")
                 p_bank = st.selectbox("Select Bank Name", NIGERIAN_BANKS)
                 p_acc_num = st.text_input("Account Number (10 Digits)", max_chars=10)
                 p_acc_name = st.text_input("Account Name")
@@ -1064,11 +1050,11 @@ elif navigation == "💰 Farmer Sales & Escrow":
 
                 if submit_withdraw:
                     if unlocked_balance < p_amount:
-                        st.error("Insufficient unlocked balance. Earnings unlock once buyer signs off delivery.")
+                        st.error("Insufficient unlocked balance.")
                     elif len(p_acc_num) != 10 or not p_acc_num.isdigit():
-                        st.error("Please enter a valid 10-digit account number.")
+                        st.error("Enter valid 10-digit account number.")
                     elif not p_acc_name.strip():
-                        st.error("Please enter account holder name.")
+                        st.error("Enter account holder name.")
                     else:
                         payout_ref = f"FTN-PO-{random.randint(100000, 999999)}"
                         payout_record = {
@@ -1084,13 +1070,13 @@ elif navigation == "💰 Farmer Sales & Escrow":
                             supabase.table("payouts").insert(payout_record).execute()
                         except Exception:
                             pass
-                        st.success(f"🎉 Payout request of ₦{p_amount:,.2f} submitted! Paystack transfer processing to {p_bank} ({p_acc_num}).")
+                        st.success(f"🎉 Payout of ₦{p_amount:,.2f} submitted!")
 
         except Exception as e:
             st.error(f"Error processing payouts: {e}")
 
 # ==============================================================================
-# 12. BUYER ORDERS VIEW
+# 13. BUYER ORDERS VIEW
 # ==============================================================================
 elif navigation == "📦 My Orders & Escrow":
     st.subheader("📦 My Purchased Orders & Delivery Sign-Off")
@@ -1099,8 +1085,7 @@ elif navigation == "📦 My Orders & Escrow":
         """
         <div class="alert-danger-box">
             <h4>🛑 CRITICAL SECURITY WARNING TO BUYERS</h4>
-            <b>DO NOT CLICK</b> the delivery confirmation sign-off button below until you have <b>physically received and inspected</b> your farm produce from the freight carrier or farm pickup.
-            <br>Clicking sign-off immediately unlocks escrow funds to the farmer and completes the contract.
+            <b>DO NOT CLICK</b> the delivery confirmation sign-off button below until you have <b>physically received and inspected</b> your produce.
         </div>
         """,
         unsafe_allow_html=True,
@@ -1139,7 +1124,7 @@ elif navigation == "📦 My Orders & Escrow":
                                     "buyer_signoff": True,
                                     "status": new_status
                                 }).eq("id", ord_item["id"]).execute()
-                                st.success("🎉 Delivery verified! Escrow funds unlocked for the farmer.")
+                                st.success("🎉 Delivery verified! Escrow unlocked.")
                                 st.rerun()
                         else:
                             st.markdown(
@@ -1153,7 +1138,7 @@ elif navigation == "📦 My Orders & Escrow":
         st.error(f"Error loading orders: {e}")
 
 # ==============================================================================
-# 13. REVENUE DASHBOARD (ADMIN ONLY)
+# 14. REVENUE DASHBOARD (ADMIN ONLY)
 # ==============================================================================
 elif navigation == "📈 Revenue Dashboard":
     st.subheader("📈 Marketplace GMV & Platform Revenue")
@@ -1177,7 +1162,7 @@ elif navigation == "📈 Revenue Dashboard":
         st.error(f"Error loading revenue metrics: {e}")
 
 # ==============================================================================
-# 14. SUPPORT & AI HELPDESK MODULE
+# 15. SUPPORT & AI HELPDESK MODULE
 # ==============================================================================
 elif navigation == "💬 Support & AI Helpdesk":
     st.subheader("💬 AI Dispute Support & Helpdesk")
