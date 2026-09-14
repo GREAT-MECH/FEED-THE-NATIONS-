@@ -882,24 +882,38 @@ if navigation == "🛒 Produce Marketplace":
         st.error(f"Marketplace error: {e}")
 
 # ==============================================================================
-# 10. ADMIN BROADCAST & MESSAGING (NEW MODULE FOR FOUNDER)
+# 10. ADMIN BROADCAST & MESSAGING (DIRECT USER DISPUTE RESOLUTION)
 # ==============================================================================
 elif navigation == "📢 Admin Broadcast & Messaging":
-    st.subheader("📢 Admin Broadcast & User Messaging Center")
+    st.subheader("📢 Admin Support Feed & Direct Dispute Messaging")
 
-    col_send, col_feed = st.columns([1.2, 1], gap="large")
+    col_send, col_feed = st.columns([1, 1.2], gap="large")
 
     with col_send:
-        st.markdown("### ✉️ Dispatch Alert / Message")
+        st.markdown("### ✉️ Send Direct Alert / Message")
+        
+        # Pre-fill target email if set via quick action button in the feed
+        default_target = st.session_state.get("admin_target_email", "")
+
         with st.form("admin_notif_form"):
-            target_audience = st.selectbox("Audience Target", ["Specific User (By Email)", "All Farmers", "All Buyers", "Everyone (Platform-Wide)"])
-            user_target_email = ""
-            if target_audience == "Specific User (By Email)":
-                user_target_email = st.text_input("Enter Target User Email", placeholder="buyer@gmail.com").strip().lower()
+            target_audience = st.selectbox(
+                "Audience Target", 
+                ["Specific User (By Email)", "All Farmers", "All Buyers", "Everyone (Platform-Wide)"]
+            )
+            
+            user_target_email = st.text_input(
+                "Target User Email", 
+                value=default_target, 
+                placeholder="buyer@gmail.com"
+            ).strip().lower()
 
-            notif_msg = st.text_area("Message Content / Action Reminder", placeholder="e.g. Please click the 'Confirm Delivery' button on your order to unlock funds to the farmer.", height=120)
+            notif_msg = st.text_area(
+                "Message Content / Action Requirement", 
+                placeholder="e.g. Please confirm receipt for Order FTN-TX-123456 so escrow funds can be unlocked.", 
+                height=120
+            )
 
-            send_btn = st.form_submit_button("SEND NOTIFICATION ALERT 🚀")
+            send_btn = st.form_submit_button("DISPATCH DIRECT ALERT 🚀")
 
             if send_btn:
                 if not notif_msg.strip():
@@ -922,23 +936,58 @@ elif navigation == "📢 Admin Broadcast & Messaging":
                         "target_role": target_role_str,
                     }
                     supabase.table("notifications").insert(notif_payload).execute()
-                    st.success("🎉 Alert broadcasted successfully!")
+                    st.success("🎉 Direct alert sent successfully!")
+                    st.session_state["admin_target_email"] = ""
                     st.rerun()
 
     with col_feed:
-        st.markdown("### 📥 Live Support Feed & Unresolved Escalations")
+        st.markdown("### 📥 Live Support Tickets & Dispute Feed")
         try:
-            feed_tickets = supabase.table("support_messages").select("*").order("created_at", desc=True).limit(10).execute().data
+            # Fetch directly from the newly created SQL view
+            feed_tickets = supabase.table("support_tickets_detailed").select("*").order("created_at", desc=True).limit(10).execute().data
+            
             if not feed_tickets:
-                st.info("No incoming helpdesk reports.")
+                st.info("No incoming support tickets.")
             else:
                 for t in feed_tickets:
-                    with st.expander(f"📩 Ticket #{t['id']} | {t.get('user_email')}", expanded=True):
-                        st.write(f"**User Message:** {t['message']}")
-                        st.caption(f"Status: {t.get('status')} | Date: {t.get('created_at', '')[:10]}")
-        except Exception as e:
-            st.error(f"Error loading live feed: {e}")
+                    ticket_id = t["ticket_id"]
+                    order_id = t.get("order_id")
+                    sender = t.get("sender_email")
+                    role = t.get("sender_role")
+                    buyer = t.get("buyer_identifier") or "Not Linked"
+                    farmer = t.get("farmer_identifier") or "Not Linked"
 
+                    with st.expander(f"📩 Ticket #{ticket_id} | From: {sender} ({role})", expanded=True):
+                        st.write(f"**Complaint:** {t['user_message']}")
+                        
+                        if order_id:
+                            st.markdown(f"📌 **Linked Order:** `{order_id}`")
+                            st.markdown(f"🛒 **Buyer:** `{buyer}` | 👨‍🌾 **Farmer:** `{farmer}`")
+                            st.markdown(f"💰 **Order Amount:** ₦{float(t.get('order_amount') or 0):,.2f} | **Status:** `{t.get('order_status')}`")
+                        else:
+                            st.caption("ℹ️ No Order ID attached to this ticket.")
+
+                        st.divider()
+                        st.markdown("**⚡ Quick Reach Out Actions:**")
+                        
+                        c1, c2 = st.columns(2)
+                        with c1:
+                            if st.button(f"✉️ Message Buyer", key=f"msg_b_{ticket_id}"):
+                                if buyer != "Not Linked":
+                                    st.session_state["admin_target_email"] = buyer
+                                    st.rerun()
+                                else:
+                                    st.warning("No buyer linked to this ticket.")
+                        with c2:
+                            if st.button(f"✉️ Message Farmer", key=f"msg_f_{ticket_id}"):
+                                if farmer != "Not Linked":
+                                    st.session_state["admin_target_email"] = farmer
+                                    st.rerun()
+                                else:
+                                    st.warning("No farmer linked to this ticket.")
+
+        except Exception as e:
+            st.error(f"Error loading live support feed: {e}")
 # ==============================================================================
 # 11. FARMER LISTINGS MANAGEMENT
 # ==============================================================================
