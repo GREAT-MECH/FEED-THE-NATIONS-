@@ -522,34 +522,54 @@ with st.sidebar:
     )
 
     # --------------------------------------------------------------------------
-    # 🔔 SIDEBAR NOTIFICATIONS BOX (DISPLAYS MESSAGES FROM ADMIN)
+    # 🔔 SIDEBAR NOTIFICATIONS BOX (DIRECT & BROADCAST ALERTS)
     # --------------------------------------------------------------------------
+    st.markdown("### 🔔 Announcements & Alerts")
     try:
-        notif_res = supabase.table("notifications").select("*").order("created_at", desc=True).limit(5).execute().data
+        notif_res = (
+            supabase.table("notifications")
+            .select("*")
+            .order("created_at", desc=True)
+            .limit(5)
+            .execute()
+            .data
+        )
+
         if notif_res:
-            relevant_notifs = []
-            for n in notif_res:
-                recip = n.get("recipient_email", "ALL")
-                t_role = n.get("target_role", "ALL")
+            displayed_count = 0
+            for item in notif_res:
+                recip = str(item.get("recipient_email", "ALL")).strip().lower()
+                t_role = str(item.get("target_role", "ALL")).strip()
+                user_email = str(st.session_state.email).strip().lower()
+                user_role = str(st.session_state.user_role).strip()
 
+                # Display if matched to current user, role, broadcast, or if Admin
                 if (
-                    recip == "ALL"
-                    or recip == st.session_state.email
-                    or t_role == "ALL"
-                    or t_role == st.session_state.user_role
-                    or st.session_state.user_role == "Admin"
+                    recip in ["all", "", "none"]
+                    or recip == user_email
+                    or t_role in ["ALL", "All"]
+                    or t_role == user_role
+                    or user_role == "Admin"
                 ):
-                    relevant_notifs.append(n)
-
-            if relevant_notifs:
-                st.markdown("**🔔 Announcements & Alerts**")
-                for item in relevant_notifs[:2]:
                     st.markdown(
-                        f'<div class="sidebar-notif-box"><b>📢 Admin Notice:</b><br>{item["message"]}</div>',
+                        f"""
+                        <div class="sidebar-notif-box">
+                            <b>📢 Admin Alert ({item.get('sender_name', 'ADMIN')}):</b><br>
+                            {item['message']}
+                        </div>
+                        """,
                         unsafe_allow_html=True,
                     )
-    except Exception:
-        pass
+                    displayed_count += 1
+
+            if displayed_count == 0:
+                st.caption("No new announcements.")
+        else:
+            st.caption("No platform announcements.")
+    except Exception as e:
+        st.caption(f"Notice: {e}")
+
+    st.divider()
 
     if st.button("🔒 Sign Out"):
         try:
