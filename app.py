@@ -29,7 +29,7 @@ PAYSTACK_CALLBACK_URL = os.environ.get("PAYSTACK_CALLBACK_URL", "https://feed-th
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 
 # ==============================================================================
-# 1. PAGE CONFIG & RESPONSIVE STYLING
+# 1. PAGE CONFIG & RESPONSIVE ULTRA-GLOW STYLING
 # ==============================================================================
 st.set_page_config(
     page_title="FEED THE NATIONS - Direct Agri Marketplace",
@@ -44,178 +44,276 @@ st.markdown(
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Montserrat:wght@700;800;900&display=swap');
 
     :root {
-        --primary: #1B4D3E;
-        --primary-light: #2C6E49;
-        --accent: #D4A373;
-        --bg-main: #F4F7F4;
-        --card-bg: #FFFFFF;
-        --text-dark: #1E293B;
-        --text-muted: #64748B;
-        --border-color: #E2E8F0;
+        --primary: #0D3B2E;
+        --primary-light: #165B46;
+        --primary-glow: #228B6A;
+        --accent-gold: #E0A96D;
+        --accent-gold-glow: #FFD099;
+        --bg-main: #0B1311;
+        --card-bg: #13221E;
+        --text-dark: #F1F5F9;
+        --text-muted: #A3B8CC;
+        --border-color: rgba(255, 255, 255, 0.12);
     }
 
+    /* Overall App Theme */
     .stApp {
-        background-color: var(--bg-main);
+        background: radial-gradient(circle at 50% 0%, #122822 0%, #080D0C 100%);
         font-family: 'Plus Jakarta Sans', sans-serif;
-        color: var(--text-dark);
+        color: #F8FAFC;
         margin: 0 auto;
         max-width: 100vw;
         overflow-x: hidden;
     }
 
+    /* CONTINUOUS ENDLESS FLOWING LIGHT ANIMATION */
+    @keyframes endlessFlow {
+        0% { transform: translateX(-150%) rotate(25deg); }
+        50% { transform: translateX(150%) rotate(25deg); }
+        100% { transform: translateX(300%) rotate(25deg); }
+    }
+
+    @keyframes bgGlowPulse {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    /* BRAND HEADER WITH CONTINUOUS WHITE GLOW BEAM */
     .brand-header-container {
         position: relative;
-        background: linear-gradient(-45deg, #062319, #0E3A2B, #1B4D3E, #2D6A4F, #124131);
-        background-size: 400% 400%;
-        animation: bgShift 10s ease infinite;
-        padding: clamp(20px, 4vw, 45px) clamp(12px, 3vw, 24px);
-        border-radius: 22px;
+        background: linear-gradient(-45deg, #051A13, #0D3B2E, #165B46, #092B21, #020C09);
+        background-size: 300% 300%;
+        animation: bgGlowPulse 12s ease infinite;
+        padding: clamp(28px, 5vw, 55px) clamp(16px, 3vw, 32px);
+        border-radius: 26px;
         text-align: center;
-        margin-bottom: 25px;
-        box-shadow: 0 16px 36px rgba(10, 47, 35, 0.35);
-        border: 1px solid rgba(255, 255, 255, 0.18);
+        margin-bottom: 30px;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 30px rgba(34, 139, 106, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.25);
         overflow: hidden;
         width: 100%;
         box-sizing: border-box;
     }
 
+    /* Continuous Flowing White Light Overlay */
+    .brand-header-container::after {
+        content: '';
+        position: absolute;
+        top: -100%;
+        left: -50%;
+        width: 60%;
+        height: 300%;
+        background: linear-gradient(
+            to right,
+            rgba(255, 255, 255, 0) 0%,
+            rgba(255, 255, 255, 0.25) 45%,
+            rgba(255, 255, 255, 0.85) 50%,
+            rgba(255, 255, 255, 0.25) 55%,
+            rgba(255, 255, 255, 0) 100%
+        );
+        transform: rotate(25deg);
+        animation: endlessFlow 4s infinite linear;
+        pointer-events: none;
+    }
+
     .brand-title {
         color: #FFFFFF !important;
         font-family: 'Montserrat', sans-serif;
-        font-size: clamp(1.8rem, 5vw, 3.8rem);
+        font-size: clamp(2rem, 5.5vw, 4.2rem);
         font-weight: 900;
-        letter-spacing: 1px;
+        letter-spacing: 2px;
         margin: 5px 0 10px 0;
         text-transform: uppercase;
-        text-shadow: 0 4px 15px rgba(0,0,0,0.4);
+        text-shadow: 0 0 20px rgba(255, 255, 255, 0.6), 0 4px 15px rgba(0,0,0,0.8);
         word-break: break-word;
     }
 
     .header-emojis {
-        font-size: clamp(1.4rem, 3.5vw, 2.1rem);
-        margin: 10px 0;
-        letter-spacing: clamp(6px, 1.5vw, 12px);
+        font-size: clamp(1.6rem, 4vw, 2.4rem);
+        margin: 12px 0;
+        letter-spacing: clamp(8px, 2vw, 16px);
+        filter: drop-shadow(0 0 10px rgba(224, 169, 109, 0.6));
     }
 
     .brand-subtext {
         color: #E2E8F0;
-        font-size: clamp(0.9rem, 2vw, 1.15rem);
+        font-size: clamp(0.95rem, 2vw, 1.25rem);
         font-weight: 600;
         margin-top: 5px;
-        margin-bottom: 18px;
+        margin-bottom: 22px;
+        text-shadow: 0 2px 8px rgba(0,0,0,0.5);
     }
 
     .brand-badge {
         display: inline-block;
-        background: rgba(212, 163, 115, 0.25);
-        border: 1px solid #E6C594;
+        background: linear-gradient(135deg, rgba(224, 169, 109, 0.3), rgba(255, 208, 153, 0.15));
+        border: 1px solid #FFD099;
         color: #FFF3E0;
-        padding: clamp(6px, 1.5vw, 8px) clamp(14px, 2.5vw, 22px);
+        padding: clamp(8px, 1.5vw, 10px) clamp(18px, 2.5vw, 26px);
         border-radius: 30px;
-        font-size: clamp(0.75rem, 1.5vw, 0.85rem);
+        font-size: clamp(0.8rem, 1.5vw, 0.92rem);
         font-weight: 800;
         text-transform: uppercase;
+        box-shadow: 0 0 15px rgba(255, 208, 153, 0.3);
     }
 
+    /* Product Cards & Containers */
+    .product-grid-card {
+        position: relative;
+        background: linear-gradient(145deg, #12221E, #0A1613);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 20px;
+        padding: 18px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        box-sizing: border-box;
+        transition: all 0.3s ease;
+        overflow: hidden;
+    }
+
+    .product-grid-card:hover {
+        transform: translateY(-5px);
+        border-color: rgba(255, 255, 255, 0.4);
+        box-shadow: 0 15px 35px rgba(34, 139, 106, 0.25), 0 0 15px rgba(255, 255, 255, 0.2);
+    }
+
+    /* Glowing Flow on Product Cards */
+    .product-grid-card::after {
+        content: '';
+        position: absolute;
+        top: -100%;
+        left: -50%;
+        width: 50%;
+        height: 300%;
+        background: linear-gradient(
+            to right,
+            rgba(255, 255, 255, 0) 0%,
+            rgba(255, 255, 255, 0.15) 50%,
+            rgba(255, 255, 255, 0) 100%
+        );
+        transform: rotate(25deg);
+        animation: endlessFlow 6s infinite linear;
+        pointer-events: none;
+    }
+
+    /* Glowing Action Buttons */
+    div.stButton > button {
+        position: relative;
+        background: linear-gradient(135deg, #165B46 0%, #0D3B2E 100%) !important;
+        color: #FFFFFF !important;
+        font-weight: 800 !important;
+        border-radius: 12px !important;
+        padding: 12px 20px !important;
+        border: 1px solid rgba(255, 255, 255, 0.25) !important;
+        width: 100%;
+        box-shadow: 0 6px 18px rgba(0,0,0,0.4), 0 0 12px rgba(34, 139, 106, 0.4);
+        transition: all 0.3s ease !important;
+        overflow: hidden;
+    }
+
+    div.stButton > button:hover {
+        background: linear-gradient(135deg, #228B6A 0%, #165B46 100%) !important;
+        box-shadow: 0 8px 25px rgba(34, 139, 106, 0.6), 0 0 20px rgba(255, 255, 255, 0.4) !important;
+        transform: scale(1.02);
+    }
+
+    /* Sidebar Styling */
+    section[data-testid="stSidebar"] {
+        background-color: #080D0C !important;
+        border-right: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .user-profile-badge {
+        background: linear-gradient(135deg, #13221E, #0A1613);
+        padding: 18px;
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        margin-bottom: 18px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+    }
+
+    .sidebar-notif-box {
+        background: rgba(13, 59, 46, 0.6);
+        border: 1px solid rgba(34, 139, 106, 0.5);
+        border-left: 4px solid #228B6A;
+        padding: 12px 14px;
+        border-radius: 10px;
+        margin-bottom: 14px;
+        font-size: 0.85rem;
+        color: #E2E8F0;
+        box-shadow: 0 0 10px rgba(34, 139, 106, 0.2);
+    }
+
+    /* Alert Boxes */
     .warning-box {
-        background-color: #FFFBEB;
+        background-color: rgba(245, 158, 11, 0.15);
         border-left: 5px solid #F59E0B;
         border-radius: 12px;
         padding: 16px;
         margin-bottom: 20px;
-        color: #92400E;
+        color: #FDE68A;
+        border: 1px solid rgba(245, 158, 11, 0.3);
     }
 
     .alert-danger-box {
-        background-color: #FEF2F2;
+        background-color: rgba(239, 68, 68, 0.15);
         border-left: 5px solid #EF4444;
         border-radius: 12px;
         padding: 16px;
         margin-bottom: 16px;
-        color: #991B1B;
+        color: #FCA5A5;
+        border: 1px solid rgba(239, 68, 68, 0.3);
     }
 
     .alert-success-box {
-        background-color: #F0FDF4;
+        background-color: rgba(34, 197, 94, 0.15);
         border-left: 5px solid #22C55E;
         border-radius: 12px;
         padding: 16px;
         margin-bottom: 16px;
-        color: #166534;
+        color: #86EFAC;
+        border: 1px solid rgba(34, 197, 94, 0.3);
     }
 
-    .sidebar-notif-box {
-        background: #EFF6FF;
-        border: 1px solid #BFDBFE;
-        border-left: 4px solid #3B82F6;
-        padding: 10px 12px;
-        border-radius: 8px;
-        margin-bottom: 14px;
-        font-size: 0.82rem;
-        color: #1E3A8A;
-    }
-
-    section[data-testid="stSidebar"] {
-        background-color: #FFFFFF;
-        border-right: 1px solid var(--border-color);
-    }
-    
-    .user-profile-badge {
-        background: #F1F5F9;
-        padding: 16px;
-        border-radius: 14px;
-        border: 1px solid #E2E8F0;
-        margin-bottom: 16px;
-    }
-
-    .product-grid-card {
-        background-color: #FFFFFF;
-        border: 1px solid #E2E8F0;
-        border-radius: 18px;
-        padding: 16px;
-        box-shadow: 0 6px 16px rgba(0,0,0,0.04);
-        box-sizing: border-box;
-    }
-
-    .user-msg-box {
-        background-color: #E2E8F0;
-        color: #1E293B;
-        padding: 12px 16px;
-        border-radius: 12px;
-        margin-bottom: 8px;
-        border-left: 4px solid #64748B;
-    }
-
-    .ai-msg-box {
-        background-color: #E6F4EA;
-        color: #1B4D3E;
-        padding: 12px 16px;
-        border-radius: 12px;
-        margin-bottom: 16px;
-        border-left: 4px solid #1B4D3E;
-    }
-
-    div.stButton > button {
-        background: linear-gradient(135deg, #1B4D3E 0%, #2C6E49 100%) !important;
-        color: #FFFFFF !important;
-        font-weight: 700 !important;
-        border-radius: 10px !important;
-        padding: 10px 16px !important;
-        border: none !important;
-        width: 100%;
-    }
-
+    /* WhatsApp Button Glow */
     .whatsapp-btn {
         display: block;
         text-align: center;
-        background-color: #25D366;
+        background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
         color: white !important;
-        font-weight: 700;
-        padding: 12px 18px;
-        border-radius: 10px;
+        font-weight: 800;
+        padding: 14px 20px;
+        border-radius: 12px;
         text-decoration: none;
-        margin-top: 10px;
+        margin-top: 12px;
+        margin-bottom: 12px;
+        box-shadow: 0 6px 20px rgba(37, 211, 102, 0.4);
+        transition: all 0.3s ease;
+    }
+
+    .whatsapp-btn:hover {
+        transform: scale(1.02);
+        box-shadow: 0 8px 25px rgba(37, 211, 102, 0.6);
+    }
+
+    /* Message Bubbles */
+    .user-msg-box {
+        background-color: rgba(255, 255, 255, 0.08);
+        color: #F1F5F9;
+        padding: 14px 18px;
+        border-radius: 14px;
         margin-bottom: 10px;
+        border-left: 4px solid #A3B8CC;
+    }
+
+    .ai-msg-box {
+        background-color: rgba(34, 139, 106, 0.2);
+        color: #E2E8F0;
+        padding: 14px 18px;
+        border-radius: 14px;
+        margin-bottom: 16px;
+        border-left: 4px solid #228B6A;
+        border: 1px solid rgba(34, 139, 106, 0.3);
     }
 </style>
 """,
@@ -401,7 +499,7 @@ if "reference" in query_params or "trxref" in query_params:
         st.query_params.clear()
 
 # ==============================================================================
-# 5. BRAND HEADER
+# 5. BRAND HEADER (WITH GLOWING LIGHT CONTINUOUS FLOW)
 # ==============================================================================
 st.markdown(
     """
@@ -513,9 +611,9 @@ with st.sidebar:
     st.markdown(
         f"""
         <div class="user-profile-badge">
-            <div style="font-weight: 800; font-size: 1.05rem; color: #1E293B;">👤 {st.session_state.username}</div>
-            <div style="font-size: 0.85rem; color: #64748B;">Role: <b>{st.session_state.user_role}</b></div>
-            <div style="font-size: 0.8rem; color: #94A3B8;">📞 {st.session_state.phone or 'N/A'}</div>
+            <div style="font-weight: 800; font-size: 1.05rem; color: #FFFFFF;">👤 {st.session_state.username}</div>
+            <div style="font-size: 0.85rem; color: #A3B8CC;">Role: <b style="color: #FFD099;">{st.session_state.user_role}</b></div>
+            <div style="font-size: 0.8rem; color: #A3B8CC;">📞 {st.session_state.phone or 'N/A'}</div>
         </div>
         """,
         unsafe_allow_html=True,
@@ -636,7 +734,7 @@ def show_product_detail_modal(product_id):
             available_stock = int(item.get("quantity", 1))
             unit_weight = float(item.get("unit_weight_kg", 50.0))
 
-            st.markdown(f"### ₦{unit_price:,.2f} <span style='font-size: 0.9rem; color: grey;'>/ unit</span>", unsafe_allow_html=True)
+            st.markdown(f"### ₦{unit_price:,.2f} <span style='font-size: 0.9rem; color: #A3B8CC;'>/ unit</span>", unsafe_allow_html=True)
             st.markdown(f"🟢 Stock: **{available_stock} units** ({unit_weight} kg/unit)")
 
             desired_qty = st.number_input(
@@ -724,7 +822,7 @@ def show_product_detail_modal(product_id):
                     auth_url = pay_resp["data"]["authorization_url"]
                     st.success("Checkout created! Click below to pay.")
                     st.markdown(
-                        f'<a href="{auth_url}" target="_blank" style="display:block; text-align:center; background: #1B4D3E; color:white; padding:12px; border-radius:8px; text-decoration:none; font-weight:bold;">Pay via Paystack ➔</a>',
+                        f'<a href="{auth_url}" target="_blank" style="display:block; text-align:center; background: #165B46; color:white; padding:12px; border-radius:8px; text-decoration:none; font-weight:bold; box-shadow: 0 0 15px rgba(34, 139, 106, 0.5);">Pay via Paystack ➔</a>',
                         unsafe_allow_html=True,
                     )
 
