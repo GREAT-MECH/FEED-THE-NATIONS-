@@ -29,7 +29,7 @@ PAYSTACK_CALLBACK_URL = os.environ.get("PAYSTACK_CALLBACK_URL", "https://feed-th
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 
 # ==============================================================================
-# 1. PAGE CONFIG & RESPONSIVE ULTRA-GLOW STYLING
+# 1. PAGE CONFIG & RESPONSIVE ULTRA-GLOW STYLING (DARK/LIGHT MODE COMPATIBLE)
 # ==============================================================================
 st.set_page_config(
     page_title="FEED THE NATIONS - Direct Agri Marketplace",
@@ -49,18 +49,11 @@ st.markdown(
         --primary-glow: #228B6A;
         --accent-gold: #E0A96D;
         --accent-gold-glow: #FFD099;
-        --bg-main: #0B1311;
-        --card-bg: #13221E;
-        --text-dark: #F1F5F9;
-        --text-muted: #A3B8CC;
-        --border-color: rgba(255, 255, 255, 0.12);
     }
 
-    /* Overall App Theme */
+    /* Overall App Theme - Optimized for visibility in both dark & light themes */
     .stApp {
-        background: radial-gradient(circle at 50% 0%, #122822 0%, #080D0C 100%);
         font-family: 'Plus Jakarta Sans', sans-serif;
-        color: #F8FAFC;
         margin: 0 auto;
         max-width: 100vw;
         overflow-x: hidden;
@@ -89,14 +82,13 @@ st.markdown(
         border-radius: 26px;
         text-align: center;
         margin-bottom: 30px;
-        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 30px rgba(34, 139, 106, 0.3);
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4), 0 0 30px rgba(34, 139, 106, 0.3);
         border: 1px solid rgba(255, 255, 255, 0.25);
         overflow: hidden;
         width: 100%;
         box-sizing: border-box;
     }
 
-    /* Continuous Flowing White Light Overlay */
     .brand-header-container::after {
         content: '';
         position: absolute;
@@ -137,7 +129,7 @@ st.markdown(
     }
 
     .brand-subtext {
-        color: #E2E8F0;
+        color: #E2E8F0 !important;
         font-size: clamp(0.95rem, 2vw, 1.25rem);
         font-weight: 600;
         margin-top: 5px;
@@ -149,7 +141,7 @@ st.markdown(
         display: inline-block;
         background: linear-gradient(135deg, rgba(224, 169, 109, 0.3), rgba(255, 208, 153, 0.15));
         border: 1px solid #FFD099;
-        color: #FFF3E0;
+        color: #FFF3E0 !important;
         padding: clamp(8px, 1.5vw, 10px) clamp(18px, 2.5vw, 26px);
         border-radius: 30px;
         font-size: clamp(0.8rem, 1.5vw, 0.92rem);
@@ -158,14 +150,15 @@ st.markdown(
         box-shadow: 0 0 15px rgba(255, 208, 153, 0.3);
     }
 
-    /* Product Cards & Containers */
+    /* Product Cards & Containers - High Contrast Dark Overlay */
     .product-grid-card {
         position: relative;
-        background: linear-gradient(145deg, #12221E, #0A1613);
-        border: 1px solid rgba(255, 255, 255, 0.15);
+        background: #12221E;
+        color: #FFFFFF !important;
+        border: 1px solid rgba(255, 255, 255, 0.18);
         border-radius: 20px;
         padding: 18px;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.3);
         box-sizing: border-box;
         transition: all 0.3s ease;
         overflow: hidden;
@@ -173,27 +166,8 @@ st.markdown(
 
     .product-grid-card:hover {
         transform: translateY(-5px);
-        border-color: rgba(255, 255, 255, 0.4);
-        box-shadow: 0 15px 35px rgba(34, 139, 106, 0.25), 0 0 15px rgba(255, 255, 255, 0.2);
-    }
-
-    /* Glowing Flow on Product Cards */
-    .product-grid-card::after {
-        content: '';
-        position: absolute;
-        top: -100%;
-        left: -50%;
-        width: 50%;
-        height: 300%;
-        background: linear-gradient(
-            to right,
-            rgba(255, 255, 255, 0) 0%,
-            rgba(255, 255, 255, 0.15) 50%,
-            rgba(255, 255, 255, 0) 100%
-        );
-        transform: rotate(25deg);
-        animation: endlessFlow 6s infinite linear;
-        pointer-events: none;
+        border-color: rgba(34, 139, 106, 0.8);
+        box-shadow: 0 15px 35px rgba(34, 139, 106, 0.3);
     }
 
     /* Glowing Action Buttons */
@@ -206,81 +180,64 @@ st.markdown(
         padding: 12px 20px !important;
         border: 1px solid rgba(255, 255, 255, 0.25) !important;
         width: 100%;
-        box-shadow: 0 6px 18px rgba(0,0,0,0.4), 0 0 12px rgba(34, 139, 106, 0.4);
+        box-shadow: 0 6px 18px rgba(0,0,0,0.3);
         transition: all 0.3s ease !important;
-        overflow: hidden;
     }
 
     div.stButton > button:hover {
         background: linear-gradient(135deg, #228B6A 0%, #165B46 100%) !important;
-        box-shadow: 0 8px 25px rgba(34, 139, 106, 0.6), 0 0 20px rgba(255, 255, 255, 0.4) !important;
+        box-shadow: 0 8px 25px rgba(34, 139, 106, 0.6) !important;
         transform: scale(1.02);
     }
 
-    /* Sidebar Styling */
-    section[data-testid="stSidebar"] {
-        background-color: #080D0C !important;
-        border-right: 1px solid rgba(255, 255, 255, 0.1);
-    }
-    
+    /* Sidebar User Badge */
     .user-profile-badge {
-        background: linear-gradient(135deg, #13221E, #0A1613);
+        background: #13221E;
         padding: 18px;
         border-radius: 16px;
         border: 1px solid rgba(255, 255, 255, 0.15);
         margin-bottom: 18px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
     }
 
     .sidebar-notif-box {
-        background: rgba(13, 59, 46, 0.6);
-        border: 1px solid rgba(34, 139, 106, 0.5);
+        background: rgba(13, 59, 46, 0.85);
+        border: 1px solid rgba(34, 139, 106, 0.6);
         border-left: 4px solid #228B6A;
         padding: 12px 14px;
         border-radius: 10px;
         margin-bottom: 14px;
-        font-size: 0.85rem;
-        color: #E2E8F0;
-        box-shadow: 0 0 10px rgba(34, 139, 106, 0.2);
+        font-size: 0.88rem;
+        color: #F8FAFC !important;
     }
 
-    /* Alert Boxes */
-    .warning-box {
-        background-color: rgba(245, 158, 11, 0.15);
-        border-left: 5px solid #F59E0B;
-        border-radius: 12px;
-        padding: 16px;
-        margin-bottom: 20px;
-        color: #FDE68A;
-        border: 1px solid rgba(245, 158, 11, 0.3);
+    /* Message Bubbles for Light/Dark mode readability */
+    .user-msg-box {
+        background-color: #1E293B;
+        color: #F8FAFC !important;
+        padding: 14px 18px;
+        border-radius: 14px;
+        margin-bottom: 10px;
+        border-left: 4px solid #38BDF8;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
     }
 
-    .alert-danger-box {
-        background-color: rgba(239, 68, 68, 0.15);
-        border-left: 5px solid #EF4444;
-        border-radius: 12px;
-        padding: 16px;
+    .ai-msg-box {
+        background-color: #064E3B;
+        color: #F0FDF4 !important;
+        padding: 14px 18px;
+        border-radius: 14px;
         margin-bottom: 16px;
-        color: #FCA5A5;
-        border: 1px solid rgba(239, 68, 68, 0.3);
+        border-left: 4px solid #10B981;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
     }
 
-    .alert-success-box {
-        background-color: rgba(34, 197, 94, 0.15);
-        border-left: 5px solid #22C55E;
-        border-radius: 12px;
-        padding: 16px;
-        margin-bottom: 16px;
-        color: #86EFAC;
-        border: 1px solid rgba(34, 197, 94, 0.3);
-    }
-
-    /* WhatsApp Button Glow */
+    /* WhatsApp Button */
     .whatsapp-btn {
         display: block;
         text-align: center;
         background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
-        color: white !important;
+        color: #FFFFFF !important;
         font-weight: 800;
         padding: 14px 20px;
         border-radius: 12px;
@@ -293,27 +250,6 @@ st.markdown(
 
     .whatsapp-btn:hover {
         transform: scale(1.02);
-        box-shadow: 0 8px 25px rgba(37, 211, 102, 0.6);
-    }
-
-    /* Message Bubbles */
-    .user-msg-box {
-        background-color: rgba(255, 255, 255, 0.08);
-        color: #F1F5F9;
-        padding: 14px 18px;
-        border-radius: 14px;
-        margin-bottom: 10px;
-        border-left: 4px solid #A3B8CC;
-    }
-
-    .ai-msg-box {
-        background-color: rgba(34, 139, 106, 0.2);
-        color: #E2E8F0;
-        padding: 14px 18px;
-        border-radius: 14px;
-        margin-bottom: 16px;
-        border-left: 4px solid #228B6A;
-        border: 1px solid rgba(34, 139, 106, 0.3);
     }
 </style>
 """,
@@ -427,18 +363,30 @@ def verify_paystack_payment(reference):
         return False, str(e)
 
 # ==============================================================================
-# 3. AI HELP DESK
+# 3. AI HELP DESK (WITH GREETINGS & ORDER ID PROMPTS)
 # ==============================================================================
-def generate_ai_support_response(user_name: str, user_role: str, message: str) -> str:
+def generate_ai_support_response(user_name: str, user_role: str, message: str, order_id: str = "") -> str:
     name = user_name if user_name else "Valued User"
+    role_title = "Greatest Farmer & Producer" if user_role == "Farmer" else ("Valued Buyer" if user_role == "Buyer" else "Platform Administrator")
+    greeting = f"Welcome to FEED THE NATIONS, {role_title} {name}! 🌾"
     
+    # Check if message or input lacks an Order ID reference
+    order_id_prompt = ""
+    if not order_id.strip() and not ("ftn-tx" in message.lower() or "order" in message.lower()):
+        order_id_prompt = (
+            "\n\n📌 **Note:** If your inquiry relates to a transaction or dispute, please include your **Order ID** (e.g., `FTN-TX-123456`) "
+            "so our Admin team can trace the buyer/seller and assist you faster!"
+        )
+
     if GEMINI_API_KEY:
         try:
             url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
             prompt_text = (
-                f"You are the AI Helpdesk Agent for FEED THE NATIONS marketplace.\n"
-                f"User Name: {name}\nUser Role: {user_role}\nUser Message: {message}\n\n"
-                f"Provide a helpful response concerning escrow, freight, or order confirmation."
+                f"You are the AI Helpdesk Agent for FEED THE NATIONS agri-marketplace.\n"
+                f"Greet the user with: '{greeting}'\n"
+                f"User Name: {name}\nUser Role: {user_role}\nOrder ID provided: {order_id}\nUser Message: {message}\n\n"
+                f"Provide a helpful, polite response regarding escrow, delivery, or dispute resolution. "
+                f"If no Order ID was attached, remind them to share the Order ID (e.g., FTN-TX-XXXXXX)."
             )
             payload = {"contents": [{"parts": [{"text": prompt_text}]}]}
             headers = {"Content-Type": "application/json"}
@@ -450,15 +398,17 @@ def generate_ai_support_response(user_name: str, user_role: str, message: str) -
         except Exception:
             pass
 
+    # Fallback AI response
     msg = message.lower().strip()
     if any(k in msg for k in ["buyer", "sign", "received", "delivered"]):
-        return (
-            f"Hello **{name}**!\n"
-            "If you have dispatched the item but the buyer has not signed off, our Admin team has been notified.\n"
-            "An Admin alert is sent to remind the buyer to confirm delivery so your funds unlock."
+        fallback_body = (
+            f"If you have dispatched your item but your buyer hasn't confirmed delivery, our Admin support team is on it! "
+            f"An alert will be dispatched to remind them to sign off so funds unlock."
         )
     else:
-        return f"Hello **{name}**! Re: *\"{message}\"*\nOur platform support & Admin team are reviewing your ticket."
+        fallback_body = f"Thank you for contacting support! Re: *\"{message}\"*, our team is reviewing your ticket."
+    
+    return f"{greeting}\n\n{fallback_body}{order_id_prompt}"
 
 # ==============================================================================
 # 4. SESSION STATE & PAYSTACK CALLBACK
@@ -499,7 +449,7 @@ if "reference" in query_params or "trxref" in query_params:
         st.query_params.clear()
 
 # ==============================================================================
-# 5. BRAND HEADER (WITH GLOWING LIGHT CONTINUOUS FLOW)
+# 5. BRAND HEADER
 # ==============================================================================
 st.markdown(
     """
@@ -514,7 +464,7 @@ st.markdown(
 )
 
 # ==============================================================================
-# 6. AUTHENTICATION PORTAL (COMPLETE ADMIN & SCHEMA BYPASS)
+# 6. AUTHENTICATION PORTAL
 # ==============================================================================
 if not st.session_state.authenticated:
     c_auth, _ = st.columns([1, 0.1])
@@ -555,9 +505,7 @@ if not st.session_state.authenticated:
         else:
             if st.button("LOG IN ➔"):
                 if email_input and password_input:
-                    # ----------------------------------------------------------
-                    # ⚡ FOUNDER / ADMIN DIRECT PASS (NO SUPABASE AUTH CALLS)
-                    # ----------------------------------------------------------
+                    # FOUNDER / ADMIN DIRECT PASS
                     if email_input == "nwokejianthony2@gmail.com" and password_input == "CHUKWUKa$7":
                         st.session_state.authenticated = True
                         st.session_state.user_role = "Admin"
@@ -566,9 +514,7 @@ if not st.session_state.authenticated:
                         st.session_state.email = email_input
                         st.rerun()
 
-                    # ----------------------------------------------------------
                     # STANDARD USER AUTHENTICATION
-                    # ----------------------------------------------------------
                     else:
                         try:
                             res = supabase.auth.sign_in_with_password({
@@ -605,7 +551,7 @@ if not st.session_state.authenticated:
     st.stop()
 
 # ==============================================================================
-# 7. SIDEBAR NAVIGATION & ANNOUNCEMENT NOTIFICATIONS
+# 7. SIDEBAR & ROLE-BASED DYNAMIC NAVIGATION MENU
 # ==============================================================================
 with st.sidebar:
     st.markdown(
@@ -619,9 +565,6 @@ with st.sidebar:
         unsafe_allow_html=True,
     )
 
-    # --------------------------------------------------------------------------
-    # 🔔 SIDEBAR NOTIFICATIONS BOX (DIRECT & BROADCAST ALERTS)
-    # --------------------------------------------------------------------------
     st.markdown("### 🔔 Announcements & Alerts")
     try:
         notif_res = (
@@ -641,7 +584,6 @@ with st.sidebar:
                 user_email = str(st.session_state.email).strip().lower()
                 user_role = str(st.session_state.user_role).strip()
 
-                # Display if matched to current user, role, broadcast, or if Admin
                 if (
                     recip in ["all", "", "none"]
                     or recip == user_email
@@ -680,7 +622,7 @@ with st.sidebar:
 
     st.divider()
 
-    # DYNAMIC ROLE-BASED SIDEBAR FILTER
+    # DYNAMIC DEDICATED SIDEBAR MENU PER ROLE
     if st.session_state.user_role == "Admin":
         nav_options = [
             "📈 Revenue Dashboard",
@@ -732,7 +674,7 @@ def show_product_detail_modal(product_id):
             available_stock = int(item.get("quantity", 1))
             unit_weight = float(item.get("unit_weight_kg", 50.0))
 
-            st.markdown(f"### ₦{unit_price:,.2f} <span style='font-size: 0.9rem; color: #A3B8CC;'>/ unit</span>", unsafe_allow_html=True)
+            st.markdown(f"### ₦{unit_price:,.2f} <span style='font-size: 0.9rem;'>/ unit</span>", unsafe_allow_html=True)
             st.markdown(f"🟢 Stock: **{available_stock} units** ({unit_weight} kg/unit)")
 
             desired_qty = st.number_input(
@@ -890,7 +832,6 @@ elif navigation == "📢 Admin Broadcast & Messaging":
     with col_send:
         st.markdown("### ✉️ Send Direct Alert / Message")
         
-        # Pre-fill target email if set via quick action button in the feed
         default_target = st.session_state.get("admin_target_email", "")
 
         with st.form("admin_notif_form"):
@@ -941,7 +882,6 @@ elif navigation == "📢 Admin Broadcast & Messaging":
     with col_feed:
         st.markdown("### 📥 Live Support Tickets & Dispute Feed")
         try:
-            # Fetch directly from the detailed SQL view
             feed_tickets = supabase.table("support_tickets_detailed").select("*").order("created_at", desc=True).limit(10).execute().data
             
             if not feed_tickets:
@@ -1029,15 +969,7 @@ elif navigation == "📦 Manage Farm Listings":
             st.error(f"Error loading listings: {e}")
 
     with tab_add:
-        st.markdown(
-            """
-            <div class="warning-box">
-                <h4>⚠️ LOGISTICS & DATA ACCURACY NOTICE</h4>
-                Input exact price, farm location address, unit count, and unit weight in KG.
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+        st.warning("⚠️ LOGISTICS NOTICE: Please input exact price, farm location address, unit count, and unit weight in KG.")
 
         with st.form("add_product_form", clear_on_submit=True):
             farming_cat = st.selectbox("Category", AGRI_CATEGORIES)
@@ -1158,12 +1090,7 @@ elif navigation == "💰 Farmer Sales & Escrow":
                                 st.info("🚚 Dispatched. Awaiting buyer receipt sign-off.")
                             
                             elif f_sign and b_sign:
-                                st.markdown(
-                                    '<div class="alert-success-box" style="padding:10px; font-size:0.85rem;">'
-                                    '🎉 <b>Buyer Confirmed Receipt!</b>'
-                                    '</div>',
-                                    unsafe_allow_html=True
-                                )
+                                st.success("🎉 Buyer Confirmed Receipt!")
 
             else:
                 st.info("No sales records found.")
@@ -1247,15 +1174,7 @@ elif navigation == "💰 Farmer Sales & Escrow":
 elif navigation == "📦 My Orders & Escrow":
     st.subheader("📦 My Purchased Orders & Delivery Sign-Off")
 
-    st.markdown(
-        """
-        <div class="alert-danger-box">
-            <h4>🛑 CRITICAL SECURITY WARNING TO BUYERS</h4>
-            <b>DO NOT CLICK</b> the delivery confirmation sign-off button below until you have <b>physically received and inspected</b> your produce.
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+    st.error("🛑 CRITICAL SECURITY WARNING: DO NOT click delivery confirmation until you physically inspect your produce.")
 
     try:
         if st.session_state.user_role == "Admin":
@@ -1293,12 +1212,7 @@ elif navigation == "📦 My Orders & Escrow":
                                 st.success("🎉 Delivery verified! Escrow unlocked.")
                                 st.rerun()
                         else:
-                            st.markdown(
-                                '<div class="alert-success-box" style="padding:10px; text-align:center;">'
-                                '✅ <b>Order Completed & Signed Off</b>'
-                                '</div>',
-                                unsafe_allow_html=True
-                            )
+                            st.success("✅ Order Completed & Signed Off")
 
     except Exception as e:
         st.error(f"Error loading orders: {e}")
@@ -1331,12 +1245,12 @@ elif navigation == "📈 Revenue Dashboard":
 # 15. SUPPORT & AI HELPDESK MODULE (WITH ORDER ID TAGGING)
 # ==============================================================================
 elif navigation == "💬 Support & AI Helpdesk":
-    st.subheader("💬 Support & Helpdesk Portal")
+    st.subheader("💬 AI Dispute Support & Helpdesk Portal")
 
     col1, col2 = st.columns([1, 1], gap="large")
 
     with col1:
-        st.markdown("### 📝 Submit Ticket")
+        st.markdown("### 📝 Submit Support Ticket")
         with st.form("support_ticket_form", clear_on_submit=True):
             order_id_input = st.text_input("Order ID (Optional)", placeholder="e.g. FTN-TX-123456")
             msg_input = st.text_area("Describe your issue, complaint, or order inquiry...", height=140)
@@ -1344,7 +1258,12 @@ elif navigation == "💬 Support & AI Helpdesk":
 
         if submit_ticket:
             if msg_input.strip():
-                ai_reply = generate_ai_support_response(st.session_state.username, st.session_state.user_role, msg_input)
+                ai_reply = generate_ai_support_response(
+                    st.session_state.username, 
+                    st.session_state.user_role, 
+                    msg_input, 
+                    order_id=order_id_input.strip()
+                )
                 payload = {
                     "user_email": st.session_state.email,
                     "user_role": st.session_state.user_role,
@@ -1357,7 +1276,7 @@ elif navigation == "💬 Support & AI Helpdesk":
                     supabase.table("support_messages").insert(payload).execute()
                 except Exception as e:
                     st.error(f"Error logging ticket: {e}")
-                st.success("Ticket submitted! Check history for updates.")
+                st.success("Ticket submitted! Check history for AI response.")
                 st.rerun()
 
     with col2:
@@ -1381,15 +1300,15 @@ elif navigation == "💬 Support & AI Helpdesk":
                 for t in tickets:
                     with st.expander(f"Ticket #{t['id']} | {t.get('created_at', '')[:10]}", expanded=True):
                         if t.get("order_id"):
-                            st.caption(f"Linked Order: {t['order_id']}")
+                            st.caption(f"📌 Linked Order ID: {t['order_id']}")
                         st.markdown(
                             f'<div class="user-msg-box"><b>👤 {t.get("user_email", st.session_state.username)}:</b><br>{t["message"]}</div>',
                             unsafe_allow_html=True
                         )
                         if t.get("response"):
                             st.markdown(
-                                f'<div class="ai-msg-box"><b>🤖 Feed The Nations AI Support:</b><br>{t["response"]}</div>',
+                                f'<div class="ai-msg-box"><b>🤖 Feed The Nations Support AI:</b><br>{t["response"]}</div>',
                                 unsafe_allow_html=True
                             )
         except Exception as e:
-            st.error(f"Error loading support history: {e}")
+            st.error(f"Error loading history: {e}")
