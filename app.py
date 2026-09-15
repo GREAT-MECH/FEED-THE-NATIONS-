@@ -78,7 +78,7 @@ st.markdown(
         padding: clamp(28px, 5vw, 55px) clamp(16px, 3vw, 32px);
         border-radius: 26px;
         text-align: center;
-        margin-bottom: 30px;
+        margin-bottom: 25px;
         box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4), 0 0 30px rgba(34, 139, 106, 0.3);
         border: 1px solid rgba(255, 255, 255, 0.25);
         overflow: hidden;
@@ -194,15 +194,16 @@ st.markdown(
         box-shadow: 0 4px 15px rgba(0,0,0,0.2);
     }
 
-    .sidebar-notif-box {
-        background: rgba(13, 59, 46, 0.85);
+    .notif-card-box {
+        background: rgba(13, 59, 46, 0.9);
         border: 1px solid rgba(34, 139, 106, 0.6);
-        border-left: 4px solid #228B6A;
-        padding: 12px 14px;
-        border-radius: 10px;
-        margin-bottom: 6px;
-        font-size: 0.88rem;
+        border-left: 5px solid #228B6A;
+        padding: 16px 20px;
+        border-radius: 14px;
+        margin-bottom: 14px;
+        font-size: 0.95rem;
         color: #F8FAFC !important;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
     }
 
     .user-msg-box {
@@ -410,7 +411,6 @@ for key, default in [
     ("email", ""),
     ("phone", ""),
     ("admin_target_email", ""),
-    ("admin_target_audience", "All Farmers"),
 ]:
     if key not in st.session_state:
         st.session_state[key] = default
@@ -541,7 +541,7 @@ if not st.session_state.authenticated:
     st.stop()
 
 # ==============================================================================
-# 7. SIDEBAR & ROLE-BASED DYNAMIC NAVIGATION MENU
+# 7. SIDEBAR & NAVIGATION MENU
 # ==============================================================================
 with st.sidebar:
     st.markdown(
@@ -550,12 +550,13 @@ with st.sidebar:
             <div style="font-weight: 800; font-size: 1.05rem; color: #FFFFFF;">👤 {st.session_state.username}</div>
             <div style="font-size: 0.85rem; color: #A3B8CC;">Role: <b style="color: #FFD099;">{st.session_state.user_role}</b></div>
             <div style="font-size: 0.8rem; color: #A3B8CC;">📞 {st.session_state.phone or 'N/A'}</div>
+            <div style="font-size: 0.8rem; color: #38BDF8;">✉️ {st.session_state.email}</div>
         </div>
         """,
         unsafe_allow_html=True,
     )
 
-    # ADMIN DISPUTE NOTIFICATION CENTER IN SIDEBAR
+    # ADMIN DISPUTE NOTIFICATION ALERT IN SIDEBAR
     if st.session_state.user_role == "Admin":
         try:
             unresolved_tickets = supabase.table("support_messages").select("*").execute().data
@@ -563,56 +564,6 @@ with st.sidebar:
                 st.warning(f"🚨 **ADMIN ALERT:** {len(unresolved_tickets)} Open Support Ticket(s) Pending Action!")
         except Exception:
             pass
-
-    st.markdown("### 🔔 Announcements & Alerts")
-    try:
-        notif_res = (
-            supabase.table("notifications")
-            .select("*")
-            .order("created_at", desc=True)
-            .limit(10)
-            .execute()
-            .data
-        )
-
-        if notif_res:
-            displayed_count = 0
-            for item in notif_res:
-                recip = str(item.get("recipient_email", "ALL")).strip().lower()
-                t_role = str(item.get("target_role", "ALL")).strip()
-                user_email = str(st.session_state.email).strip().lower()
-                user_role = str(st.session_state.user_role).strip()
-
-                if (
-                    recip in ["all", "", "none"]
-                    or recip == user_email
-                    or t_role in ["ALL", "All"]
-                    or t_role == user_role
-                    or user_role == "Admin"
-                ):
-                    st.markdown(
-                        f"""
-                        <div class="sidebar-notif-box">
-                            <b>📢 Alert ({item.get('sender_name', 'ADMIN')}):</b><br>
-                            {item['message']}
-                        </div>
-                        """,
-                        unsafe_allow_html=True,
-                    )
-                    # DELETE NOTIFICATION BUTTON
-                    if st.button("🗑️ Delete Notification", key=f"del_notif_{item['id']}"):
-                        supabase.table("notifications").delete().eq("id", item["id"]).execute()
-                        st.toast("Notification deleted!")
-                        st.rerun()
-
-                    displayed_count += 1
-
-            if displayed_count == 0:
-                st.caption("No new announcements.")
-        else:
-            st.caption("No platform announcements.")
-    except Exception as e:
-        st.caption(f"Notice: {e}")
 
     st.divider()
 
@@ -652,7 +603,70 @@ with st.sidebar:
     navigation = st.radio("Navigation Menu", nav_options)
 
 # ==============================================================================
-# 8. PRODUCT DETAIL & BUY MODAL
+# 8. DEDICATED NOTIFICATION HUB (ISOLATED MAIN CONTENT CONTAINER)
+# ==============================================================================
+# DEDICATED SPACE FOR NOTIFICATIONS SO SIDEBAR IS NEVER CROWDED
+try:
+    all_notifs = (
+        supabase.table("notifications")
+        .select("*")
+        .order("created_at", desc=True)
+        .execute()
+        .data
+    )
+
+    user_email = str(st.session_state.email).strip().lower()
+    user_role = str(st.session_state.user_role).strip()
+
+    filtered_notifs = []
+    if all_notifs:
+        for item in all_notifs:
+            recip = str(item.get("recipient_email", "ALL")).strip().lower()
+            t_role = str(item.get("target_role", "ALL")).strip()
+
+            # STRICT MESSAGE ISOLATION LOGIC:
+            # 1. Direct message (specific recipient email) -> ONLY visible to that specific email (or Admin)
+            # 2. Role-wide broadcast -> Visible to users with that role
+            # 3. Global broadcast -> Visible to everyone
+            if recip not in ["all", "", "none"] and recip != "all":
+                if recip == user_email or user_role == "Admin":
+                    filtered_notifs.append(item)
+            else:
+                if t_role in ["ALL", "All"] or t_role == user_role or user_role == "Admin":
+                    filtered_notifs.append(item)
+
+    if filtered_notifs:
+        with st.expander(f"🔔 **Notifications & Alerts ({len(filtered_notifs)})**", expanded=True):
+            for n in filtered_notifs:
+                sender = n.get('sender_name', 'ADMIN')
+                msg = n.get('message', '')
+                created = str(n.get('created_at', ''))[:16].replace('T', ' ')
+                recip_info = f" (Direct to: {n.get('recipient_email')})" if n.get('recipient_email') and n.get('recipient_email') != 'ALL' else ""
+
+                st.markdown(
+                    f"""
+                    <div class="notif-card-box">
+                        <div style="font-size: 0.82rem; color: #FFD099; margin-bottom: 4px;">
+                            📢 <b>From {sender}</b>{recip_info} • <span style="color: #CBD5E1;">{created}</span>
+                        </div>
+                        <div>{msg}</div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+
+                # DELETE NOTIFICATION BUTTON EXCLUSIVELY AVAILABLE TO ADMIN
+                if user_role == "Admin":
+                    if st.button("🗑️ Admin Delete Notification", key=f"del_notif_main_{n['id']}"):
+                        supabase.table("notifications").delete().eq("id", n["id"]).execute()
+                        st.success("Notification deleted.")
+                        st.rerun()
+
+except Exception as e:
+    st.caption(f"Notification area notice: {e}")
+
+# ==============================================================================
+# 9. PRODUCT DETAIL & BUY MODAL
 # ==============================================================================
 @st.dialog("🌾 Produce Details & Escrow Purchase")
 def show_product_detail_modal(product_id):
@@ -775,7 +789,7 @@ def show_product_detail_modal(product_id):
         st.error(f"Error opening modal: {e}")
 
 # ==============================================================================
-# 9. MARKETPLACE VIEW
+# 10. MARKETPLACE VIEW
 # ==============================================================================
 if navigation == "🛒 Produce Marketplace":
     st.subheader("🛒 Farm Produce Marketplace")
@@ -833,7 +847,7 @@ if navigation == "🛒 Produce Marketplace":
         st.error(f"Marketplace error: {e}")
 
 # ==============================================================================
-# 10. ADMIN BROADCAST & MESSAGING (DIRECT USER DISPUTE RESOLUTION)
+# 11. ADMIN BROADCAST & MESSAGING (DIRECT DISPUTE DISPATCH)
 # ==============================================================================
 elif navigation == "📢 Admin Broadcast & Messaging":
     st.subheader("📢 Admin Support Feed & Direct Dispute Messaging")
@@ -844,18 +858,11 @@ elif navigation == "📢 Admin Broadcast & Messaging":
         st.markdown("### ✉️ Send Direct Alert / Message")
         
         default_target = st.session_state.get("admin_target_email", "")
-        default_audience = st.session_state.get("admin_target_audience", "All Farmers")
 
         with st.form("admin_notif_form"):
-            audience_options = ["Specific User (By Email)", "All Farmers", "All Buyers", "Everyone (Platform-Wide)"]
-            
-            # Auto-select index based on button clicked
-            default_index = audience_options.index(default_audience) if default_audience in audience_options else 0
-
             target_audience = st.selectbox(
                 "Audience Target", 
-                audience_options,
-                index=default_index
+                ["Specific User (By Email)", "All Farmers", "All Buyers", "Everyone (Platform-Wide)"]
             )
             
             user_target_email = st.text_input(
@@ -875,6 +882,8 @@ elif navigation == "📢 Admin Broadcast & Messaging":
             if send_btn:
                 if not notif_msg.strip():
                     st.error("Please enter a message.")
+                elif target_audience == "Specific User (By Email)" and not user_target_email:
+                    st.error("Please specify target user email.")
                 else:
                     target_role_str = "ALL"
                     recip_str = "ALL"
@@ -893,9 +902,8 @@ elif navigation == "📢 Admin Broadcast & Messaging":
                         "target_role": target_role_str,
                     }
                     supabase.table("notifications").insert(notif_payload).execute()
-                    st.success("🎉 Direct alert sent successfully!")
+                    st.success(f"🎉 Direct alert sent successfully to {recip_str}!")
                     st.session_state["admin_target_email"] = ""
-                    st.session_state["admin_target_audience"] = "All Farmers"
                     st.rerun()
 
     with col_feed:
@@ -932,7 +940,6 @@ elif navigation == "📢 Admin Broadcast & Messaging":
                                         buyer_prof = supabase.table("profiles").select("email").eq("full_name", buyer).execute().data
                                         if buyer_prof:
                                             st.session_state["admin_target_email"] = buyer_prof[0]["email"]
-                                            st.session_state["admin_target_audience"] = "Specific User (By Email)"
                                             st.rerun()
                                         else:
                                             st.warning("Buyer email not found.")
@@ -941,22 +948,20 @@ elif navigation == "📢 Admin Broadcast & Messaging":
                                         farmer_prof = supabase.table("profiles").select("email").eq("full_name", farmer).execute().data
                                         if farmer_prof:
                                             st.session_state["admin_target_email"] = farmer_prof[0]["email"]
-                                            st.session_state["admin_target_audience"] = "Specific User (By Email)"
                                             st.rerun()
                                         else:
                                             st.warning("Farmer email not found.")
                         else:
                             st.caption("ℹ️ No Order ID attached to this ticket.")
-                            if st.button(f"✉️ Reply to Sender", key=f"reply_s_{ticket_id}"):
+                            if st.button(f"✉️ Reply to Sender Direct", key=f"reply_s_{ticket_id}"):
                                 st.session_state["admin_target_email"] = sender
-                                st.session_state["admin_target_audience"] = "Specific User (By Email)"
                                 st.rerun()
 
         except Exception as e:
             st.error(f"Error loading live support feed: {e}")
 
 # ==============================================================================
-# 11. USER PROFILE MANAGEMENT (ADMIN ONLY)
+# 12. USER PROFILE MANAGEMENT (ADMIN ONLY)
 # ==============================================================================
 elif navigation == "👥 User Profile Management" and st.session_state.user_role == "Admin":
     st.subheader("👥 Admin Profile & User Management")
@@ -973,7 +978,6 @@ elif navigation == "👥 User Profile Management" and st.session_state.user_role
             selected_user_email = st.selectbox("Select Account Email to Delete", df_profiles["email"].tolist())
             
             if st.button("🔴 DELETE USER PROFILE ENTIRELY", type="primary"):
-                user_to_delete = df_profiles[df_profiles["email"] == selected_user_email].iloc[0]
                 supabase.table("profiles").delete().eq("email", selected_user_email).execute()
                 st.success(f"Profile for {selected_user_email} deleted successfully!")
                 st.rerun()
@@ -983,7 +987,7 @@ elif navigation == "👥 User Profile Management" and st.session_state.user_role
         st.error(f"Error managing profiles: {e}")
 
 # ==============================================================================
-# 12. FARMER LISTINGS MANAGEMENT
+# 13. FARMER LISTINGS MANAGEMENT
 # ==============================================================================
 elif navigation == "📦 Manage Farm Listings":
     st.subheader("📦 Farm Produce Inventory")
@@ -1078,7 +1082,7 @@ elif navigation == "📦 Manage Farm Listings":
                         st.success("🎉 Produce listed successfully!")
 
 # ==============================================================================
-# 13. FARMER SALES & ESCROW LEDGER
+# 14. FARMER SALES & ESCROW LEDGER
 # ==============================================================================
 elif navigation == "💰 Farmer Sales & Escrow":
     st.subheader("💰 Confirmed Sales & Escrow Ledger")
@@ -1224,7 +1228,7 @@ elif navigation == "💰 Farmer Sales & Escrow":
             st.error(f"Error processing payouts: {e}")
 
 # ==============================================================================
-# 14. BUYER ORDERS VIEW
+# 15. BUYER ORDERS VIEW
 # ==============================================================================
 elif navigation == "📦 My Orders & Escrow":
     st.subheader("📦 My Purchased Orders & Delivery Sign-Off")
@@ -1273,7 +1277,7 @@ elif navigation == "📦 My Orders & Escrow":
         st.error(f"Error loading orders: {e}")
 
 # ==============================================================================
-# 15. REVENUE DASHBOARD (ADMIN ONLY)
+# 16. REVENUE DASHBOARD (ADMIN ONLY)
 # ==============================================================================
 elif navigation == "📈 Revenue Dashboard":
     st.subheader("📈 Marketplace GMV & Platform Revenue")
@@ -1297,7 +1301,7 @@ elif navigation == "📈 Revenue Dashboard":
         st.error(f"Error loading revenue metrics: {e}")
 
 # ==============================================================================
-# 16. SUPPORT & AI HELPDESK MODULE (WITH ORDER ID TAGGING)
+# 17. SUPPORT & AI HELPDESK MODULE
 # ==============================================================================
 elif navigation == "💬 Support & AI Helpdesk":
     st.subheader("💬 AI Dispute Support & Helpdesk Portal")
