@@ -51,7 +51,6 @@ st.markdown(
         --accent-gold-glow: #FFD099;
     }
 
-    /* Overall App Theme - Optimized for visibility in both dark & light themes */
     .stApp {
         font-family: 'Plus Jakarta Sans', sans-serif;
         margin: 0 auto;
@@ -59,7 +58,6 @@ st.markdown(
         overflow-x: hidden;
     }
 
-    /* CONTINUOUS ENDLESS FLOWING LIGHT ANIMATION */
     @keyframes endlessFlow {
         0% { transform: translateX(-150%) rotate(25deg); }
         50% { transform: translateX(150%) rotate(25deg); }
@@ -72,7 +70,6 @@ st.markdown(
         100% { background-position: 0% 50%; }
     }
 
-    /* BRAND HEADER WITH CONTINUOUS WHITE GLOW BEAM */
     .brand-header-container {
         position: relative;
         background: linear-gradient(-45deg, #051A13, #0D3B2E, #165B46, #092B21, #020C09);
@@ -150,7 +147,6 @@ st.markdown(
         box-shadow: 0 0 15px rgba(255, 208, 153, 0.3);
     }
 
-    /* Product Cards & Containers - High Contrast Dark Overlay */
     .product-grid-card {
         position: relative;
         background: #12221E;
@@ -170,7 +166,6 @@ st.markdown(
         box-shadow: 0 15px 35px rgba(34, 139, 106, 0.3);
     }
 
-    /* Glowing Action Buttons */
     div.stButton > button {
         position: relative;
         background: linear-gradient(135deg, #165B46 0%, #0D3B2E 100%) !important;
@@ -190,7 +185,6 @@ st.markdown(
         transform: scale(1.02);
     }
 
-    /* Sidebar User Badge */
     .user-profile-badge {
         background: #13221E;
         padding: 18px;
@@ -211,7 +205,6 @@ st.markdown(
         color: #F8FAFC !important;
     }
 
-    /* Message Bubbles for Light/Dark mode readability */
     .user-msg-box {
         background-color: #1E293B;
         color: #F8FAFC !important;
@@ -232,7 +225,6 @@ st.markdown(
         box-shadow: 0 2px 8px rgba(0,0,0,0.15);
     }
 
-    /* WhatsApp Button */
     .whatsapp-btn {
         display: block;
         text-align: center;
@@ -363,14 +355,13 @@ def verify_paystack_payment(reference):
         return False, str(e)
 
 # ==============================================================================
-# 3. AI HELP DESK (WITH GREETINGS & ORDER ID PROMPTS)
+# 3. AI HELP DESK
 # ==============================================================================
 def generate_ai_support_response(user_name: str, user_role: str, message: str, order_id: str = "") -> str:
     name = user_name if user_name else "Valued User"
     role_title = "Greatest Farmer & Producer" if user_role == "Farmer" else ("Valued Buyer" if user_role == "Buyer" else "Platform Administrator")
     greeting = f"Welcome to FEED THE NATIONS, {role_title} {name}! 🌾"
     
-    # Check if message or input lacks an Order ID reference
     order_id_prompt = ""
     if not order_id.strip() and not ("ftn-tx" in message.lower() or "order" in message.lower()):
         order_id_prompt = (
@@ -398,7 +389,6 @@ def generate_ai_support_response(user_name: str, user_role: str, message: str, o
         except Exception:
             pass
 
-    # Fallback AI response
     msg = message.lower().strip()
     if any(k in msg for k in ["buyer", "sign", "received", "delivered"]):
         fallback_body = (
@@ -419,6 +409,7 @@ for key, default in [
     ("username", ""),
     ("email", ""),
     ("phone", ""),
+    ("admin_target_email", ""),
 ]:
     if key not in st.session_state:
         st.session_state[key] = default
@@ -505,7 +496,6 @@ if not st.session_state.authenticated:
         else:
             if st.button("LOG IN ➔"):
                 if email_input and password_input:
-                    # FOUNDER / ADMIN DIRECT PASS
                     if email_input == "nwokejianthony2@gmail.com" and password_input == "CHUKWUKa$7":
                         st.session_state.authenticated = True
                         st.session_state.user_role = "Admin"
@@ -514,7 +504,6 @@ if not st.session_state.authenticated:
                         st.session_state.email = email_input
                         st.rerun()
 
-                    # STANDARD USER AUTHENTICATION
                     else:
                         try:
                             res = supabase.auth.sign_in_with_password({
@@ -564,6 +553,15 @@ with st.sidebar:
         """,
         unsafe_allow_html=True,
     )
+
+    # ADMIN DISPUTE NOTIFICATION CENTER IN SIDEBAR
+    if st.session_state.user_role == "Admin":
+        try:
+            unresolved_tickets = supabase.table("support_messages").select("*").execute().data
+            if unresolved_tickets:
+                st.warning(f"🚨 **ADMIN ALERT:** {len(unresolved_tickets)} Open Support Ticket(s) Pending Action!")
+        except Exception:
+            pass
 
     st.markdown("### 🔔 Announcements & Alerts")
     try:
@@ -622,11 +620,11 @@ with st.sidebar:
 
     st.divider()
 
-    # DYNAMIC DEDICATED SIDEBAR MENU PER ROLE
     if st.session_state.user_role == "Admin":
         nav_options = [
             "📈 Revenue Dashboard",
             "📢 Admin Broadcast & Messaging",
+            "👥 User Profile Management",
             "🛒 Produce Marketplace",
             "💬 Support & AI Helpdesk"
         ]
@@ -816,6 +814,12 @@ if navigation == "🛒 Produce Marketplace":
                             if st.button("View Details & Buy ➔", key=f"btn_view_{item['id']}"):
                                 show_product_detail_modal(item["id"])
 
+                            if st.session_state.user_role == "Admin":
+                                if st.button("🗑️ Admin Delete Listing", key=f"admin_del_mkt_{item['id']}"):
+                                    supabase.table("listings").delete().eq("id", item["id"]).execute()
+                                    st.success("Listing removed from marketplace.")
+                                    st.rerun()
+
                             st.markdown("</div>", unsafe_allow_html=True)
 
     except Exception as e:
@@ -882,53 +886,86 @@ elif navigation == "📢 Admin Broadcast & Messaging":
     with col_feed:
         st.markdown("### 📥 Live Support Tickets & Dispute Feed")
         try:
-            feed_tickets = supabase.table("support_tickets_detailed").select("*").order("created_at", desc=True).limit(10).execute().data
+            feed_tickets = supabase.table("support_messages").select("*").order("created_at", desc=True).limit(10).execute().data
             
             if not feed_tickets:
                 st.info("No incoming support tickets.")
             else:
                 for t in feed_tickets:
-                    ticket_id = t["ticket_id"]
+                    ticket_id = t["id"]
                     order_id = t.get("order_id")
-                    sender = t.get("sender_email")
-                    role = t.get("sender_role")
-                    buyer = t.get("buyer_identifier") or "Not Linked"
-                    farmer = t.get("farmer_identifier") or "Not Linked"
+                    sender = t.get("user_email")
+                    role = t.get("user_role")
 
                     with st.expander(f"📩 Ticket #{ticket_id} | From: {sender} ({role})", expanded=True):
-                        st.write(f"**Complaint:** {t['user_message']}")
+                        st.write(f"**Complaint:** {t['message']}")
                         
                         if order_id:
                             st.markdown(f"📌 **Linked Order:** `{order_id}`")
-                            st.markdown(f"🛒 **Buyer:** `{buyer}` | 👨‍🌾 **Farmer:** `{farmer}`")
-                            st.markdown(f"💰 **Order Amount:** ₦{float(t.get('order_amount') or 0):,.2f} | **Status:** `{t.get('order_status')}`")
+                            order_details = supabase.table("transactions").select("*").eq("id", order_id).execute().data
+                            if order_details:
+                                ord_data = order_details[0]
+                                buyer = ord_data.get("buyer")
+                                farmer_listing = supabase.table("listings").select("seller").eq("id", ord_data.get("listing_id")).execute().data
+                                farmer = farmer_listing[0].get("seller") if farmer_listing else "N/A"
+                                st.markdown(f"🛒 **Buyer Name:** `{buyer}` | 👨‍🌾 **Farmer Seller:** `{farmer}`")
+                                st.markdown(f"💰 **Amount:** ₦{float(ord_data.get('total_paid', 0)):,.2f} | **Status:** `{ord_data.get('status')}`")
+
+                                c1, c2 = st.columns(2)
+                                with c1:
+                                    if st.button(f"✉️ Message Buyer Direct", key=f"msg_b_{ticket_id}"):
+                                        buyer_prof = supabase.table("profiles").select("email").eq("full_name", buyer).execute().data
+                                        if buyer_prof:
+                                            st.session_state["admin_target_email"] = buyer_prof[0]["email"]
+                                            st.rerun()
+                                        else:
+                                            st.warning("Buyer email not found.")
+                                with c2:
+                                    if st.button(f"✉️ Message Farmer Direct", key=f"msg_f_{ticket_id}"):
+                                        farmer_prof = supabase.table("profiles").select("email").eq("full_name", farmer).execute().data
+                                        if farmer_prof:
+                                            st.session_state["admin_target_email"] = farmer_prof[0]["email"]
+                                            st.rerun()
+                                        else:
+                                            st.warning("Farmer email not found.")
                         else:
                             st.caption("ℹ️ No Order ID attached to this ticket.")
-
-                        st.divider()
-                        st.markdown("**⚡ Quick Reach Out Actions:**")
-                        
-                        c1, c2 = st.columns(2)
-                        with c1:
-                            if st.button(f"✉️ Message Buyer", key=f"msg_b_{ticket_id}"):
-                                if buyer != "Not Linked":
-                                    st.session_state["admin_target_email"] = buyer
-                                    st.rerun()
-                                else:
-                                    st.warning("No buyer linked to this ticket.")
-                        with c2:
-                            if st.button(f"✉️ Message Farmer", key=f"msg_f_{ticket_id}"):
-                                if farmer != "Not Linked":
-                                    st.session_state["admin_target_email"] = farmer
-                                    st.rerun()
-                                else:
-                                    st.warning("No farmer linked to this ticket.")
+                            if st.button(f"✉️ Reply to Sender", key=f"reply_s_{ticket_id}"):
+                                st.session_state["admin_target_email"] = sender
+                                st.rerun()
 
         except Exception as e:
             st.error(f"Error loading live support feed: {e}")
 
 # ==============================================================================
-# 11. FARMER LISTINGS MANAGEMENT
+# 11. USER PROFILE MANAGEMENT (ADMIN ONLY)
+# ==============================================================================
+elif navigation == "👥 User Profile Management" and st.session_state.user_role == "Admin":
+    st.subheader("👥 Admin Profile & User Management")
+    st.info("Manage, review, or terminate buyer/farmer accounts that violate Feed The Nations terms.")
+
+    try:
+        profiles = supabase.table("profiles").select("*").execute().data
+        if profiles:
+            df_profiles = pd.DataFrame(profiles)
+            st.dataframe(df_profiles[["id", "email", "full_name", "role", "phone", "category"]], use_container_width=True)
+
+            st.divider()
+            st.markdown("### 🗑️ Delete Non-Compliant Account Profile")
+            selected_user_email = st.selectbox("Select Account Email to Delete", df_profiles["email"].tolist())
+            
+            if st.button("🔴 DELETE USER PROFILE ENTIRELY", type="primary"):
+                user_to_delete = df_profiles[df_profiles["email"] == selected_user_email].iloc[0]
+                supabase.table("profiles").delete().eq("email", selected_user_email).execute()
+                st.success(f"Profile for {selected_user_email} deleted successfully!")
+                st.rerun()
+        else:
+            st.info("No registered user profiles found.")
+    except Exception as e:
+        st.error(f"Error managing profiles: {e}")
+
+# ==============================================================================
+# 12. FARMER LISTINGS MANAGEMENT
 # ==============================================================================
 elif navigation == "📦 Manage Farm Listings":
     st.subheader("📦 Farm Produce Inventory")
@@ -1023,7 +1060,7 @@ elif navigation == "📦 Manage Farm Listings":
                         st.success("🎉 Produce listed successfully!")
 
 # ==============================================================================
-# 12. FARMER SALES & ESCROW LEDGER
+# 13. FARMER SALES & ESCROW LEDGER
 # ==============================================================================
 elif navigation == "💰 Farmer Sales & Escrow":
     st.subheader("💰 Confirmed Sales & Escrow Ledger")
@@ -1169,7 +1206,7 @@ elif navigation == "💰 Farmer Sales & Escrow":
             st.error(f"Error processing payouts: {e}")
 
 # ==============================================================================
-# 13. BUYER ORDERS VIEW
+# 14. BUYER ORDERS VIEW
 # ==============================================================================
 elif navigation == "📦 My Orders & Escrow":
     st.subheader("📦 My Purchased Orders & Delivery Sign-Off")
@@ -1218,7 +1255,7 @@ elif navigation == "📦 My Orders & Escrow":
         st.error(f"Error loading orders: {e}")
 
 # ==============================================================================
-# 14. REVENUE DASHBOARD (ADMIN ONLY)
+# 15. REVENUE DASHBOARD (ADMIN ONLY)
 # ==============================================================================
 elif navigation == "📈 Revenue Dashboard":
     st.subheader("📈 Marketplace GMV & Platform Revenue")
@@ -1242,7 +1279,7 @@ elif navigation == "📈 Revenue Dashboard":
         st.error(f"Error loading revenue metrics: {e}")
 
 # ==============================================================================
-# 15. SUPPORT & AI HELPDESK MODULE (WITH ORDER ID TAGGING)
+# 16. SUPPORT & AI HELPDESK MODULE (WITH ORDER ID TAGGING)
 # ==============================================================================
 elif navigation == "💬 Support & AI Helpdesk":
     st.subheader("💬 AI Dispute Support & Helpdesk Portal")
