@@ -200,7 +200,7 @@ st.markdown(
         border-left: 4px solid #228B6A;
         padding: 12px 14px;
         border-radius: 10px;
-        margin-bottom: 14px;
+        margin-bottom: 6px;
         font-size: 0.88rem;
         color: #F8FAFC !important;
     }
@@ -410,6 +410,7 @@ for key, default in [
     ("email", ""),
     ("phone", ""),
     ("admin_target_email", ""),
+    ("admin_target_audience", "All Farmers"),
 ]:
     if key not in st.session_state:
         st.session_state[key] = default
@@ -569,7 +570,7 @@ with st.sidebar:
             supabase.table("notifications")
             .select("*")
             .order("created_at", desc=True)
-            .limit(5)
+            .limit(10)
             .execute()
             .data
         )
@@ -592,12 +593,18 @@ with st.sidebar:
                     st.markdown(
                         f"""
                         <div class="sidebar-notif-box">
-                            <b>📢 Admin Alert ({item.get('sender_name', 'ADMIN')}):</b><br>
+                            <b>📢 Alert ({item.get('sender_name', 'ADMIN')}):</b><br>
                             {item['message']}
                         </div>
                         """,
                         unsafe_allow_html=True,
                     )
+                    # DELETE NOTIFICATION BUTTON
+                    if st.button("🗑️ Delete Notification", key=f"del_notif_{item['id']}"):
+                        supabase.table("notifications").delete().eq("id", item["id"]).execute()
+                        st.toast("Notification deleted!")
+                        st.rerun()
+
                     displayed_count += 1
 
             if displayed_count == 0:
@@ -837,11 +844,18 @@ elif navigation == "📢 Admin Broadcast & Messaging":
         st.markdown("### ✉️ Send Direct Alert / Message")
         
         default_target = st.session_state.get("admin_target_email", "")
+        default_audience = st.session_state.get("admin_target_audience", "All Farmers")
 
         with st.form("admin_notif_form"):
+            audience_options = ["Specific User (By Email)", "All Farmers", "All Buyers", "Everyone (Platform-Wide)"]
+            
+            # Auto-select index based on button clicked
+            default_index = audience_options.index(default_audience) if default_audience in audience_options else 0
+
             target_audience = st.selectbox(
                 "Audience Target", 
-                ["Specific User (By Email)", "All Farmers", "All Buyers", "Everyone (Platform-Wide)"]
+                audience_options,
+                index=default_index
             )
             
             user_target_email = st.text_input(
@@ -881,6 +895,7 @@ elif navigation == "📢 Admin Broadcast & Messaging":
                     supabase.table("notifications").insert(notif_payload).execute()
                     st.success("🎉 Direct alert sent successfully!")
                     st.session_state["admin_target_email"] = ""
+                    st.session_state["admin_target_audience"] = "All Farmers"
                     st.rerun()
 
     with col_feed:
@@ -917,6 +932,7 @@ elif navigation == "📢 Admin Broadcast & Messaging":
                                         buyer_prof = supabase.table("profiles").select("email").eq("full_name", buyer).execute().data
                                         if buyer_prof:
                                             st.session_state["admin_target_email"] = buyer_prof[0]["email"]
+                                            st.session_state["admin_target_audience"] = "Specific User (By Email)"
                                             st.rerun()
                                         else:
                                             st.warning("Buyer email not found.")
@@ -925,6 +941,7 @@ elif navigation == "📢 Admin Broadcast & Messaging":
                                         farmer_prof = supabase.table("profiles").select("email").eq("full_name", farmer).execute().data
                                         if farmer_prof:
                                             st.session_state["admin_target_email"] = farmer_prof[0]["email"]
+                                            st.session_state["admin_target_audience"] = "Specific User (By Email)"
                                             st.rerun()
                                         else:
                                             st.warning("Farmer email not found.")
@@ -932,6 +949,7 @@ elif navigation == "📢 Admin Broadcast & Messaging":
                             st.caption("ℹ️ No Order ID attached to this ticket.")
                             if st.button(f"✉️ Reply to Sender", key=f"reply_s_{ticket_id}"):
                                 st.session_state["admin_target_email"] = sender
+                                st.session_state["admin_target_audience"] = "Specific User (By Email)"
                                 st.rerun()
 
         except Exception as e:
