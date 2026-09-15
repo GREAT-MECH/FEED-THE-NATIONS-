@@ -295,6 +295,31 @@ NIGERIAN_BANKS = [
     "OPay", "Palmpay", "Moniepoint", "Sterling Bank", "Wema Bank (ALAT)"
 ]
 
+def fetch_user_notifications(user_email, user_role):
+    """Retrieves notifications targeted specifically to the current logged-in user or role."""
+    try:
+        all_notifs = supabase.table("notifications").select("*").order("created_at", desc=True).execute().data
+        if not all_notifs:
+            return []
+
+        u_email = str(user_email).strip().lower()
+        u_role = str(user_role).strip()
+
+        filtered = []
+        for item in all_notifs:
+            recip = str(item.get("recipient_email", "ALL")).strip().lower()
+            t_role = str(item.get("target_role", "ALL")).strip()
+
+            if recip not in ["all", "", "none"]:
+                if recip == u_email or u_role == "Admin":
+                    filtered.append(item)
+            else:
+                if t_role in ["ALL", "All"] or t_role == u_role or u_role == "Admin":
+                    filtered.append(item)
+        return filtered
+    except Exception:
+        return []
+
 def verify_farm_photo(image):
     try:
         img = image.convert("RGB")
@@ -411,6 +436,7 @@ for key, default in [
     ("email", ""),
     ("phone", ""),
     ("admin_target_email", ""),
+    ("last_seen_notif_count", 0),
 ]:
     if key not in st.session_state:
         st.session_state[key] = default
@@ -541,8 +567,14 @@ if not st.session_state.authenticated:
     st.stop()
 
 # ==============================================================================
-# 7. SIDEBAR & NAVIGATION MENU (NOTIFICATIONS INTEGRATED)
+# 7. SIDEBAR & NAVIGATION MENU (WITH NOTIFICATION BADGE COUNTER)
 # ==============================================================================
+user_notifs = fetch_user_notifications(st.session_state.email, st.session_state.user_role)
+total_notif_count = len(user_notifs)
+
+# Calculate label with live notification count
+notif_menu_label = f"🔔 Notifications & Alerts ({total_notif_count})"
+
 with st.sidebar:
     st.markdown(
         f"""
@@ -577,11 +609,11 @@ with st.sidebar:
 
     st.divider()
 
-    # Dynamic Navigation Menu Options
+    # Dynamic Navigation Menu Options with Notification Counter
     if st.session_state.user_role == "Admin":
         nav_options = [
             "🛒 Produce Marketplace",
-            "🔔 Notifications & Alerts",
+            notif_menu_label,
             "📈 Revenue Dashboard",
             "📢 Admin Broadcast & Messaging",
             "👥 User Profile Management",
@@ -590,7 +622,7 @@ with st.sidebar:
     elif st.session_state.user_role == "Farmer":
         nav_options = [
             "🛒 Produce Marketplace",
-            "🔔 Notifications & Alerts",
+            notif_menu_label,
             "💰 Farmer Sales & Escrow",
             "📦 Manage Farm Listings",
             "💬 Support & AI Helpdesk"
@@ -598,12 +630,18 @@ with st.sidebar:
     else:  # Buyer
         nav_options = [
             "🛒 Produce Marketplace",
-            "🔔 Notifications & Alerts",
+            notif_menu_label,
             "📦 My Orders & Escrow",
             "💬 Support & AI Helpdesk"
         ]
 
     navigation = st.radio("Navigation Menu", nav_options)
+
+# Normalize navigation route selection
+if navigation == notif_menu_label:
+    nav_route = "NOTIFICATIONS"
+else:
+    nav_route = navigation
 
 # ==============================================================================
 # 8. PRODUCT DETAIL & BUY MODAL
@@ -715,6 +753,19 @@ def show_product_detail_modal(product_id):
                     "buyer_signoff": False,
                 }
                 supabase.table("transactions").insert(tx_record).execute()
+                
+                # Notify farmer of new order attempt
+                farmer_name = item.get("seller")
+                farmer_prof = supabase.table("profiles").select("email").eq("full_name", farmer_name).execute().data
+                if farmer_prof:
+                    f_email = farmer_prof[0].get("email")
+                    supabase.table("notifications").insert({
+                        "recipient_email": f_email,
+                        "sender_name": "PLATFORM ESCROW",
+                        "message": f"🛒 New order initiated for '{item['item']}' (Qty: {desired_qty}) by {st.session_state.username}. Order ID: {ref}",
+                        "target_role": "Farmer"
+                    }).execute()
+
                 pay_resp = initialize_paystack_payment(st.session_state.email, grand_total, ref)
 
                 if pay_resp.get("status"):
@@ -731,7 +782,7 @@ def show_product_detail_modal(product_id):
 # ==============================================================================
 # 9. MARKETPLACE VIEW
 # ==============================================================================
-if navigation == "🛒 Produce Marketplace":
+if nav_route == "🛒 Produce Marketplace":
     st.subheader("🛒 Farm Produce Marketplace")
 
     f1, f2 = st.columns([1, 1])
@@ -787,41 +838,16 @@ if navigation == "🛒 Produce Marketplace":
         st.error(f"Marketplace error: {e}")
 
 # ==============================================================================
-# 10. NOTIFICATIONS & ALERTS VIEW (DEDICATED NAVIGATION ITEM)
+# 10. NOTIFICATIONS & ALERTS VIEW (WITH DYNAMIC COUNTER)
 # ==============================================================================
-elif navigation == "🔔 Notifications & Alerts":
+elif nav_route == "NOTIFICATIONS":
     st.subheader("🔔 Notifications & Official Alerts Hub")
 
     try:
-        all_notifs = (
-            supabase.table("notifications")
-            .select("*")
-            .order("created_at", desc=True)
-            .execute()
-            .data
-        )
-
-        user_email = str(st.session_state.email).strip().lower()
-        user_role = str(st.session_state.user_role).strip()
-
-        filtered_notifs = []
-        if all_notifs:
-            for item in all_notifs:
-                recip = str(item.get("recipient_email", "ALL")).strip().lower()
-                t_role = str(item.get("target_role", "ALL")).strip()
-
-                # STRICT MESSAGE ISOLATION LOGIC:
-                # Direct message -> Only recipient (or Admin)
-                # Broadcast -> Targeted role or ALL
-                if recip not in ["all", "", "none"] and recip != "all":
-                    if recip == user_email or user_role == "Admin":
-                        filtered_notifs.append(item)
-                else:
-                    if t_role in ["ALL", "All"] or t_role == user_role or user_role == "Admin":
-                        filtered_notifs.append(item)
+        filtered_notifs = user_notifs
 
         if not filtered_notifs:
-            st.info(" You have no notifications or alerts at this time.")
+            st.info("You have no notifications or alerts at this time.")
         else:
             st.write(f"Showing **{len(filtered_notifs)}** notification(s) for `{st.session_state.email}` ({st.session_state.user_role}):")
             st.divider()
@@ -845,7 +871,7 @@ elif navigation == "🔔 Notifications & Alerts":
                 )
 
                 # DELETE BUTTON ONLY AVAILABLE TO ADMIN
-                if user_role == "Admin":
+                if st.session_state.user_role == "Admin":
                     if st.button("🗑️ Admin Delete Notification", key=f"del_notif_page_{n['id']}"):
                         supabase.table("notifications").delete().eq("id", n["id"]).execute()
                         st.success("Notification removed.")
@@ -857,7 +883,7 @@ elif navigation == "🔔 Notifications & Alerts":
 # ==============================================================================
 # 11. ADMIN BROADCAST & MESSAGING
 # ==============================================================================
-elif navigation == "📢 Admin Broadcast & Messaging":
+elif nav_route == "📢 Admin Broadcast & Messaging":
     st.subheader("📢 Admin Support Feed & Direct Dispute Messaging")
 
     col_send, col_feed = st.columns([1, 1.2], gap="large")
@@ -971,7 +997,7 @@ elif navigation == "📢 Admin Broadcast & Messaging":
 # ==============================================================================
 # 12. USER PROFILE MANAGEMENT (ADMIN ONLY)
 # ==============================================================================
-elif navigation == "👥 User Profile Management" and st.session_state.user_role == "Admin":
+elif nav_route == "👥 User Profile Management" and st.session_state.user_role == "Admin":
     st.subheader("👥 Admin Profile & User Management")
     st.info("Manage, review, or terminate buyer/farmer accounts that violate Feed The Nations terms.")
 
@@ -997,7 +1023,7 @@ elif navigation == "👥 User Profile Management" and st.session_state.user_role
 # ==============================================================================
 # 13. FARMER LISTINGS MANAGEMENT
 # ==============================================================================
-elif navigation == "📦 Manage Farm Listings":
+elif nav_route == "📦 Manage Farm Listings":
     st.subheader("📦 Farm Produce Inventory")
 
     tab_active, tab_add = st.tabs(["🟢 Active Listings", "➕ Post New Produce"])
@@ -1092,7 +1118,7 @@ elif navigation == "📦 Manage Farm Listings":
 # ==============================================================================
 # 14. FARMER SALES & ESCROW LEDGER
 # ==============================================================================
-elif navigation == "💰 Farmer Sales & Escrow":
+elif nav_route == "💰 Farmer Sales & Escrow":
     st.subheader("💰 Confirmed Sales & Escrow Ledger")
 
     tab_sales, tab_payout = st.tabs(["📊 Sales Orders & Sign-Off Status", "💼 Farmer Wallet & Bank Payouts"])
@@ -1150,6 +1176,19 @@ elif navigation == "💰 Farmer Sales & Escrow":
                                         "farmer_signoff": True,
                                         "status": "FARMER_DISPATCHED" if not b_sign else "DELIVERED_VERIFIED"
                                     }).eq("id", tx["id"]).execute()
+                                    
+                                    # Send notification to buyer
+                                    buyer_name = tx.get("buyer")
+                                    buyer_prof = supabase.table("profiles").select("email").eq("full_name", buyer_name).execute().data
+                                    if buyer_prof:
+                                        b_email = buyer_prof[0].get("email")
+                                        supabase.table("notifications").insert({
+                                            "recipient_email": b_email,
+                                            "sender_name": "FARMER DISPATCH",
+                                            "message": f"🚚 Your produce for Order ID {tx['id']} ({tx['item']}) has been dispatched by the farmer!",
+                                            "target_role": "Buyer"
+                                        }).execute()
+
                                     st.success("Dispatch confirmed!")
                                     st.rerun()
 
@@ -1238,7 +1277,7 @@ elif navigation == "💰 Farmer Sales & Escrow":
 # ==============================================================================
 # 15. BUYER ORDERS VIEW
 # ==============================================================================
-elif navigation == "📦 My Orders & Escrow":
+elif nav_route == "📦 My Orders & Escrow":
     st.subheader("📦 My Purchased Orders & Delivery Sign-Off")
 
     st.error("🛑 CRITICAL SECURITY WARNING: DO NOT click delivery confirmation until you physically inspect your produce.")
@@ -1276,6 +1315,21 @@ elif navigation == "📦 My Orders & Escrow":
                                     "buyer_signoff": True,
                                     "status": new_status
                                 }).eq("id", ord_item["id"]).execute()
+
+                                # Notify farmer that delivery is confirmed
+                                farmer_listing = supabase.table("listings").select("seller").eq("id", ord_item.get("listing_id")).execute().data
+                                if farmer_listing:
+                                    farmer_name = farmer_listing[0].get("seller")
+                                    farmer_prof = supabase.table("profiles").select("email").eq("full_name", farmer_name).execute().data
+                                    if farmer_prof:
+                                        f_email = farmer_prof[0].get("email")
+                                        supabase.table("notifications").insert({
+                                            "recipient_email": f_email,
+                                            "sender_name": "BUYER RECEIPT",
+                                            "message": f"🎉 Buyer {st.session_state.username} confirmed receipt for Order ID {ord_item['id']}. Funds are now unlocked!",
+                                            "target_role": "Farmer"
+                                        }).execute()
+
                                 st.success("🎉 Delivery verified! Escrow unlocked.")
                                 st.rerun()
                         else:
@@ -1287,7 +1341,7 @@ elif navigation == "📦 My Orders & Escrow":
 # ==============================================================================
 # 16. REVENUE DASHBOARD (ADMIN ONLY)
 # ==============================================================================
-elif navigation == "📈 Revenue Dashboard":
+elif nav_route == "📈 Revenue Dashboard":
     st.subheader("📈 Marketplace GMV & Platform Revenue")
     try:
         tx_data = supabase.table("transactions").select("*").in_("status", ["PAID_VERIFIED", "DELIVERED_VERIFIED", "FARMER_DISPATCHED"]).execute().data
@@ -1311,7 +1365,7 @@ elif navigation == "📈 Revenue Dashboard":
 # ==============================================================================
 # 17. SUPPORT & AI HELPDESK MODULE
 # ==============================================================================
-elif navigation == "💬 Support & AI Helpdesk":
+elif nav_route == "💬 Support & AI Helpdesk":
     st.subheader("💬 AI Dispute Support & Helpdesk Portal")
 
     col1, col2 = st.columns([1, 1], gap="large")
