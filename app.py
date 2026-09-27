@@ -420,7 +420,7 @@ def detect_contact_or_bypass_attempt(text_content: str) -> bool:
     # Email regex pattern
     email_pattern = r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}'
     
-    # Phone number regex pattern (e.g. 080..., +234..., 11-digit numbers, numbers with spaces/hyphens)
+    # Phone number regex pattern
     phone_pattern = r'(\+?234|0)[789][01]\d{8}|\b\d{3}[-.\s]?\d{3}[-.\s]?\d{4}\b|\b\d{11}\b'
     
     # Social handle or off-platform keyword triggers
@@ -464,6 +464,44 @@ def fetch_user_notifications(user_email, user_role):
         return filtered
     except Exception:
         return []
+
+def fetch_unread_notification_count(user_email, user_role):
+    """Counts unread notifications targeted at the current user or role."""
+    try:
+        notifs = fetch_user_notifications(user_email, user_role)
+        unread = [n for n in notifs if not n.get("is_read", False)]
+        return len(unread)
+    except Exception:
+        return 0
+
+def mark_notifications_as_read(user_email, user_role):
+    """Marks all user notifications as read upon viewing."""
+    try:
+        notifs = fetch_user_notifications(user_email, user_role)
+        unread_ids = [n["id"] for n in notifs if not n.get("is_read", False)]
+        if unread_ids:
+            for n_id in unread_ids:
+                supabase.table("notifications").update({"is_read": True}).eq("id", n_id).execute()
+    except Exception:
+        pass
+
+def fetch_unread_chat_count(username):
+    """Counts unread direct messages sent to the logged-in user."""
+    try:
+        res = supabase.table("direct_messages").select("id").eq("recipient", username).eq("is_read", False).execute().data
+        return len(res) if res else 0
+    except Exception:
+        return 0
+
+def mark_chats_as_read(recipient_username, sender_username):
+    """Marks messages from sender to recipient as read."""
+    try:
+        res = supabase.table("direct_messages").select("id").eq("recipient", recipient_username).eq("sender", sender_username).eq("is_read", False).execute().data
+        if res:
+            for msg in res:
+                supabase.table("direct_messages").update({"is_read": True}).eq("id", msg["id"]).execute()
+    except Exception:
+        pass
 
 def verify_farm_photo(image):
     try:
@@ -581,7 +619,6 @@ for key, default in [
     ("email", ""),
     ("phone", ""),
     ("admin_target_email", ""),
-    ("last_seen_notif_count", 0),
     ("active_chat_recipient", ""),
 ]:
     if key not in st.session_state:
@@ -713,12 +750,13 @@ if not st.session_state.authenticated:
     st.stop()
 
 # ==============================================================================
-# 7. SIDEBAR & NAVIGATION MENU
+# 7. SIDEBAR & NAVIGATION MENU (WITH UNREAD NUMBER BADGES)
 # ==============================================================================
-user_notifs = fetch_user_notifications(st.session_state.email, st.session_state.user_role)
-total_notif_count = len(user_notifs)
+unread_notifs = fetch_unread_notification_count(st.session_state.email, st.session_state.user_role)
+unread_chats = fetch_unread_chat_count(st.session_state.username)
 
-notif_menu_label = f"🔔 Notifications ({total_notif_count})"
+notif_menu_label = f"🔔 Notifications ({unread_notifs})" if unread_notifs > 0 else "🔔 Notifications"
+chat_menu_label = f"💬 Direct Buyer-Farmer Chat ({unread_chats})" if unread_chats > 0 else "💬 Direct Buyer-Farmer Chat"
 
 with st.sidebar:
     st.markdown(
@@ -757,7 +795,7 @@ with st.sidebar:
     if st.session_state.user_role == "Admin":
         nav_options = [
             "🛒 Produce Marketplace",
-            "💬 Direct Buyer-Farmer Chat & Call",
+            chat_menu_label,
             notif_menu_label,
             "📈 Revenue Dashboard",
             "📢 Admin Broadcast & Messaging",
@@ -767,7 +805,7 @@ with st.sidebar:
     elif st.session_state.user_role == "Farmer":
         nav_options = [
             "🛒 Produce Marketplace",
-            "💬 Direct Buyer-Farmer Chat & Call",
+            chat_menu_label,
             notif_menu_label,
             "💰 Farmer Sales & Escrow",
             "📦 Manage Farm Listings",
@@ -776,7 +814,7 @@ with st.sidebar:
     else:  # Buyer
         nav_options = [
             "🛒 Produce Marketplace",
-            "💬 Direct Buyer-Farmer Chat & Call",
+            chat_menu_label,
             notif_menu_label,
             "📦 My Orders & Escrow",
             "💬 Support & AI Helpdesk"
@@ -786,6 +824,8 @@ with st.sidebar:
 
 if navigation == notif_menu_label:
     nav_route = "NOTIFICATIONS"
+elif navigation == chat_menu_label:
+    nav_route = "CHAT"
 else:
     nav_route = navigation
 
@@ -815,7 +855,7 @@ def show_product_detail_modal(product_id):
 
             if st.button("💬 Contact Farmer in App", key="modal_contact_farmer"):
                 st.session_state["active_chat_recipient"] = item.get("seller")
-                st.info(f"Opening chat with {item.get('seller')}. Go to '💬 Direct Buyer-Farmer Chat & Call' in sidebar menu.")
+                st.info(f"Opening chat with {item.get('seller')}. Go to '💬 Direct Buyer-Farmer Chat' in sidebar menu.")
 
         with col2:
             st.markdown(f"### {item['item']}")
@@ -930,7 +970,8 @@ def show_product_detail_modal(product_id):
                         "recipient_email": f_email,
                         "sender_name": "PLATFORM ESCROW",
                         "message": f"🛒 New order initiated for '{item['item']}' (Qty: {desired_qty}) by {st.session_state.username}. Order ID: {ref}",
-                        "target_role": "Farmer"
+                        "target_role": "Farmer",
+                        "is_read": False
                     }).execute()
 
                 pay_resp = initialize_paystack_payment(st.session_state.email, grand_total, ref)
@@ -1012,13 +1053,12 @@ if nav_route == "🛒 Produce Marketplace":
         st.error(f"Marketplace error: {e}")
 
 # ==============================================================================
-# 10. DIRECT BUYER-FARMER CHAT & CALL (WITH BYPASS & CONTACT DETECTOR)
+# 10. DIRECT BUYER-FARMER CHAT (WITH UNREAD AUTO-READ LOGIC)
 # ==============================================================================
-elif nav_route == "💬 Direct Buyer-Farmer Chat & Call":
-    st.subheader("💬 Direct Buyer-Farmer In-App Chat & Call Portal")
-    st.caption("Discuss logistics plans, negotiate produce details, and place calls directly in app. Escrow safety rules apply.")
+elif nav_route == "CHAT":
+    st.subheader("💬 Direct Buyer-Farmer In-App Chat")
+    st.caption("Discuss logistics plans, negotiate produce details, and send messages directly in app. Escrow safety rules apply.")
 
-    # Fetch available contacts from profiles or existing listings
     try:
         all_profiles = supabase.table("profiles").select("*").execute().data or []
         contact_names = [p.get("full_name") for p in all_profiles if p.get("full_name") != st.session_state.username]
@@ -1031,96 +1071,79 @@ elif nav_route == "💬 Direct Buyer-Farmer Chat & Call":
             index=0 if st.session_state["active_chat_recipient"] not in contact_names else contact_names.index(st.session_state["active_chat_recipient"])
         )
 
-        chat_col, call_col = st.columns([2, 1], gap="large")
+        # Mark messages as read when opening chat conversation
+        mark_chats_as_read(st.session_state.username, selected_recipient)
 
-        with chat_col:
-            st.markdown(f"### 💬 WhatsApp-Style Direct Chat with **{selected_recipient}**")
-            
-            # Fetch past chat messages
-            chat_query = supabase.table("direct_messages").select("*").or_(
-                f"and(sender.eq.{st.session_state.username},recipient.eq.{selected_recipient}),and(sender.eq.{selected_recipient},recipient.eq.{st.session_state.username})"
-            ).order("created_at", desc=False).execute().data or []
+        st.markdown(f"### 💬 WhatsApp-Style Direct Chat with **{selected_recipient}**")
+        
+        # Fetch past chat messages
+        chat_query = supabase.table("direct_messages").select("*").or_(
+            f"and(sender.eq.{st.session_state.username},recipient.eq.{selected_recipient}),and(sender.eq.{selected_recipient},recipient.eq.{st.session_state.username})"
+        ).order("created_at", desc=False).execute().data or []
 
-            # Display messages in WhatsApp style bubbles
-            chat_container = st.container(height=380)
-            with chat_container:
-                if not chat_query:
-                    st.info("No messages exchanged yet. Start the logistics or price negotiation below!")
-                else:
-                    for m in chat_query:
-                        sender_label = m.get("sender")
-                        msg_text = m.get("message")
-                        time_str = str(m.get("created_at", ""))[:16].replace("T", " ")
+        # Display messages in WhatsApp style bubbles
+        chat_container = st.container(height=420)
+        with chat_container:
+            if not chat_query:
+                st.info("No messages exchanged yet. Start the logistics or price negotiation below!")
+            else:
+                for m in chat_query:
+                    sender_label = m.get("sender")
+                    msg_text = m.get("message")
+                    time_str = str(m.get("created_at", ""))[:16].replace("T", " ")
 
-                        if sender_label == st.session_state.username:
-                            st.markdown(
-                                f'<div class="chat-bubble-buyer"><b>You ({sender_label}):</b><br>{msg_text}<br><span style="font-size:0.75rem; opacity:0.7;">{time_str}</span></div>',
-                                unsafe_allow_html=True
-                            )
-                        else:
-                            st.markdown(
-                                f'<div class="chat-bubble-farmer"><b>{sender_label}:</b><br>{msg_text}<br><span style="font-size:0.75rem; opacity:0.7;">{time_str}</span></div>',
-                                unsafe_allow_html=True
-                            )
-
-            st.markdown("#### ✉️ Send In-App Message")
-            with st.form("send_inapp_chat", clear_on_submit=True):
-                new_msg = st.text_input("Type message...", placeholder="Ask about logistics rates, quantity discounts, or dispatch state...")
-                send_chat_btn = st.form_submit_button("SEND MESSAGE 🚀")
-
-                if send_chat_btn:
-                    if not new_msg.strip():
-                        st.error("Please enter a message.")
-                    elif detect_contact_or_bypass_attempt(new_msg):
+                    if sender_label == st.session_state.username:
                         st.markdown(
-                            '<div class="chat-system-warning">🛑 <b>SECURITY DETECTOR WARNING:</b> Off-platform contact sharing (emails, phone numbers, or external handles) is strictly prohibited to protect escrow transactions and prevent bypass fraud. Please keep communication within the app.</div>',
+                            f'<div class="chat-bubble-buyer"><b>You ({sender_label}):</b><br>{msg_text}<br><span style="font-size:0.75rem; opacity:0.7;">{time_str}</span></div>',
                             unsafe_allow_html=True
                         )
                     else:
-                        msg_payload = {
-                            "sender": st.session_state.username,
-                            "recipient": selected_recipient,
-                            "message": new_msg.strip()
-                        }
-                        try:
-                            supabase.table("direct_messages").insert(msg_payload).execute()
-                            st.success("Message sent successfully!")
-                            st.rerun()
-                        except Exception as e:
-                            st.error(f"Error sending message: {e}")
+                        st.markdown(
+                            f'<div class="chat-bubble-farmer"><b>{sender_label}:</b><br>{msg_text}<br><span style="font-size:0.75rem; opacity:0.7;">{time_str}</span></div>',
+                            unsafe_allow_html=True
+                        )
 
-        with call_col:
-            st.markdown("### 📞 In-App Direct Audio Call")
-            st.info("Connect voice calls inside Feed The Nations without sharing personal phone numbers.")
-            
-            call_status = st.radio("Call Session State", ["Idle", "Initiate Direct Web Call", "In-Call Active"], key="call_state_radio")
-            
-            if call_status == "Initiate Direct Web Call":
-                st.warning(f"🔔 Dialing {selected_recipient} via platform voice bridge...")
-                st.markdown("🎙️ **Audio Microphone:** Active")
-                
-                # Audio Note or Call Voice Transcription Bypass Detector
-                audio_note_sim = st.text_input("Spoken Voice Note / Call Note (Scanned)", placeholder="Record audio transcript...")
-                if audio_note_sim and detect_contact_or_bypass_attempt(audio_note_sim):
-                     st.error("🛑 AUTOMATED CALL DETECTOR ALERT: Sharing phone numbers or requesting off-platform payments during voice calls is flagged for admin review.")
-                
-                if st.button("🔴 END CALL"):
-                    st.success("Call ended cleanly.")
-            elif call_status == "In-Call Active":
-                st.success(f"🟢 Active Voice Call connected with {selected_recipient}")
-                st.markdown("⏱️ Duration: `02:45` | Encryption: `256-bit Escrow Bridge`")
+        st.markdown("#### ✉️ Send In-App Message")
+        with st.form("send_inapp_chat", clear_on_submit=True):
+            new_msg = st.text_input("Type message...", placeholder="Ask about logistics rates, quantity discounts, or dispatch state...")
+            send_chat_btn = st.form_submit_button("SEND MESSAGE 🚀")
+
+            if send_chat_btn:
+                if not new_msg.strip():
+                    st.error("Please enter a message.")
+                elif detect_contact_or_bypass_attempt(new_msg):
+                    st.markdown(
+                        '<div class="chat-system-warning">🛑 <b>SECURITY DETECTOR WARNING:</b> Off-platform contact sharing (emails, phone numbers, or external handles) is strictly prohibited to protect escrow transactions and prevent bypass fraud. Please keep communication within the app.</div>',
+                        unsafe_allow_html=True
+                    )
+                else:
+                    msg_payload = {
+                        "sender": st.session_state.username,
+                        "recipient": selected_recipient,
+                        "message": new_msg.strip(),
+                        "is_read": False
+                    }
+                    try:
+                        supabase.table("direct_messages").insert(msg_payload).execute()
+                        st.success("Message sent successfully!")
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Error sending message: {e}")
 
     except Exception as e:
         st.error(f"Error loading direct communication hub: {e}")
 
 # ==============================================================================
-# 11. NOTIFICATIONS & ALERTS VIEW
+# 11. NOTIFICATIONS & ALERTS VIEW (WITH AUTO-READ MARKING)
 # ==============================================================================
 elif nav_route == "NOTIFICATIONS":
     st.subheader("🔔 Notifications & Official Alerts Hub")
 
+    # Mark notifications as read as soon as user opens this view
+    mark_notifications_as_read(st.session_state.email, st.session_state.user_role)
+
     try:
-        filtered_notifs = user_notifs
+        filtered_notifs = fetch_user_notifications(st.session_state.email, st.session_state.user_role)
 
         if not filtered_notifs:
             st.info("You have no notifications or alerts at this time.")
@@ -1209,6 +1232,7 @@ elif nav_route == "📢 Admin Broadcast & Messaging":
                         "sender_name": "FOUNDER / ADMIN",
                         "message": notif_msg.strip(),
                         "target_role": target_role_str,
+                        "is_read": False
                     }
                     supabase.table("notifications").insert(notif_payload).execute()
                     st.success(f"🎉 Direct alert sent successfully to {recip_str}!")
@@ -1469,7 +1493,8 @@ elif nav_route == "💰 Farmer Sales & Escrow":
                                             "recipient_email": b_email,
                                             "sender_name": "FARMER DISPATCH",
                                             "message": f"🚚 Your produce for Order ID {tx['id']} ({tx['item']}) has been dispatched by the farmer!",
-                                            "target_role": "Buyer"
+                                            "target_role": "Buyer",
+                                            "is_read": False
                                         }).execute()
 
                                     st.success("Dispatch confirmed!")
@@ -1609,7 +1634,8 @@ elif nav_route == "📦 My Orders & Escrow":
                                             "recipient_email": f_email,
                                             "sender_name": "BUYER RECEIPT",
                                             "message": f"🎉 Buyer {st.session_state.username} confirmed receipt for Order ID {ord_item['id']}. Funds are now unlocked!",
-                                            "target_role": "Farmer"
+                                            "target_role": "Farmer",
+                                            "is_read": False
                                         }).execute()
 
                                 st.success("🎉 Delivery verified! Escrow unlocked.")
