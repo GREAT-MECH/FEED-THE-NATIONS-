@@ -29,7 +29,7 @@ PAYSTACK_CALLBACK_URL = os.environ.get("PAYSTACK_CALLBACK_URL", "https://feed-th
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 
 # ==============================================================================
-# 1. PAGE CONFIG & RESPONSIVE ULTRA-GLOW STYLING (DARK/LIGHT MODE COMPATIBLE)
+# 1. PAGE CONFIG & RESPONSIVE ULTRA-GLOW STYLING (LARGE FONT & TOUCH-FRIENDLY SIDEBAR)
 # ==============================================================================
 st.set_page_config(
     page_title="FEED THE NATIONS - Direct Agri Marketplace",
@@ -51,11 +51,82 @@ st.markdown(
         --accent-gold-glow: #FFD099;
     }
 
-    .stApp {
+    /* Base Font & Scale Enhancements */
+    html, body, [class*="css"] {
         font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 18px !important;
+    }
+
+    .stApp {
         margin: 0 auto;
         max-width: 100vw;
         overflow-x: hidden;
+    }
+
+    /* Touch-Friendly & Large Navigation Sidebar */
+    [data-testid="stSidebar"] {
+        min-width: 340px !important;
+        width: 340px !important;
+    }
+
+    [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p {
+        font-size: 1.15rem !important;
+    }
+
+    /* Sidebar Radio Buttons Enlarged for Finger Touch */
+    [data-testid="stSidebar"] div[role="radiogroup"] > label {
+        background: rgba(22, 91, 70, 0.25) !important;
+        border: 1px solid rgba(255, 255, 255, 0.15) !important;
+        padding: 16px 20px !important;
+        margin-bottom: 12px !important;
+        border-radius: 14px !important;
+        cursor: pointer !important;
+        min-height: 54px !important;
+        display: flex !important;
+        align-items: center !important;
+        transition: all 0.25s ease-in-out !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+    }
+
+    [data-testid="stSidebar"] div[role="radiogroup"] > label:hover {
+        background: rgba(34, 139, 106, 0.45) !important;
+        border-color: #228B6A !important;
+        transform: translateX(4px);
+    }
+
+    [data-testid="stSidebar"] div[role="radiogroup"] > label[data-checked="true"] {
+        background: linear-gradient(135deg, #165B46 0%, #0D3B2E 100%) !important;
+        border: 2px solid #FFD099 !important;
+        box-shadow: 0 0 15px rgba(255, 208, 153, 0.4) !important;
+    }
+
+    [data-testid="stSidebar"] div[role="radiogroup"] p {
+        font-size: 1.12rem !important;
+        font-weight: 700 !important;
+        color: #FFFFFF !important;
+    }
+
+    /* General Typography Scaling */
+    p, label, span, div {
+        font-size: 1.05rem;
+    }
+
+    h1 { font-size: 2.8rem !important; font-weight: 900 !important; }
+    h2 { font-size: 2.2rem !important; font-weight: 800 !important; }
+    h3 { font-size: 1.7rem !important; font-weight: 700 !important; }
+    h4 { font-size: 1.35rem !important; font-weight: 700 !important; }
+
+    /* Form Labels & Inputs enlarged */
+    .stTextInput > label, .stSelectbox > label, .stNumberInput > label, .stTextArea > label {
+        font-size: 1.15rem !important;
+        font-weight: 700 !important;
+        color: #F8FAFC !important;
+        margin-bottom: 6px !important;
+    }
+
+    input, select, textarea {
+        font-size: 1.1rem !important;
+        padding: 12px !important;
     }
 
     @keyframes endlessFlow {
@@ -75,10 +146,10 @@ st.markdown(
         background: linear-gradient(-45deg, #051A13, #0D3B2E, #165B46, #092B21, #020C09);
         background-size: 300% 300%;
         animation: bgGlowPulse 12s ease infinite;
-        padding: clamp(28px, 5vw, 55px) clamp(16px, 3vw, 32px);
+        padding: clamp(32px, 5vw, 60px) clamp(20px, 3vw, 40px);
         border-radius: 26px;
         text-align: center;
-        margin-bottom: 25px;
+        margin-bottom: 30px;
         box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4), 0 0 30px rgba(34, 139, 106, 0.3);
         border: 1px solid rgba(255, 255, 255, 0.25);
         overflow: hidden;
@@ -109,7 +180,7 @@ st.markdown(
     .brand-title {
         color: #FFFFFF !important;
         font-family: 'Montserrat', sans-serif;
-        font-size: clamp(2rem, 5.5vw, 4.2rem);
+        font-size: clamp(2.3rem, 6vw, 4.5rem);
         font-weight: 900;
         letter-spacing: 2px;
         margin: 5px 0 10px 0;
@@ -119,29 +190,29 @@ st.markdown(
     }
 
     .header-emojis {
-        font-size: clamp(1.6rem, 4vw, 2.4rem);
-        margin: 12px 0;
-        letter-spacing: clamp(8px, 2vw, 16px);
+        font-size: clamp(1.8rem, 4.5vw, 2.8rem);
+        margin: 14px 0;
+        letter-spacing: clamp(10px, 2.5vw, 20px);
         filter: drop-shadow(0 0 10px rgba(224, 169, 109, 0.6));
     }
 
     .brand-subtext {
         color: #E2E8F0 !important;
-        font-size: clamp(0.95rem, 2vw, 1.25rem);
+        font-size: clamp(1.1rem, 2.2vw, 1.4rem);
         font-weight: 600;
         margin-top: 5px;
-        margin-bottom: 22px;
+        margin-bottom: 24px;
         text-shadow: 0 2px 8px rgba(0,0,0,0.5);
     }
 
     .brand-badge {
         display: inline-block;
         background: linear-gradient(135deg, rgba(224, 169, 109, 0.3), rgba(255, 208, 153, 0.15));
-        border: 1px solid #FFD099;
+        border: 1px dashed #FFD099;
         color: #FFF3E0 !important;
-        padding: clamp(8px, 1.5vw, 10px) clamp(18px, 2.5vw, 26px);
+        padding: clamp(10px, 1.8vw, 12px) clamp(20px, 2.8vw, 30px);
         border-radius: 30px;
-        font-size: clamp(0.8rem, 1.5vw, 0.92rem);
+        font-size: clamp(0.95rem, 1.6vw, 1.1rem);
         font-weight: 800;
         text-transform: uppercase;
         box-shadow: 0 0 15px rgba(255, 208, 153, 0.3);
@@ -153,7 +224,7 @@ st.markdown(
         color: #FFFFFF !important;
         border: 1px solid rgba(255, 255, 255, 0.18);
         border-radius: 20px;
-        padding: 18px;
+        padding: 22px;
         box-shadow: 0 10px 25px rgba(0,0,0,0.3);
         box-sizing: border-box;
         transition: all 0.3s ease;
@@ -166,13 +237,28 @@ st.markdown(
         box-shadow: 0 15px 35px rgba(34, 139, 106, 0.3);
     }
 
+    .logistics-badge {
+        display: inline-block;
+        background: rgba(34, 139, 106, 0.25);
+        border: 1px solid #228B6A;
+        color: #A7F3D0 !important;
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: 0.92rem;
+        font-weight: 700;
+        margin-top: 8px;
+        margin-bottom: 8px;
+    }
+
     div.stButton > button {
         position: relative;
         background: linear-gradient(135deg, #165B46 0%, #0D3B2E 100%) !important;
         color: #FFFFFF !important;
+        font-size: 1.1rem !important;
         font-weight: 800 !important;
-        border-radius: 12px !important;
-        padding: 12px 20px !important;
+        border-radius: 14px !important;
+        padding: 14px 24px !important;
+        min-height: 52px !important;
         border: 1px solid rgba(255, 255, 255, 0.25) !important;
         width: 100%;
         box-shadow: 0 6px 18px rgba(0,0,0,0.3);
@@ -187,21 +273,21 @@ st.markdown(
 
     .user-profile-badge {
         background: #13221E;
-        padding: 18px;
-        border-radius: 16px;
+        padding: 20px;
+        border-radius: 18px;
         border: 1px solid rgba(255, 255, 255, 0.15);
-        margin-bottom: 18px;
+        margin-bottom: 22px;
         box-shadow: 0 4px 15px rgba(0,0,0,0.2);
     }
 
     .notif-card-box {
         background: rgba(13, 59, 46, 0.9);
         border: 1px solid rgba(34, 139, 106, 0.6);
-        border-left: 5px solid #228B6A;
-        padding: 18px 22px;
-        border-radius: 14px;
-        margin-bottom: 16px;
-        font-size: 1rem;
+        border-left: 6px solid #228B6A;
+        padding: 20px 24px;
+        border-radius: 16px;
+        margin-bottom: 18px;
+        font-size: 1.1rem;
         color: #F8FAFC !important;
         box-shadow: 0 4px 15px rgba(0,0,0,0.2);
     }
@@ -209,21 +295,23 @@ st.markdown(
     .user-msg-box {
         background-color: #1E293B;
         color: #F8FAFC !important;
-        padding: 14px 18px;
-        border-radius: 14px;
-        margin-bottom: 10px;
-        border-left: 4px solid #38BDF8;
+        padding: 16px 20px;
+        border-radius: 16px;
+        margin-bottom: 12px;
+        border-left: 5px solid #38BDF8;
         box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        font-size: 1.05rem;
     }
 
     .ai-msg-box {
         background-color: #064E3B;
         color: #F0FDF4 !important;
-        padding: 14px 18px;
-        border-radius: 14px;
-        margin-bottom: 16px;
-        border-left: 4px solid #10B981;
+        padding: 16px 20px;
+        border-radius: 16px;
+        margin-bottom: 18px;
+        border-left: 5px solid #10B981;
         box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        font-size: 1.05rem;
     }
 
     .whatsapp-btn {
@@ -232,11 +320,12 @@ st.markdown(
         background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
         color: #FFFFFF !important;
         font-weight: 800;
-        padding: 14px 20px;
-        border-radius: 12px;
+        font-size: 1.1rem;
+        padding: 16px 22px;
+        border-radius: 14px;
         text-decoration: none;
-        margin-top: 12px;
-        margin-bottom: 12px;
+        margin-top: 14px;
+        margin-bottom: 14px;
         box-shadow: 0 6px 20px rgba(37, 211, 102, 0.4);
         transition: all 0.3s ease;
     }
@@ -474,7 +563,7 @@ st.markdown(
 <div class="brand-header-container">
     <h1 class="brand-title">FEED THE NATIONS</h1>
     <div class="header-emojis">🌾 🌽 🐂 🐓</div>
-    <p class="brand-subtext">Direct Farm-to-Buyer Marketplace • Verified Produce • Instant Logistics Freight</p>
+    <p class="brand-subtext">Direct Farm-to-Buyer Marketplace • Verified Produce • On-Demand Seller Logistics</p>
     <div class="brand-badge">🌾 Official Agricultural Escrow Platform</div>
 </div>
 """,
@@ -567,22 +656,21 @@ if not st.session_state.authenticated:
     st.stop()
 
 # ==============================================================================
-# 7. SIDEBAR & NAVIGATION MENU (WITH NOTIFICATION BADGE COUNTER)
+# 7. SIDEBAR & NAVIGATION MENU (LARGE FINGER-FRIENDLY BUTTONS + COUNTER)
 # ==============================================================================
 user_notifs = fetch_user_notifications(st.session_state.email, st.session_state.user_role)
 total_notif_count = len(user_notifs)
 
-# Calculate label with live notification count
-notif_menu_label = f"🔔 Notifications & Alerts ({total_notif_count})"
+notif_menu_label = f"🔔 Notifications ({total_notif_count})"
 
 with st.sidebar:
     st.markdown(
         f"""
         <div class="user-profile-badge">
-            <div style="font-weight: 800; font-size: 1.05rem; color: #FFFFFF;">👤 {st.session_state.username}</div>
-            <div style="font-size: 0.85rem; color: #A3B8CC;">Role: <b style="color: #FFD099;">{st.session_state.user_role}</b></div>
-            <div style="font-size: 0.8rem; color: #A3B8CC;">📞 {st.session_state.phone or 'N/A'}</div>
-            <div style="font-size: 0.8rem; color: #38BDF8;">✉️ {st.session_state.email}</div>
+            <div style="font-weight: 800; font-size: 1.25rem; color: #FFFFFF;">👤 {st.session_state.username}</div>
+            <div style="font-size: 1.05rem; color: #A3B8CC;">Role: <b style="color: #FFD099;">{st.session_state.user_role}</b></div>
+            <div style="font-size: 0.95rem; color: #A3B8CC;">📞 {st.session_state.phone or 'N/A'}</div>
+            <div style="font-size: 0.95rem; color: #38BDF8;">✉️ {st.session_state.email}</div>
         </div>
         """,
         unsafe_allow_html=True,
@@ -609,7 +697,6 @@ with st.sidebar:
 
     st.divider()
 
-    # Dynamic Navigation Menu Options with Notification Counter
     if st.session_state.user_role == "Admin":
         nav_options = [
             "🛒 Produce Marketplace",
@@ -637,14 +724,13 @@ with st.sidebar:
 
     navigation = st.radio("Navigation Menu", nav_options)
 
-# Normalize navigation route selection
 if navigation == notif_menu_label:
     nav_route = "NOTIFICATIONS"
 else:
     nav_route = navigation
 
 # ==============================================================================
-# 8. PRODUCT DETAIL & BUY MODAL
+# 8. PRODUCT DETAIL & BUY MODAL (WITH FARMER LOGISTICS SPOTLIGHT)
 # ==============================================================================
 @st.dialog("🌾 Produce Details & Escrow Purchase")
 def show_product_detail_modal(product_id):
@@ -657,11 +743,15 @@ def show_product_detail_modal(product_id):
         item = res[0]
         col1, col2 = st.columns([1, 1.2])
 
+        has_seller_logistics = item.get("has_logistics", False)
+
         with col1:
             render_product_image(item.get("image_url"))
             st.markdown(f"**Pickup State:** {item.get('location')}")
             st.markdown(f"**Exact Address:** `{item.get('exact_farm_address', 'Contact seller upon purchase')}`")
             st.markdown(f"**Producer:** `{item.get('seller')}`")
+            if has_seller_logistics:
+                st.markdown('<div class="logistics-badge">🚚 Seller Offers Direct Delivery / Logistics</div>', unsafe_allow_html=True)
 
         with col2:
             st.markdown(f"### {item['item']}")
@@ -688,16 +778,30 @@ def show_product_detail_modal(product_id):
         st.divider()
         st.markdown("#### 🚚 Step 1: Delivery Destination & Freight Method")
 
+        logistics_options = ["Use Partnered Logistics Carrier", "Self-Arranged Pickup / Buyer's Own Logistics"]
+        if has_seller_logistics:
+            logistics_options.insert(0, "Seller's Direct In-House Delivery Service")
+
         logistics_choice = st.radio(
             "Logistics Method",
-            ["Use Partnered Logistics Carrier", "Self-Arranged Pickup / Buyer's Own Logistics"],
+            logistics_options,
             key="modal_logistics_choice",
-            horizontal=True
+            horizontal=False
         )
 
         agreed_freight = 0.0
 
-        if logistics_choice == "Use Partnered Logistics Carrier":
+        if logistics_choice == "Seller's Direct In-House Delivery Service":
+            st.success("✅ Seller indicated they have logistics capabilities to ship directly to your location! Contact them after checkout or set agreed freight below.")
+            d_col1, d_col2 = st.columns([1, 2])
+            with d_col1:
+                delivery_state = st.selectbox("Destination State", NIGERIAN_STATES, index=24, key="modal_state_seller")
+            with d_col2:
+                delivery_street = st.text_input("Exact Delivery Address", placeholder="Street, City, Landmark", key="modal_street_seller")
+            full_address = f"{delivery_street.strip()}, {delivery_state}" if delivery_street.strip() else delivery_state
+            agreed_freight = st.number_input("Enter Agreed Seller Delivery Fee (₦)", min_value=0.0, value=15000.0, step=1000.0, key="modal_freight_seller")
+
+        elif logistics_choice == "Use Partnered Logistics Carrier":
             d_col1, d_col2 = st.columns([1, 2])
             with d_col1:
                 delivery_state = st.selectbox("Destination State", NIGERIAN_STATES, index=24, key="modal_state")
@@ -722,7 +826,7 @@ def show_product_detail_modal(product_id):
             st.markdown(f'<a href="{wa_url}" target="_blank" class="whatsapp-btn">💬 Request Freight Quote on WhatsApp</a>', unsafe_allow_html=True)
 
             st.markdown("#### 🚚 Step 2: Agreed Freight & Checkout")
-            agreed_freight = st.number_input("Enter Agreed Freight Fee (₦)", min_value=0, value=25000, step=5000, key="modal_freight")
+            agreed_freight = st.number_input("Enter Agreed Freight Fee (₦)", min_value=0.0, value=25000.0, step=5000.0, key="modal_freight")
         else:
             full_address = f"Self-Pickup at Farm Address ({item.get('exact_farm_address', 'N/A')}, {item['location']})"
             st.info("ℹ️ **Self-Pickup Selected:** Freight fee set to ₦0.00.")
@@ -731,7 +835,7 @@ def show_product_detail_modal(product_id):
         st.markdown(f"### **Total Amount: ₦{grand_total:,.2f}**")
 
         if st.button("PROCEED TO PAYSTACK CHECKOUT 💳", key="modal_checkout"):
-            if logistics_choice == "Use Partnered Logistics Carrier" and not delivery_street.strip():
+            if logistics_choice != "Self-Arranged Pickup / Buyer's Own Logistics" and not delivery_street.strip():
                 st.error("⚠️ Please enter a delivery address.")
             else:
                 ref = f"FTN-TX-{random.randint(100000, 999999)}"
@@ -754,7 +858,6 @@ def show_product_detail_modal(product_id):
                 }
                 supabase.table("transactions").insert(tx_record).execute()
                 
-                # Notify farmer of new order attempt
                 farmer_name = item.get("seller")
                 farmer_prof = supabase.table("profiles").select("email").eq("full_name", farmer_name).execute().data
                 if farmer_prof:
@@ -772,7 +875,7 @@ def show_product_detail_modal(product_id):
                     auth_url = pay_resp["data"]["authorization_url"]
                     st.success("Checkout created! Click below to pay.")
                     st.markdown(
-                        f'<a href="{auth_url}" target="_blank" style="display:block; text-align:center; background: #165B46; color:white; padding:12px; border-radius:8px; text-decoration:none; font-weight:bold; box-shadow: 0 0 15px rgba(34, 139, 106, 0.5);">Pay via Paystack ➔</a>',
+                        f'<a href="{auth_url}" target="_blank" style="display:block; text-align:center; background: #165B46; color:white; padding:16px; border-radius:12px; text-decoration:none; font-weight:bold; font-size:1.15rem; box-shadow: 0 0 15px rgba(34, 139, 106, 0.5);">Pay via Paystack ➔</a>',
                         unsafe_allow_html=True,
                     )
 
@@ -780,16 +883,18 @@ def show_product_detail_modal(product_id):
         st.error(f"Error opening modal: {e}")
 
 # ==============================================================================
-# 9. MARKETPLACE VIEW
+# 9. MARKETPLACE VIEW (WITH LOGISTICS FILTERS)
 # ==============================================================================
 if nav_route == "🛒 Produce Marketplace":
     st.subheader("🛒 Farm Produce Marketplace")
 
-    f1, f2 = st.columns([1, 1])
+    f1, f2, f3 = st.columns([1, 1, 1])
     with f1:
         category_filter = st.selectbox("Category Filter", ["All Categories"] + AGRI_CATEGORIES)
     with f2:
         scale_filter = st.selectbox("Scale Filter", ["All Scales", "Large Scale / Commercial Wholesale", "Small Scale / Retail"])
+    with f3:
+        logistics_filter = st.selectbox("Logistics Support", ["All Sellers", "Only Sellers Offering Logistics/Delivery"])
 
     st.divider()
 
@@ -799,11 +904,13 @@ if nav_route == "🛒 Produce Marketplace":
             query = query.eq("category", category_filter)
         if scale_filter != "All Scales":
             query = query.eq("scale", scale_filter)
+        if logistics_filter == "Only Sellers Offering Logistics/Delivery":
+            query = query.eq("has_logistics", True)
 
         listings = query.execute().data
 
         if not listings:
-            st.info("No active produce listings available.")
+            st.info("No active produce listings matching your criteria.")
         else:
             cols_per_row = 3
             for i in range(0, len(listings), cols_per_row):
@@ -819,6 +926,9 @@ if nav_route == "🛒 Produce Marketplace":
                             st.markdown(f"#### {item['item']}")
                             st.caption(f"📍 {item.get('location')} | Seller: {item['seller']}")
                             
+                            if item.get("has_logistics", False):
+                                st.markdown('<div class="logistics-badge">🚚 Seller Offers Delivery Service</div>', unsafe_allow_html=True)
+
                             unit_price = float(item["price_ngn"])
                             st.markdown(f"**₦{unit_price:,.2f}** / unit")
                             st.markdown(f"Stock: `{item.get('quantity', 0)} units` ({item.get('unit_weight_kg', 50)} kg)")
@@ -838,7 +948,7 @@ if nav_route == "🛒 Produce Marketplace":
         st.error(f"Marketplace error: {e}")
 
 # ==============================================================================
-# 10. NOTIFICATIONS & ALERTS VIEW (WITH DYNAMIC COUNTER)
+# 10. NOTIFICATIONS & ALERTS VIEW
 # ==============================================================================
 elif nav_route == "NOTIFICATIONS":
     st.subheader("🔔 Notifications & Official Alerts Hub")
@@ -861,16 +971,15 @@ elif nav_route == "NOTIFICATIONS":
                 st.markdown(
                     f"""
                     <div class="notif-card-box">
-                        <div style="font-size: 0.88rem; color: #FFD099; margin-bottom: 6px;">
+                        <div style="font-size: 0.95rem; color: #FFD099; margin-bottom: 8px;">
                             📢 <b>From {sender}</b>{recip_info} • <span style="color: #CBD5E1;">{created}</span>
                         </div>
-                        <div style="font-size: 1.05rem; font-weight: 500;">{msg}</div>
+                        <div style="font-size: 1.15rem; font-weight: 500;">{msg}</div>
                     </div>
                     """,
                     unsafe_allow_html=True,
                 )
 
-                # DELETE BUTTON ONLY AVAILABLE TO ADMIN
                 if st.session_state.user_role == "Admin":
                     if st.button("🗑️ Admin Delete Notification", key=f"del_notif_page_{n['id']}"):
                         supabase.table("notifications").delete().eq("id", n["id"]).execute()
@@ -908,7 +1017,7 @@ elif nav_route == "📢 Admin Broadcast & Messaging":
             notif_msg = st.text_area(
                 "Message Content / Action Requirement", 
                 placeholder="e.g. Please confirm receipt for Order FTN-TX-123456 so escrow funds can be unlocked.", 
-                height=120
+                height=140
             )
 
             send_btn = st.form_submit_button("DISPATCH DIRECT ALERT 🚀")
@@ -1021,7 +1130,7 @@ elif nav_route == "👥 User Profile Management" and st.session_state.user_role 
         st.error(f"Error managing profiles: {e}")
 
 # ==============================================================================
-# 13. FARMER LISTINGS MANAGEMENT
+# 13. FARMER LISTINGS MANAGEMENT (WITH LOGISTICS SPOTLIGHT)
 # ==============================================================================
 elif nav_route == "📦 Manage Farm Listings":
     st.subheader("📦 Farm Produce Inventory")
@@ -1048,6 +1157,8 @@ elif nav_route == "📦 Manage Farm Listings":
                             st.write(f"**Category:** {item.get('category')}")
                             st.write(f"**Price:** ₦{float(item['price_ngn']):,.2f} | **Stock:** {item.get('quantity')} units")
                             st.write(f"**Location:** {item.get('location')} ({item.get('exact_farm_address', 'N/A')})")
+                            if item.get("has_logistics"):
+                                st.markdown('<div class="logistics-badge">🚚 Seller Delivery / Logistics Service Included</div>', unsafe_allow_html=True)
                             st.caption(f"Seller: {item.get('seller')}")
                         with c3:
                             if st.button("🗑️ Delete Listing", key=f"del_{item['id']}"):
@@ -1062,7 +1173,7 @@ elif nav_route == "📦 Manage Farm Listings":
             st.error(f"Error loading listings: {e}")
 
     with tab_add:
-        st.warning("⚠️ LOGISTICS NOTICE: Please input exact price, farm location address, unit count, and unit weight in KG.")
+        st.warning("⚠️ LOGISTICS NOTICE: Please input exact price, farm location address, unit count, unit weight in KG, and indicate if you offer logistics.")
 
         with st.form("add_product_form", clear_on_submit=True):
             farming_cat = st.selectbox("Category", AGRI_CATEGORIES)
@@ -1082,6 +1193,12 @@ elif nav_route == "📦 Manage Farm Listings":
                 location = st.selectbox("Farm Region / State", NIGERIAN_STATES, index=24)
             with loc_col2:
                 exact_address = st.text_input("Exact Farm Pickup Location / Landmark", placeholder="e.g. Km 12 Farm Settlement, Ogun State")
+
+            has_logistics_input = st.checkbox(
+                "🚚 I have logistics capabilities and can deliver farm produce directly to buyer's location",
+                value=False,
+                help="Checking this highlights your produce on the marketplace and lets buyers know you handle direct doorstep shipping!"
+            )
 
             uploaded_file = st.file_uploader("Upload Produce Photo", type=["jpg", "jpeg", "png"])
             submit_product = st.form_submit_button("PUBLISH PRODUCT TO MARKETPLACE 🚀")
@@ -1110,10 +1227,11 @@ elif nav_route == "📦 Manage Farm Listings":
                             "price_ngn": price,
                             "quantity": quantity,
                             "unit_weight_kg": unit_weight,
+                            "has_logistics": has_logistics_input,
                             "image_url": img_url,
                         }
                         supabase.table("listings").insert(product_data).execute()
-                        st.success("🎉 Produce listed successfully!")
+                        st.success("🎉 Produce listed successfully with logistics preference recorded!")
 
 # ==============================================================================
 # 14. FARMER SALES & ESCROW LEDGER
@@ -1177,7 +1295,6 @@ elif nav_route == "💰 Farmer Sales & Escrow":
                                         "status": "FARMER_DISPATCHED" if not b_sign else "DELIVERED_VERIFIED"
                                     }).eq("id", tx["id"]).execute()
                                     
-                                    # Send notification to buyer
                                     buyer_name = tx.get("buyer")
                                     buyer_prof = supabase.table("profiles").select("email").eq("full_name", buyer_name).execute().data
                                     if buyer_prof:
@@ -1316,7 +1433,6 @@ elif nav_route == "📦 My Orders & Escrow":
                                     "status": new_status
                                 }).eq("id", ord_item["id"]).execute()
 
-                                # Notify farmer that delivery is confirmed
                                 farmer_listing = supabase.table("listings").select("seller").eq("id", ord_item.get("listing_id")).execute().data
                                 if farmer_listing:
                                     farmer_name = farmer_listing[0].get("seller")
