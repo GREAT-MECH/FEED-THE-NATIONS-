@@ -8,6 +8,7 @@ import pandas as pd
 from PIL import Image, ImageStat
 import requests
 import streamlit as st
+import streamlit.components.v1 as components
 from supabase import Client, create_client
 
 # ==============================================================================
@@ -277,6 +278,19 @@ st.markdown(
         margin-bottom: 8px;
     }
 
+    .out-of-stock-badge {
+        display: inline-block;
+        background: #FEE2E2;
+        border: 1px solid #EF4444;
+        color: #991B1B !important;
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: 0.92rem;
+        font-weight: 800;
+        margin-top: 8px;
+        margin-bottom: 8px;
+    }
+
     /* Mode-Safe Text Formatting for Badges */
     @media (prefers-color-scheme: dark) {
         .logistics-badge {
@@ -389,7 +403,7 @@ st.markdown(
 )
 
 # ==============================================================================
-# 2. HELPER FUNCTIONS & DB CONNECTIONS
+# 2. HELPER FUNCTIONS, PUSH NOTIFICATIONS & DB CONNECTIONS
 # ==============================================================================
 @st.cache_resource
 def init_supabase() -> Client:
@@ -434,6 +448,31 @@ NIGERIAN_BANKS = [
     "OPay", "Palmpay", "Moniepoint", "Sterling Bank", "Wema Bank (ALAT)"
 ]
 
+def send_push_notification(title, body):
+    """Fires native browser/device push system notification to mobile phone or desktop."""
+    js_code = f"""
+    <script>
+    if ("Notification" in window) {{
+        if (Notification.permission === "granted") {{
+            new Notification("{title}", {{
+                body: "{body}",
+                icon: "https://em-content.zobj.net/source/apple/354/sheaf-of-rice_1f33e.png"
+            }});
+        }} else if (Notification.permission !== "denied") {{
+            Notification.requestPermission().then(function (permission) {{
+                if (permission === "granted") {{
+                    new Notification("{title}", {{
+                        body: "{body}",
+                        icon: "https://em-content.zobj.net/source/apple/354/sheaf-of-rice_1f33e.png"
+                    }});
+                }}
+            }});
+        }}
+    }}
+    </script>
+    """
+    components.html(js_code, height=0, width=0)
+
 # ==============================================================================
 # 🛑 SECURITY DETECTOR: CONTACT & PAYMENT BYPASS DETECTOR (REGEX PATTERNS)
 # ==============================================================================
@@ -442,13 +481,8 @@ def detect_contact_or_bypass_attempt(text_content: str) -> bool:
     if not text_content:
         return False
     
-    # Email regex pattern
     email_pattern = r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}'
-    
-    # Phone number regex pattern
     phone_pattern = r'(\+?234|0)[789][01]\d{8}|\b\d{3}[-.\s]?\d{3}[-.\s]?\d{4}\b|\b\d{11}\b'
-    
-    # Social handle or off-platform keyword triggers
     off_platform_keywords = [
         r'whatsapp', r'telegram', r'call me', r'reach me on', r'pay directly', 
         r'bank transfer to', r'account number', r'acct no', r'pay me outside', r'bypass'
@@ -646,6 +680,8 @@ for key, default in [
     ("admin_target_email", ""),
     ("active_chat_recipient", ""),
     ("current_nav_route", "🛒 Produce Marketplace"),
+    ("last_notif_count", 0),
+    ("last_chat_count", 0)
 ]:
     if key not in st.session_state:
         st.session_state[key] = default
@@ -688,6 +724,18 @@ st.markdown(
 </div>
 """,
     unsafe_allow_html=True,
+)
+
+# Request Notification Permission on App Boot
+components.html(
+    """
+    <script>
+    if ("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
+        Notification.requestPermission();
+    }
+    </script>
+    """,
+    height=0, width=0
 )
 
 # ==============================================================================
@@ -780,6 +828,15 @@ if not st.session_state.authenticated:
 # ==============================================================================
 unread_notifs = fetch_unread_notification_count(st.session_state.email, st.session_state.user_role)
 unread_chats = fetch_unread_chat_count(st.session_state.username)
+
+# Trigger direct system push notifications when unread counts increase
+if unread_notifs > st.session_state.last_notif_count:
+    send_push_notification("🌾 Feed The Nations Notification", f"You have {unread_notifs} new alert(s) in your inbox.")
+    st.session_state.last_notif_count = unread_notifs
+
+if unread_chats > st.session_state.last_chat_count:
+    send_push_notification("💬 Feed The Nations Direct Message", f"You have {unread_chats} new direct message(s) awaiting reply.")
+    st.session_state.last_chat_count = unread_chats
 
 notif_menu_label = f"🔔 Notifications ({unread_notifs})" if unread_notifs > 0 else "🔔 Notifications"
 chat_menu_label = f"💬 Direct Buyer-Farmer Chat ({unread_chats})" if unread_chats > 0 else "💬 Direct Buyer-Farmer Chat"
@@ -890,7 +947,6 @@ def show_product_detail_modal(product_id):
             if has_seller_logistics:
                 st.markdown('<div class="logistics-badge">🚚 Seller Offers Direct Delivery / Logistics</div>', unsafe_allow_html=True)
 
-            # Direct Contact Farmer Action Redirect
             if st.button("💬 Contact Farmer Directly", key="modal_contact_farmer_direct"):
                 st.session_state["active_chat_recipient"] = item.get("seller")
                 st.session_state["current_nav_route"] = "CHAT"
@@ -905,10 +961,13 @@ def show_product_detail_modal(product_id):
             unit_weight = float(item.get("unit_weight_kg", 50.0))
 
             st.markdown(f"### ₦{unit_price:,.2f} <span style='font-size: 0.9rem;'>/ unit</span>", unsafe_allow_html=True)
-            st.markdown(f"🟢 Stock: **{available_stock} units** ({unit_weight} kg/unit)")
+            if available_stock > 0:
+                st.markdown(f"🟢 Stock: **{available_stock} units** ({unit_weight} kg/unit)")
+            else:
+                st.markdown('<div class="out-of-stock-badge">❌ OUT OF STOCK / SOLD OUT</div>', unsafe_allow_html=True)
 
             desired_qty = st.number_input(
-                "Order Quantity", min_value=1, max_value=max(available_stock, 1), value=1, step=1, key="modal_qty"
+                "Order Quantity", min_value=1, max_value=max(available_stock, 1), value=1, step=1, key="modal_qty", disabled=(available_stock <= 0)
             )
 
             product_subtotal = unit_price * desired_qty
@@ -929,7 +988,8 @@ def show_product_detail_modal(product_id):
             "Logistics Method",
             logistics_options,
             key="modal_logistics_choice",
-            horizontal=False
+            horizontal=False,
+            disabled=(available_stock <= 0)
         )
 
         agreed_freight = 0.0
@@ -977,7 +1037,7 @@ def show_product_detail_modal(product_id):
         grand_total = product_subtotal + platform_fee + agreed_freight
         st.markdown(f"### **Total Amount: ₦{grand_total:,.2f}**")
 
-        if st.button("PROCEED TO PAYSTACK CHECKOUT 💳", key="modal_checkout"):
+        if st.button("PROCEED TO PAYSTACK CHECKOUT 💳", key="modal_checkout", disabled=(available_stock <= 0)):
             if logistics_choice != "Self-Arranged Pickup / Buyer's Own Logistics" and not delivery_street.strip():
                 st.error("⚠️ Please enter a delivery address.")
             else:
@@ -1079,7 +1139,12 @@ if nav_route == "🛒 Produce Marketplace":
 
                             unit_price = float(item["price_ngn"])
                             st.markdown(f"**₦{unit_price:,.2f}** / unit")
-                            st.markdown(f"Stock: `{item.get('quantity', 0)} units` ({item.get('unit_weight_kg', 50)} kg)")
+                            
+                            qty_val = int(item.get('quantity', 0))
+                            if qty_val > 0:
+                                st.markdown(f"Stock: `{qty_val} units` ({item.get('unit_weight_kg', 50)} kg)")
+                            else:
+                                st.markdown('<div class="out-of-stock-badge">❌ OUT OF STOCK</div>', unsafe_allow_html=True)
 
                             if st.button("View Details & Buy ➔", key=f"btn_view_{item['id']}"):
                                 show_product_detail_modal(item["id"])
@@ -1096,7 +1161,7 @@ if nav_route == "🛒 Produce Marketplace":
         st.error(f"Marketplace error: {e}")
 
 # ==============================================================================
-# 10. DIRECT BUYER-FARMER CHAT (WITH UNREAD AUTO-READ LOGIC)
+# 10. DIRECT BUYER-FARMER CHAT (WITH UNREAD AUTO-READ LOGIC & DEVICE PUSH)
 # ==============================================================================
 elif nav_route == "CHAT":
     st.subheader("💬 Direct Buyer-Farmer In-App Chat")
@@ -1114,20 +1179,15 @@ elif nav_route == "CHAT":
             index=0 if st.session_state["active_chat_recipient"] not in contact_names else contact_names.index(st.session_state["active_chat_recipient"])
         )
 
-        # Sync current recipient state
         st.session_state["active_chat_recipient"] = selected_recipient
-
-        # Mark messages as read when opening chat conversation
         mark_chats_as_read(st.session_state.username, selected_recipient)
 
         st.markdown(f"### 💬 Direct Chat Conversation with **{selected_recipient}**")
         
-        # Fetch past chat messages
         chat_query = supabase.table("direct_messages").select("*").or_(
             f"and(sender.eq.{st.session_state.username},recipient.eq.{selected_recipient}),and(sender.eq.{selected_recipient},recipient.eq.{st.session_state.username})"
         ).order("created_at", desc=False).execute().data or []
 
-        # Display messages in WhatsApp style bubbles
         chat_container = st.container(height=420)
         with chat_container:
             if not chat_query:
@@ -1171,6 +1231,18 @@ elif nav_route == "CHAT":
                     }
                     try:
                         supabase.table("direct_messages").insert(msg_payload).execute()
+                        
+                        recip_prof = supabase.table("profiles").select("email").eq("full_name", selected_recipient).execute().data
+                        if recip_prof:
+                            r_email = recip_prof[0].get("email")
+                            supabase.table("notifications").insert({
+                                "recipient_email": r_email,
+                                "sender_name": st.session_state.username,
+                                "message": f"💬 New direct chat message from {st.session_state.username}: '{new_msg.strip()[:60]}...'",
+                                "target_role": "ALL",
+                                "is_read": False
+                            }).execute()
+
                         st.success("Message sent successfully!")
                         st.rerun()
                     except Exception as e:
@@ -1185,7 +1257,6 @@ elif nav_route == "CHAT":
 elif nav_route == "NOTIFICATIONS":
     st.subheader("🔔 Notifications & Official Alerts Hub")
 
-    # Mark notifications as read as soon as user opens this view
     mark_notifications_as_read(st.session_state.email, st.session_state.user_role)
 
     try:
@@ -1366,10 +1437,13 @@ elif nav_route == "👥 User Profile Management" and st.session_state.user_role 
         st.error(f"Error managing profiles: {e}")
 
 # ==============================================================================
-# 14. FARMER LISTINGS MANAGEMENT (WITH LOGISTICS SPOTLIGHT)
+# 14. FARMER LISTINGS MANAGEMENT (WITH CLEANUP REMINDER)
 # ==============================================================================
 elif nav_route == "📦 Manage Farm Listings":
     st.subheader("📦 Farm Produce Inventory")
+
+    # Important notice for farmers to delete fully bought out items
+    st.warning("📢 **FARMER CLEANUP NOTICE:** Please delete fully bought or exhausted produce listings from the marketplace once stock hits zero (0) to keep the store organized for buyers.")
 
     tab_active, tab_add = st.tabs(["🟢 Active Listings", "➕ Post New Produce"])
 
@@ -1386,12 +1460,21 @@ elif nav_route == "📦 Manage Farm Listings":
                 for item in my_items:
                     with st.container(border=True):
                         c1, c2, c3 = st.columns([1, 2, 1])
+                        qty_val = int(item.get("quantity", 0))
+
                         with c1:
                             render_product_image(item.get("image_url"))
                         with c2:
                             st.markdown(f"### {item['item']}")
                             st.write(f"**Category:** {item.get('category')}")
-                            st.write(f"**Price:** ₦{float(item['price_ngn']):,.2f} | **Stock:** {item.get('quantity')} units")
+                            st.write(f"**Price:** ₦{float(item['price_ngn']):,.2f}")
+                            
+                            if qty_val > 0:
+                                st.write(f"**Stock Available:** {qty_val} units")
+                            else:
+                                st.markdown('<div class="out-of-stock-badge">❌ OUT OF STOCK (0 UNITS REMAINING)</div>', unsafe_allow_html=True)
+                                st.info("💡 *This produce was completely bought! Please click delete below to clear it from marketplace listings.*")
+
                             st.write(f"**Location:** {item.get('location')} ({item.get('exact_farm_address', 'N/A')})")
                             if item.get("has_logistics"):
                                 st.markdown('<div class="logistics-badge">🚚 Seller Delivery / Logistics Service Included</div>', unsafe_allow_html=True)
