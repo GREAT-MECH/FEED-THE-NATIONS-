@@ -66,45 +66,70 @@ st.markdown(
 
     /* Touch-Friendly & Large Navigation Sidebar */
     [data-testid="stSidebar"] {
-        min-width: 340px !important;
-        width: 340px !important;
+        min-width: 380px !important;
+        width: 380px !important;
     }
 
     [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p {
         font-size: 1.15rem !important;
     }
 
-    /* Sidebar Radio Buttons Enlarged for Finger Touch */
+    /* Multicolored Sidebar Menu Items Demarcated by White Lines */
     [data-testid="stSidebar"] div[role="radiogroup"] > label {
-        background: rgba(22, 91, 70, 0.2) !important;
-        border: 1px solid rgba(34, 139, 106, 0.3) !important;
-        padding: 16px 20px !important;
-        margin-bottom: 12px !important;
-        border-radius: 14px !important;
+        padding: 16px 22px !important;
+        margin-bottom: 10px !important;
+        border-radius: 12px !important;
         cursor: pointer !important;
-        min-height: 54px !important;
+        min-height: 60px !important;
         display: flex !important;
         align-items: center !important;
         transition: all 0.25s ease-in-out !important;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+        border-bottom: 2px solid #FFFFFF !important; /* Distinct White Line Demarcation */
+    }
+
+    /* Distinct Colors for Sidebar Options */
+    [data-testid="stSidebar"] div[role="radiogroup"] > label:nth-child(1) {
+        background: linear-gradient(135deg, #0D3B2E 0%, #165B46 100%) !important;
+    }
+    [data-testid="stSidebar"] div[role="radiogroup"] > label:nth-child(2) {
+        background: linear-gradient(135deg, #1E3A8A 0%, #3B82F6 100%) !important;
+    }
+    [data-testid="stSidebar"] div[role="radiogroup"] > label:nth-child(3) {
+        background: linear-gradient(135deg, #581C87 0%, #8B5CF6 100%) !important;
+    }
+    [data-testid="stSidebar"] div[role="radiogroup"] > label:nth-child(4) {
+        background: linear-gradient(135deg, #78350F 0%, #D97706 100%) !important;
+    }
+    [data-testid="stSidebar"] div[role="radiogroup"] > label:nth-child(5) {
+        background: linear-gradient(135deg, #064E3B 0%, #10B981 100%) !important;
+    }
+    [data-testid="stSidebar"] div[role="radiogroup"] > label:nth-child(6) {
+        background: linear-gradient(135deg, #831843 0%, #EC4899 100%) !important;
+    }
+    [data-testid="stSidebar"] div[role="radiogroup"] > label:nth-child(7) {
+        background: linear-gradient(135deg, #312E81 0%, #6366F1 100%) !important;
     }
 
     [data-testid="stSidebar"] div[role="radiogroup"] > label:hover {
-        background: rgba(34, 139, 106, 0.35) !important;
-        border-color: #228B6A !important;
-        transform: translateX(4px);
+        transform: translateX(6px);
+        filter: brightness(1.2);
     }
 
     [data-testid="stSidebar"] div[role="radiogroup"] > label[data-checked="true"] {
-        background: linear-gradient(135deg, #165B46 0%, #0D3B2E 100%) !important;
-        border: 2px solid #E0A96D !important;
-        box-shadow: 0 0 15px rgba(224, 169, 109, 0.4) !important;
+        border: 2px solid #FFD099 !important;
+        border-bottom: 3px solid #FFFFFF !important;
+        box-shadow: 0 0 18px rgba(255, 208, 153, 0.6) !important;
+        filter: brightness(1.15);
     }
 
     [data-testid="stSidebar"] div[role="radiogroup"] p {
-        font-size: 1.12rem !important;
-        font-weight: 700 !important;
+        font-size: 1.1rem !important;
+        font-weight: 800 !important;
         color: #FFFFFF !important;
+        white-space: normal !important;
+        word-wrap: break-word !important;
+        line-height: 1.4 !important;
     }
 
     /* Typography Scaling & Mode Visibility Fixes */
@@ -620,6 +645,7 @@ for key, default in [
     ("phone", ""),
     ("admin_target_email", ""),
     ("active_chat_recipient", ""),
+    ("current_nav_route", "🛒 Produce Marketplace"),
 ]:
     if key not in st.session_state:
         st.session_state[key] = default
@@ -750,7 +776,7 @@ if not st.session_state.authenticated:
     st.stop()
 
 # ==============================================================================
-# 7. SIDEBAR & NAVIGATION MENU (WITH UNREAD NUMBER BADGES)
+# 7. SIDEBAR & NAVIGATION MENU (MULTICOLORED, DEMARCATED BY WHITE LINES)
 # ==============================================================================
 unread_notifs = fetch_unread_notification_count(st.session_state.email, st.session_state.user_role)
 unread_chats = fetch_unread_chat_count(st.session_state.username)
@@ -820,17 +846,28 @@ with st.sidebar:
             "💬 Support & AI Helpdesk"
         ]
 
-    navigation = st.radio("Navigation Menu", nav_options)
+    # Index selection logic for dynamic chat redirections
+    default_idx = 0
+    if st.session_state.current_nav_route in nav_options:
+        default_idx = nav_options.index(st.session_state.current_nav_route)
+    elif st.session_state.current_nav_route == "CHAT":
+        for idx, item in enumerate(nav_options):
+            if "💬 Direct Buyer-Farmer Chat" in item:
+                default_idx = idx
+                break
+
+    navigation = st.radio("Navigation Menu", nav_options, index=default_idx)
+    st.session_state.current_nav_route = navigation
 
 if navigation == notif_menu_label:
     nav_route = "NOTIFICATIONS"
-elif navigation == chat_menu_label:
+elif navigation == chat_menu_label or "💬 Direct Buyer-Farmer Chat" in navigation:
     nav_route = "CHAT"
 else:
     nav_route = navigation
 
 # ==============================================================================
-# 8. PRODUCT DETAIL & BUY MODAL (WITH FARMER LOGISTICS SPOTLIGHT)
+# 8. PRODUCT DETAIL & BUY MODAL (WITH DIRECT FARMER CHAT REDIRECT)
 # ==============================================================================
 @st.dialog("🌾 Produce Details & Escrow Purchase")
 def show_product_detail_modal(product_id):
@@ -853,9 +890,11 @@ def show_product_detail_modal(product_id):
             if has_seller_logistics:
                 st.markdown('<div class="logistics-badge">🚚 Seller Offers Direct Delivery / Logistics</div>', unsafe_allow_html=True)
 
-            if st.button("💬 Contact Farmer in App", key="modal_contact_farmer"):
+            # Direct Contact Farmer Action Redirect
+            if st.button("💬 Contact Farmer Directly", key="modal_contact_farmer_direct"):
                 st.session_state["active_chat_recipient"] = item.get("seller")
-                st.info(f"Opening chat with {item.get('seller')}. Go to '💬 Direct Buyer-Farmer Chat' in sidebar menu.")
+                st.session_state["current_nav_route"] = "CHAT"
+                st.rerun()
 
         with col2:
             st.markdown(f"### {item['item']}")
@@ -988,17 +1027,19 @@ def show_product_detail_modal(product_id):
         st.error(f"Error opening modal: {e}")
 
 # ==============================================================================
-# 9. MARKETPLACE VIEW
+# 9. MARKETPLACE VIEW (WITH REGION / STATE FILTER)
 # ==============================================================================
 if nav_route == "🛒 Produce Marketplace":
     st.subheader("🛒 Farm Produce Marketplace")
 
-    f1, f2, f3 = st.columns([1, 1, 1])
+    f1, f2, f3, f4 = st.columns([1, 1, 1, 1])
     with f1:
         category_filter = st.selectbox("Category Filter", ["All Categories"] + AGRI_CATEGORIES)
     with f2:
-        scale_filter = st.selectbox("Scale Filter", ["All Scales", "Large Scale / Commercial Wholesale", "Small Scale / Retail"])
+        region_filter = st.selectbox("Region / State", ["All Regions"] + NIGERIAN_STATES)
     with f3:
+        scale_filter = st.selectbox("Scale Filter", ["All Scales", "Large Scale / Commercial Wholesale", "Small Scale / Retail"])
+    with f4:
         logistics_filter = st.selectbox("Logistics Support", ["All Sellers", "Only Sellers Offering Logistics/Delivery"])
 
     st.divider()
@@ -1007,6 +1048,8 @@ if nav_route == "🛒 Produce Marketplace":
         query = supabase.table("listings").select("*").gt("quantity", 0)
         if category_filter != "All Categories":
             query = query.eq("category", category_filter)
+        if region_filter != "All Regions":
+            query = query.eq("location", region_filter)
         if scale_filter != "All Scales":
             query = query.eq("scale", scale_filter)
         if logistics_filter == "Only Sellers Offering Logistics/Delivery":
@@ -1071,10 +1114,13 @@ elif nav_route == "CHAT":
             index=0 if st.session_state["active_chat_recipient"] not in contact_names else contact_names.index(st.session_state["active_chat_recipient"])
         )
 
+        # Sync current recipient state
+        st.session_state["active_chat_recipient"] = selected_recipient
+
         # Mark messages as read when opening chat conversation
         mark_chats_as_read(st.session_state.username, selected_recipient)
 
-        st.markdown(f"### 💬 WhatsApp-Style Direct Chat with **{selected_recipient}**")
+        st.markdown(f"### 💬 Direct Chat Conversation with **{selected_recipient}**")
         
         # Fetch past chat messages
         chat_query = supabase.table("direct_messages").select("*").or_(
