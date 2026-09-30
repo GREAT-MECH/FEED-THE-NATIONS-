@@ -73,10 +73,9 @@ st.markdown(
         overflow-x: hidden;
     }
 
-    /* Touch-Friendly & Large Navigation Sidebar */
+    /* Touch-Friendly Navigation Sidebar - Updated for proper collapse behavior */
     [data-testid="stSidebar"] {
-        min-width: 380px !important;
-        width: 380px !important;
+        max-width: 380px !important;
         background-color: #051410 !important;
         border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
     }
@@ -1194,7 +1193,7 @@ if nav_route == "🛒 Produce Marketplace":
                                 show_product_detail_modal(item["id"])
 
                             if st.session_state.user_role == "Admin":
-                                if st.button("🗑️ Admin Delete Listing", key=f"admin_del_mkt_{item['id']}"):
+                                if st.button("🗑️️ Admin Delete Listing", key=f"admin_del_mkt_{item['id']}"):
                                     supabase.table("listings").delete().eq("id", item["id"]).execute()
                                     st.success("Listing removed from marketplace.")
                                     st.rerun()
