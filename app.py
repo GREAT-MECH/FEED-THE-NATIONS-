@@ -31,7 +31,7 @@ PAYSTACK_CALLBACK_URL = os.environ.get("PAYSTACK_CALLBACK_URL", "https://feed-th
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 
 # ==============================================================================
-# 1. PAGE CONFIG & RESPONSIVE ULTRA-GLOW STYLING (LIGHT/DARK MODE ADAPTIVE)
+# 1. PAGE CONFIG & RESPONSIVE ULTRA-GLOW STYLING (FORCED DARK MODE DEFAULT)
 # ==============================================================================
 st.set_page_config(
     page_title="FEED THE NATIONS - Direct Agri Marketplace",
@@ -51,12 +51,20 @@ st.markdown(
         --primary-glow: #228B6A;
         --accent-gold: #E0A96D;
         --accent-gold-glow: #FFD099;
+        color-scheme: dark !important;
     }
 
-    /* Base Font & Dynamic Contrast Support */
-    html, body, [class*="css"] {
+    /* Force Dark Mode App Environment regardless of Browser Preference */
+    html, body, [data-testid="stAppViewContainer"], .stApp {
+        background-color: #081D17 !important;
+        color: #F8FAFC !important;
         font-family: 'Plus Jakarta Sans', sans-serif;
         font-size: 18px !important;
+    }
+
+    /* Ensure text elements remain bright white/gold */
+    p, span, label, div, h1, h2, h3, h4, h5, h6 {
+        color: #F8FAFC !important;
     }
 
     .stApp {
@@ -69,10 +77,13 @@ st.markdown(
     [data-testid="stSidebar"] {
         min-width: 380px !important;
         width: 380px !important;
+        background-color: #051410 !important;
+        border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
     }
 
     [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p {
         font-size: 1.15rem !important;
+        color: #FFFFFF !important;
     }
 
     /* Multicolored Sidebar Menu Items Demarcated by White Lines */
@@ -85,7 +96,7 @@ st.markdown(
         display: flex !important;
         align-items: center !important;
         transition: all 0.25s ease-in-out !important;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
         border-bottom: 2px solid #FFFFFF !important; /* Distinct White Line Demarcation */
     }
 
@@ -134,26 +145,30 @@ st.markdown(
     }
 
     /* Typography Scaling & Mode Visibility Fixes */
-    p, label, span, div {
-        font-size: 1.05rem;
-    }
+    h1 { font-size: 2.8rem !important; font-weight: 900 !important; color: #FFFFFF !important; }
+    h2 { font-size: 2.2rem !important; font-weight: 800 !important; color: #FFFFFF !important; }
+    h3 { font-size: 1.7rem !important; font-weight: 700 !important; color: #FFD099 !important; }
+    h4 { font-size: 1.35rem !important; font-weight: 700 !important; color: #FFFFFF !important; }
 
-    h1 { font-size: 2.8rem !important; font-weight: 900 !important; }
-    h2 { font-size: 2.2rem !important; font-weight: 800 !important; }
-    h3 { font-size: 1.7rem !important; font-weight: 700 !important; }
-    h4 { font-size: 1.35rem !important; font-weight: 700 !important; }
-
-    /* Form Labels High Contrast across Light & Dark Mode */
+    /* Inputs High-Contrast Styling across Light & Dark Browser Mode */
     .stTextInput > label, .stSelectbox > label, .stNumberInput > label, .stTextArea > label {
         font-size: 1.15rem !important;
         font-weight: 700 !important;
+        color: #FFD099 !important;
         margin-bottom: 6px !important;
     }
 
-    input, select, textarea {
+    input, select, textarea, div[data-baseweb="select"] {
+        background-color: #0F2D24 !important;
+        color: #FFFFFF !important;
         font-size: 1.1rem !important;
-        padding: 12px !important;
+        border: 1px solid #228B6A !important;
         border-radius: 10px !important;
+    }
+
+    div[data-baseweb="select"] * {
+        background-color: #0F2D24 !important;
+        color: #FFFFFF !important;
     }
 
     @keyframes endlessFlow {
@@ -177,7 +192,7 @@ st.markdown(
         border-radius: 26px;
         text-align: center;
         margin-bottom: 30px;
-        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3), 0 0 30px rgba(34, 139, 106, 0.3);
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 0 30px rgba(34, 139, 106, 0.4);
         border: 1px solid rgba(255, 255, 255, 0.25);
         overflow: hidden;
         width: 100%;
@@ -245,31 +260,32 @@ st.markdown(
         box-shadow: 0 0 15px rgba(255, 208, 153, 0.3);
     }
 
-    /* Product Card Adaptability */
+    /* Product Card Adaptability & Contrast */
     .product-grid-card {
         position: relative;
-        background: rgba(13, 59, 46, 0.08);
-        border: 1px solid rgba(22, 91, 70, 0.3);
+        background: #0C2820 !important;
+        border: 1px solid #228B6A !important;
         border-radius: 20px;
         padding: 22px;
-        box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.4);
         box-sizing: border-box;
         transition: all 0.3s ease;
         overflow: hidden;
         margin-bottom: 20px;
+        color: #FFFFFF !important;
     }
 
     .product-grid-card:hover {
         transform: translateY(-5px);
-        border-color: rgba(34, 139, 106, 0.8);
-        box-shadow: 0 15px 35px rgba(34, 139, 106, 0.25);
+        border-color: #FFD099 !important;
+        box-shadow: 0 15px 35px rgba(34, 139, 106, 0.4);
     }
 
     .logistics-badge {
         display: inline-block;
-        background: rgba(34, 139, 106, 0.15);
-        border: 1px solid #228B6A;
-        color: #0D3B2E !important;
+        background: rgba(34, 139, 106, 0.3) !important;
+        border: 1px solid #228B6A !important;
+        color: #A7F3D0 !important;
         padding: 6px 12px;
         border-radius: 8px;
         font-size: 0.92rem;
@@ -280,22 +296,15 @@ st.markdown(
 
     .out-of-stock-badge {
         display: inline-block;
-        background: #FEE2E2;
-        border: 1px solid #EF4444;
-        color: #991B1B !important;
+        background: #7F1D1D !important;
+        border: 1px solid #EF4444 !important;
+        color: #FECACA !important;
         padding: 6px 12px;
         border-radius: 8px;
         font-size: 0.92rem;
         font-weight: 800;
         margin-top: 8px;
         margin-bottom: 8px;
-    }
-
-    /* Mode-Safe Text Formatting for Badges */
-    @media (prefers-color-scheme: dark) {
-        .logistics-badge {
-            color: #A7F3D0 !important;
-        }
     }
 
     div.stButton > button {
@@ -309,7 +318,7 @@ st.markdown(
         min-height: 52px !important;
         border: 1px solid rgba(255, 255, 255, 0.25) !important;
         width: 100%;
-        box-shadow: 0 6px 18px rgba(0,0,0,0.2);
+        box-shadow: 0 6px 18px rgba(0,0,0,0.3);
         transition: all 0.3s ease !important;
     }
 
@@ -325,52 +334,52 @@ st.markdown(
         border-radius: 18px;
         border: 1px solid rgba(255, 255, 255, 0.2);
         margin-bottom: 22px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         color: #FFFFFF !important;
     }
 
     .notif-card-box {
-        background: rgba(13, 59, 46, 0.9);
-        border: 1px solid rgba(34, 139, 106, 0.6);
-        border-left: 6px solid #228B6A;
+        background: #0F382C !important;
+        border: 1px solid #228B6A !important;
+        border-left: 6px solid #FFD099 !important;
         padding: 20px 24px;
         border-radius: 16px;
         margin-bottom: 18px;
         font-size: 1.1rem;
         color: #FFFFFF !important;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
     }
 
-    /* WhatsApp Style Chat Containers */
+    /* Chat Containers */
     .chat-bubble-buyer {
-        background-color: #DCF8C6;
-        color: #111827 !important;
+        background-color: #14532D !important;
+        color: #FFFFFF !important;
         padding: 14px 18px;
         border-radius: 18px 18px 4px 18px;
         margin-bottom: 12px;
         margin-left: 20%;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        border: 1px solid #B7E493;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        border: 1px solid #22C55E !important;
         font-size: 1.05rem;
     }
 
     .chat-bubble-farmer {
-        background-color: #FFFFFF;
-        color: #111827 !important;
+        background-color: #0F2D24 !important;
+        color: #FFFFFF !important;
         padding: 14px 18px;
         border-radius: 18px 18px 18px 4px;
         margin-bottom: 12px;
         margin-right: 20%;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        border: 1px solid #E2E8F0;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        border: 1px solid #165B46 !important;
         font-size: 1.05rem;
     }
 
     .chat-system-warning {
-        background-color: #FEF2F2;
-        border: 1px solid #FCA5A5;
-        border-left: 5px solid #EF4444;
-        color: #991B1B !important;
+        background-color: #450A0A !important;
+        border: 1px solid #EF4444 !important;
+        border-left: 5px solid #F87171 !important;
+        color: #FECACA !important;
         padding: 12px 16px;
         border-radius: 12px;
         margin: 12px 0;
