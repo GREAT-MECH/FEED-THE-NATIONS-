@@ -166,7 +166,42 @@ st.markdown(
         border-radius: 10px !important;
     }
 
+    /* FIX FOR DROPDOWN / SELECTBOX VISIBILITY & POPOVERS */
     div[data-baseweb="select"] * {
+        background-color: #0F2D24 !important;
+        color: #FFFFFF !important;
+    }
+
+    /* BaseWeb Menu Popover Container & Options */
+    ul[data-baseweb="menu"], 
+    div[data-baseweb="popover"], 
+    div[data-baseweb="menu"] {
+        background-color: #051410 !important;
+        border: 1px solid #228B6A !important;
+        border-radius: 10px !important;
+    }
+
+    /* Individual items in Streamlit dropdown lists */
+    li[data-baseweb="option"], 
+    div[role="option"], 
+    ul[data-baseweb="menu"] li {
+        background-color: #051410 !important;
+        color: #FFFFFF !important;
+        font-size: 1.05rem !important;
+        font-weight: 600 !important;
+        padding: 12px 16px !important;
+    }
+
+    /* Hover and Selected state for Dropdown Options */
+    li[data-baseweb="option"]:hover, 
+    div[role="option"]:hover, 
+    li[aria-selected="true"] {
+        background-color: #165B46 !important;
+        color: #FFD099 !important;
+    }
+
+    /* HTML Select element options fallback */
+    option {
         background-color: #0F2D24 !important;
         color: #FFFFFF !important;
     }
