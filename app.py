@@ -54,7 +54,6 @@ st.markdown(
         color-scheme: dark !important;
     }
 
-    /* Force Dark Mode App Environment regardless of Browser Preference */
     html, body, [data-testid="stAppViewContainer"], .stApp {
         background-color: #081D17 !important;
         color: #F8FAFC !important;
@@ -62,7 +61,6 @@ st.markdown(
         font-size: 18px !important;
     }
 
-    /* Ensure text elements remain bright white/gold */
     p, span, label, div, h1, h2, h3, h4, h5, h6 {
         color: #F8FAFC !important;
     }
@@ -73,7 +71,6 @@ st.markdown(
         overflow-x: hidden;
     }
 
-    /* Touch-Friendly Navigation Sidebar - Updated for proper collapse behavior */
     [data-testid="stSidebar"] {
         max-width: 380px !important;
         background-color: #051410 !important;
@@ -85,7 +82,6 @@ st.markdown(
         color: #FFFFFF !important;
     }
 
-    /* Multicolored Sidebar Menu Items Demarcated by White Lines */
     [data-testid="stSidebar"] div[role="radiogroup"] > label {
         padding: 16px 22px !important;
         margin-bottom: 10px !important;
@@ -96,31 +92,16 @@ st.markdown(
         align-items: center !important;
         transition: all 0.25s ease-in-out !important;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
-        border-bottom: 2px solid #FFFFFF !important; /* Distinct White Line Demarcation */
+        border-bottom: 2px solid #FFFFFF !important;
     }
 
-    /* Distinct Colors for Sidebar Options */
-    [data-testid="stSidebar"] div[role="radiogroup"] > label:nth-child(1) {
-        background: linear-gradient(135deg, #0D3B2E 0%, #165B46 100%) !important;
-    }
-    [data-testid="stSidebar"] div[role="radiogroup"] > label:nth-child(2) {
-        background: linear-gradient(135deg, #1E3A8A 0%, #3B82F6 100%) !important;
-    }
-    [data-testid="stSidebar"] div[role="radiogroup"] > label:nth-child(3) {
-        background: linear-gradient(135deg, #581C87 0%, #8B5CF6 100%) !important;
-    }
-    [data-testid="stSidebar"] div[role="radiogroup"] > label:nth-child(4) {
-        background: linear-gradient(135deg, #78350F 0%, #D97706 100%) !important;
-    }
-    [data-testid="stSidebar"] div[role="radiogroup"] > label:nth-child(5) {
-        background: linear-gradient(135deg, #064E3B 0%, #10B981 100%) !important;
-    }
-    [data-testid="stSidebar"] div[role="radiogroup"] > label:nth-child(6) {
-        background: linear-gradient(135deg, #831843 0%, #EC4899 100%) !important;
-    }
-    [data-testid="stSidebar"] div[role="radiogroup"] > label:nth-child(7) {
-        background: linear-gradient(135deg, #312E81 0%, #6366F1 100%) !important;
-    }
+    [data-testid="stSidebar"] div[role="radiogroup"] > label:nth-child(1) { background: linear-gradient(135deg, #0D3B2E 0%, #165B46 100%) !important; }
+    [data-testid="stSidebar"] div[role="radiogroup"] > label:nth-child(2) { background: linear-gradient(135deg, #1E3A8A 0%, #3B82F6 100%) !important; }
+    [data-testid="stSidebar"] div[role="radiogroup"] > label:nth-child(3) { background: linear-gradient(135deg, #581C87 0%, #8B5CF6 100%) !important; }
+    [data-testid="stSidebar"] div[role="radiogroup"] > label:nth-child(4) { background: linear-gradient(135deg, #78350F 0%, #D97706 100%) !important; }
+    [data-testid="stSidebar"] div[role="radiogroup"] > label:nth-child(5) { background: linear-gradient(135deg, #064E3B 0%, #10B981 100%) !important; }
+    [data-testid="stSidebar"] div[role="radiogroup"] > label:nth-child(6) { background: linear-gradient(135deg, #831843 0%, #EC4899 100%) !important; }
+    [data-testid="stSidebar"] div[role="radiogroup"] > label:nth-child(7) { background: linear-gradient(135deg, #312E81 0%, #6366F1 100%) !important; }
 
     [data-testid="stSidebar"] div[role="radiogroup"] > label:hover {
         transform: translateX(6px);
@@ -143,13 +124,11 @@ st.markdown(
         line-height: 1.4 !important;
     }
 
-    /* Typography Scaling & Mode Visibility Fixes */
     h1 { font-size: 2.8rem !important; font-weight: 900 !important; color: #FFFFFF !important; }
     h2 { font-size: 2.2rem !important; font-weight: 800 !important; color: #FFFFFF !important; }
     h3 { font-size: 1.7rem !important; font-weight: 700 !important; color: #FFD099 !important; }
     h4 { font-size: 1.35rem !important; font-weight: 700 !important; color: #FFFFFF !important; }
 
-    /* Inputs High-Contrast Styling across Light & Dark Browser Mode */
     .stTextInput > label, .stSelectbox > label, .stNumberInput > label, .stTextArea > label {
         font-size: 1.15rem !important;
         font-weight: 700 !important;
@@ -165,25 +144,18 @@ st.markdown(
         border-radius: 10px !important;
     }
 
-    /* FIX FOR DROPDOWN / SELECTBOX VISIBILITY & POPOVERS */
     div[data-baseweb="select"] * {
         background-color: #0F2D24 !important;
         color: #FFFFFF !important;
     }
 
-    /* BaseWeb Menu Popover Container & Options */
-    ul[data-baseweb="menu"], 
-    div[data-baseweb="popover"], 
-    div[data-baseweb="menu"] {
+    ul[data-baseweb="menu"], div[data-baseweb="popover"], div[data-baseweb="menu"] {
         background-color: #051410 !important;
         border: 1px solid #228B6A !important;
         border-radius: 10px !important;
     }
 
-    /* Individual items in Streamlit dropdown lists */
-    li[data-baseweb="option"], 
-    div[role="option"], 
-    ul[data-baseweb="menu"] li {
+    li[data-baseweb="option"], div[role="option"], ul[data-baseweb="menu"] li {
         background-color: #051410 !important;
         color: #FFFFFF !important;
         font-size: 1.05rem !important;
@@ -191,15 +163,11 @@ st.markdown(
         padding: 12px 16px !important;
     }
 
-    /* Hover and Selected state for Dropdown Options */
-    li[data-baseweb="option"]:hover, 
-    div[role="option"]:hover, 
-    li[aria-selected="true"] {
+    li[data-baseweb="option"]:hover, div[role="option"]:hover, li[aria-selected="true"] {
         background-color: #165B46 !important;
         color: #FFD099 !important;
     }
 
-    /* HTML Select element options fallback */
     option {
         background-color: #0F2D24 !important;
         color: #FFFFFF !important;
@@ -294,7 +262,6 @@ st.markdown(
         box-shadow: 0 0 15px rgba(255, 208, 153, 0.3);
     }
 
-    /* Product Card Adaptability & Contrast */
     .product-grid-card {
         position: relative;
         background: #0C2820 !important;
@@ -384,7 +351,6 @@ st.markdown(
         box-shadow: 0 4px 15px rgba(0,0,0,0.3);
     }
 
-    /* Chat Containers */
     .chat-bubble-buyer {
         background-color: #14532D !important;
         color: #FFFFFF !important;
@@ -492,7 +458,6 @@ NIGERIAN_BANKS = [
 ]
 
 def send_push_notification(title, body):
-    """Fires native browser/device push system notification to mobile phone or desktop."""
     js_code = f"""
     <script>
     if ("Notification" in window) {{
@@ -516,47 +481,35 @@ def send_push_notification(title, body):
     """
     components.html(js_code, height=0, width=0)
 
-# ==============================================================================
-# 🛑 SECURITY DETECTOR: CONTACT & PAYMENT BYPASS DETECTOR (REGEX PATTERNS)
-# ==============================================================================
 def detect_contact_or_bypass_attempt(text_content: str) -> bool:
-    """Scans chat message/audio notes for off-platform payment bypass attempts (emails, phone numbers, handles)."""
     if not text_content:
         return False
-    
     email_pattern = r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}'
     phone_pattern = r'(\+?234|0)[789][01]\d{8}|\b\d{3}[-.\s]?\d{3}[-.\s]?\d{4}\b|\b\d{11}\b'
     off_platform_keywords = [
         r'whatsapp', r'telegram', r'call me', r'reach me on', r'pay directly', 
         r'bank transfer to', r'account number', r'acct no', r'pay me outside', r'bypass'
     ]
-    
     if re.search(email_pattern, text_content, re.IGNORECASE):
         return True
     if re.search(phone_pattern, text_content):
         return True
-    
     for kw in off_platform_keywords:
         if re.search(kw, text_content, re.IGNORECASE):
             return True
-            
     return False
 
 def fetch_user_notifications(user_email, user_role):
-    """Retrieves notifications targeted specifically to the current logged-in user or role."""
     try:
         all_notifs = supabase.table("notifications").select("*").order("created_at", desc=True).execute().data
         if not all_notifs:
             return []
-
         u_email = str(user_email).strip().lower()
         u_role = str(user_role).strip()
-
         filtered = []
         for item in all_notifs:
             recip = str(item.get("recipient_email", "ALL")).strip().lower()
             t_role = str(item.get("target_role", "ALL")).strip()
-
             if recip not in ["all", "", "none"]:
                 if recip == u_email or u_role == "Admin":
                     filtered.append(item)
@@ -568,7 +521,6 @@ def fetch_user_notifications(user_email, user_role):
         return []
 
 def fetch_unread_notification_count(user_email, user_role):
-    """Counts unread notifications targeted at the current user or role."""
     try:
         notifs = fetch_user_notifications(user_email, user_role)
         unread = [n for n in notifs if not n.get("is_read", False)]
@@ -577,7 +529,6 @@ def fetch_unread_notification_count(user_email, user_role):
         return 0
 
 def mark_notifications_as_read(user_email, user_role):
-    """Marks all user notifications as read upon viewing."""
     try:
         notifs = fetch_user_notifications(user_email, user_role)
         unread_ids = [n["id"] for n in notifs if not n.get("is_read", False)]
@@ -588,7 +539,6 @@ def mark_notifications_as_read(user_email, user_role):
         pass
 
 def fetch_unread_chat_count(username):
-    """Counts unread direct messages sent to the logged-in user."""
     try:
         res = supabase.table("direct_messages").select("id").eq("recipient", username).eq("is_read", False).execute().data
         return len(res) if res else 0
@@ -596,7 +546,6 @@ def fetch_unread_chat_count(username):
         return 0
 
 def mark_chats_as_read(recipient_username, sender_username):
-    """Marks messages from sender to recipient as read."""
     try:
         res = supabase.table("direct_messages").select("id").eq("recipient", recipient_username).eq("sender", sender_username).eq("is_read", False).execute().data
         if res:
@@ -692,7 +641,6 @@ def generate_ai_support_response(user_name: str, user_role: str, message: str, o
             )
             payload = {"contents": [{"parts": [{"text": prompt_text}]}]}
             headers = {"Content-Type": "application/json"}
-            
             response = requests.post(url, json=payload, headers=headers, timeout=10)
             if response.status_code == 200:
                 res_data = response.json()
@@ -702,13 +650,9 @@ def generate_ai_support_response(user_name: str, user_role: str, message: str, o
 
     msg = message.lower().strip()
     if any(k in msg for k in ["buyer", "sign", "received", "delivered"]):
-        fallback_body = (
-            f"If you have dispatched your item but your buyer hasn't confirmed delivery, our Admin support team is on it! "
-            f"An alert will be dispatched to remind them to sign off so funds unlock."
-        )
+        fallback_body = f"If you have dispatched your item but your buyer hasn't confirmed delivery, our Admin support team is on it! An alert will be dispatched to remind them to sign off so funds unlock."
     else:
         fallback_body = f"Thank you for contacting support! Re: *\"{message}\"*, our team is reviewing your ticket."
-    
     return f"{greeting}\n\n{fallback_body}{order_id_prompt}"
 
 # ==============================================================================
@@ -732,7 +676,9 @@ for key, default in [
 query_params = st.query_params
 if "reference" in query_params or "trxref" in query_params:
     pay_ref = query_params.get("reference") or query_params.get("trxref")
-    is_success, _ = verify_paystack_payment(pay_ref)
+    is_success, pay_data = verify_paystack_payment(pay_ref)
+    
+    # 🌟 REQUIREMENT 2 & 1: STRICT PAYSTACK PAYMENT VERIFICATION & STOCK CALCULATION / UPDATE
     if is_success:
         try:
             existing_tx = supabase.table("transactions").select("*").eq("paystack_ref", pay_ref).execute().data
@@ -744,12 +690,35 @@ if "reference" in query_params or "trxref" in query_params:
                     "buyer_signoff": False
                 }).eq("paystack_ref", pay_ref).execute()
                 
-                listing_res = supabase.table("listings").select("quantity").eq("id", tx_item["listing_id"]).execute().data
+                # Automatically calculate stock available and update or flag farm listing
+                listing_id = tx_item["listing_id"]
+                listing_res = supabase.table("listings").select("quantity, item, seller").eq("id", listing_id).execute().data
+                
                 if listing_res:
                     cur_qty = int(listing_res[0].get("quantity", 0))
                     bought_qty = int(tx_item.get("quantity_bought", 1))
-                    supabase.table("listings").update({"quantity": max(0, cur_qty - bought_qty)}).eq("id", tx_item["listing_id"]).execute()
-                st.success("🎉 Payment verified! Escrow funds locked safely until dual sign-off.")
+                    new_stock = max(0, cur_qty - bought_qty)
+                    
+                    supabase.table("listings").update({"quantity": new_stock}).eq("id", listing_id).execute()
+                    
+                    farmer_name = listing_res[0].get("seller", "Farmer")
+                    item_name = listing_res[0].get("item", "Produce")
+                    buyer_name = tx_item.get("buyer", "Buyer")
+                    
+                    # 🌟 REQUIREMENT 3: PERSONALIZE NOTIFICATIONS WITH FARMER & BUYER NAMES
+                    farmer_prof = supabase.table("profiles").select("email").eq("full_name", farmer_name).execute().data
+                    if farmer_prof:
+                        f_email = farmer_prof[0].get("email")
+                        stock_msg = f"Stock updated to {new_stock} units." if new_stock > 0 else "Stock is now exhausted (0 units remaining). Please delete or update your farm listing."
+                        supabase.table("notifications").insert({
+                            "recipient_email": f_email,
+                            "sender_name": "PLATFORM ESCROW",
+                            "message": f"Hello {farmer_name}, buyer {buyer_name} successfully paid via Paystack for '{item_name}' (Qty: {bought_qty}). {stock_msg} Order ID: {pay_ref}",
+                            "target_role": "Farmer",
+                            "is_read": False
+                        }).execute()
+
+                st.success("🎉 Payment verified successfully! Escrow funds locked safely until dual sign-off.")
         except Exception as e:
             st.warning(f"Payment sync notice: {e}")
         st.query_params.clear()
@@ -769,7 +738,6 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# Request Notification Permission on App Boot
 components.html(
     """
     <script>
@@ -830,18 +798,15 @@ if not st.session_state.authenticated:
                         st.session_state.phone = "+2348000000000"
                         st.session_state.email = email_input
                         st.rerun()
-
                     else:
                         try:
                             res = supabase.auth.sign_in_with_password({
                                 "email": email_input, 
                                 "password": password_input
                             })
-                            
                             if res.user:
                                 meta = res.user.user_metadata or {}
                                 profile = {}
-
                                 try:
                                     prof_data = supabase.table("profiles").select("*").eq("id", res.user.id).execute().data
                                     if prof_data:
@@ -857,9 +822,7 @@ if not st.session_state.authenticated:
                                 st.session_state.username = display_name
                                 st.session_state.phone = profile.get("phone") or meta.get("phone", "")
                                 st.session_state.email = email_input
-
                                 st.rerun()
-
                         except Exception as e:
                             st.error(f"Login error: {e}")
                 else:
@@ -867,12 +830,11 @@ if not st.session_state.authenticated:
     st.stop()
 
 # ==============================================================================
-# 7. SIDEBAR & NAVIGATION MENU (MULTICOLORED, DEMARCATED BY WHITE LINES)
+# 7. SIDEBAR & NAVIGATION MENU
 # ==============================================================================
 unread_notifs = fetch_unread_notification_count(st.session_state.email, st.session_state.user_role)
 unread_chats = fetch_unread_chat_count(st.session_state.username)
 
-# Trigger direct system push notifications when unread counts increase
 if unread_notifs > st.session_state.last_notif_count:
     send_push_notification("🌾 Feed The Nations Notification", f"You have {unread_notifs} new alert(s) in your inbox.")
     st.session_state.last_notif_count = unread_notifs
@@ -937,7 +899,7 @@ with st.sidebar:
             "📦 Manage Farm Listings",
             "💬 Support & AI Helpdesk"
         ]
-    else:  # Buyer
+    else:
         nav_options = [
             "🛒 Produce Marketplace",
             chat_menu_label,
@@ -946,7 +908,6 @@ with st.sidebar:
             "💬 Support & AI Helpdesk"
         ]
 
-    # Index selection logic for dynamic chat redirections
     default_idx = 0
     if st.session_state.current_nav_route in nav_options:
         default_idx = nav_options.index(st.session_state.current_nav_route)
@@ -967,7 +928,7 @@ else:
     nav_route = navigation
 
 # ==============================================================================
-# 8. PRODUCT DETAIL & BUY MODAL (WITH DIRECT FARMER CHAT REDIRECT)
+# 8. PRODUCT DETAIL & BUY MODAL
 # ==============================================================================
 @st.dialog("🌾 Produce Details & Escrow Purchase")
 def show_product_detail_modal(product_id):
@@ -979,7 +940,6 @@ def show_product_detail_modal(product_id):
 
         item = res[0]
         col1, col2 = st.columns([1, 1.2])
-
         has_seller_logistics = item.get("has_logistics", False)
 
         with col1:
@@ -1036,7 +996,6 @@ def show_product_detail_modal(product_id):
         )
 
         agreed_freight = 0.0
-
         if logistics_choice == "Seller's Direct In-House Delivery Service":
             st.success("✅ Seller indicated they have logistics capabilities to ship directly to your location! Contact them after checkout or set agreed freight below.")
             d_col1, d_col2 = st.columns([1, 2])
@@ -1055,7 +1014,6 @@ def show_product_detail_modal(product_id):
                 delivery_street = st.text_input("Exact Delivery Address", placeholder="Street, City, Landmark", key="modal_street")
 
             full_address = f"{delivery_street.strip()}, {delivery_state}" if delivery_street.strip() else delivery_state
-
             selected_partner = st.selectbox("Freight Carrier Partner", list(LOGISTICS_PARTNERS.keys()), key="modal_carrier")
             partner_info = LOGISTICS_PARTNERS[selected_partner]
 
@@ -1104,6 +1062,7 @@ def show_product_detail_modal(product_id):
                 }
                 supabase.table("transactions").insert(tx_record).execute()
                 
+                # 🌟 REQUIREMENT 3: PERSONALIZE NOTIFICATIONS WITH FARMER & BUYER NAMES
                 farmer_name = item.get("seller")
                 farmer_prof = supabase.table("profiles").select("email").eq("full_name", farmer_name).execute().data
                 if farmer_prof:
@@ -1111,13 +1070,12 @@ def show_product_detail_modal(product_id):
                     supabase.table("notifications").insert({
                         "recipient_email": f_email,
                         "sender_name": "PLATFORM ESCROW",
-                        "message": f"🛒 New order initiated for '{item['item']}' (Qty: {desired_qty}) by {st.session_state.username}. Order ID: {ref}",
+                        "message": f"Hello {farmer_name}, new order initiated for '{item['item']}' (Qty: {desired_qty}) by buyer {st.session_state.username}. Order ID: {ref}",
                         "target_role": "Farmer",
                         "is_read": False
                     }).execute()
 
                 pay_resp = initialize_paystack_payment(st.session_state.email, grand_total, ref)
-
                 if pay_resp.get("status"):
                     auth_url = pay_resp["data"]["authorization_url"]
                     st.success("Checkout created! Click below to pay.")
@@ -1125,12 +1083,11 @@ def show_product_detail_modal(product_id):
                         f'<a href="{auth_url}" target="_blank" style="display:block; text-align:center; background: #165B46; color:white; padding:16px; border-radius:12px; text-decoration:none; font-weight:bold; font-size:1.15rem; box-shadow: 0 0 15px rgba(34, 139, 106, 0.5);">Pay via Paystack ➔</a>',
                         unsafe_allow_html=True,
                     )
-
     except Exception as e:
         st.error(f"Error opening modal: {e}")
 
 # ==============================================================================
-# 9. MARKETPLACE VIEW (WITH REGION / STATE FILTER)
+# 9. MARKETPLACE VIEW
 # ==============================================================================
 if nav_route == "🛒 Produce Marketplace":
     st.subheader("🛒 Farm Produce Marketplace")
@@ -1159,7 +1116,6 @@ if nav_route == "🛒 Produce Marketplace":
             query = query.eq("has_logistics", True)
 
         listings = query.execute().data
-
         if not listings:
             st.info("No active produce listings matching your criteria.")
         else:
@@ -1193,18 +1149,17 @@ if nav_route == "🛒 Produce Marketplace":
                                 show_product_detail_modal(item["id"])
 
                             if st.session_state.user_role == "Admin":
-                                if st.button("🗑️️ Admin Delete Listing", key=f"admin_del_mkt_{item['id']}"):
+                                if st.button("🗑 Admin Delete Listing", key=f"admin_del_mkt_{item['id']}"):
                                     supabase.table("listings").delete().eq("id", item["id"]).execute()
                                     st.success("Listing removed from marketplace.")
                                     st.rerun()
 
                             st.markdown("</div>", unsafe_allow_html=True)
-
     except Exception as e:
         st.error(f"Marketplace error: {e}")
 
 # ==============================================================================
-# 10. DIRECT BUYER-FARMER CHAT (WITH UNREAD AUTO-READ LOGIC & DEVICE PUSH)
+# 10. DIRECT BUYER-FARMER CHAT
 # ==============================================================================
 elif nav_route == "CHAT":
     st.subheader("💬 Direct Buyer-Farmer In-App Chat")
@@ -1215,7 +1170,7 @@ elif nav_route == "CHAT":
         contact_names = [p.get("full_name") for p in all_profiles if p.get("full_name") != st.session_state.username]
         if not contact_names:
             contact_names = ["Farmer General", "Buyer General"]
-            
+
         selected_recipient = st.selectbox(
             "Select Farmer or Buyer to Contact",
             contact_names,
@@ -1275,13 +1230,14 @@ elif nav_route == "CHAT":
                     try:
                         supabase.table("direct_messages").insert(msg_payload).execute()
                         
+                        # 🌟 REQUIREMENT 3: PERSONALIZE NOTIFICATIONS WITH NAMES
                         recip_prof = supabase.table("profiles").select("email").eq("full_name", selected_recipient).execute().data
                         if recip_prof:
                             r_email = recip_prof[0].get("email")
                             supabase.table("notifications").insert({
                                 "recipient_email": r_email,
                                 "sender_name": st.session_state.username,
-                                "message": f"💬 New direct chat message from {st.session_state.username}: '{new_msg.strip()[:60]}...'",
+                                "message": f"Hello {selected_recipient}, you have a new direct chat message from {st.session_state.username}: '{new_msg.strip()[:60]}...'",
                                 "target_role": "ALL",
                                 "is_read": False
                             }).execute()
@@ -1290,21 +1246,18 @@ elif nav_route == "CHAT":
                         st.rerun()
                     except Exception as e:
                         st.error(f"Error sending message: {e}")
-
     except Exception as e:
         st.error(f"Error loading direct communication hub: {e}")
 
 # ==============================================================================
-# 11. NOTIFICATIONS & ALERTS VIEW (WITH AUTO-READ MARKING)
+# 11. NOTIFICATIONS & ALERTS VIEW
 # ==============================================================================
 elif nav_route == "NOTIFICATIONS":
     st.subheader("🔔 Notifications & Official Alerts Hub")
-
     mark_notifications_as_read(st.session_state.email, st.session_state.user_role)
 
     try:
         filtered_notifs = fetch_user_notifications(st.session_state.email, st.session_state.user_role)
-
         if not filtered_notifs:
             st.info("You have no notifications or alerts at this time.")
         else:
@@ -1334,7 +1287,6 @@ elif nav_route == "NOTIFICATIONS":
                         supabase.table("notifications").delete().eq("id", n["id"]).execute()
                         st.success("Notification removed.")
                         st.rerun()
-
     except Exception as e:
         st.error(f"Error loading notifications: {e}")
 
@@ -1345,10 +1297,8 @@ elif nav_route == "📢 Admin Broadcast & Messaging":
     st.subheader("📢 Admin Support Feed & Direct Dispute Messaging")
 
     col_send, col_feed = st.columns([1, 1.2], gap="large")
-
     with col_send:
         st.markdown("### ✉️ Send Direct Alert / Message")
-        
         default_target = st.session_state.get("admin_target_email", "")
 
         with st.form("admin_notif_form"):
@@ -1356,19 +1306,8 @@ elif nav_route == "📢 Admin Broadcast & Messaging":
                 "Audience Target", 
                 ["Specific User (By Email)", "All Farmers", "All Buyers", "Everyone (Platform-Wide)"]
             )
-            
-            user_target_email = st.text_input(
-                "Target User Email", 
-                value=default_target, 
-                placeholder="buyer@gmail.com"
-            ).strip().lower()
-
-            notif_msg = st.text_area(
-                "Message Content / Action Requirement", 
-                placeholder="e.g. Please confirm receipt for Order FTN-TX-123456 so escrow funds can be unlocked.", 
-                height=140
-            )
-
+            user_target_email = st.text_input("Target User Email", value=default_target, placeholder="buyer@gmail.com").strip().lower()
+            notif_msg = st.text_area("Message Content / Action Requirement", placeholder="e.g. Please confirm receipt for Order FTN-TX-123456 so escrow funds can be unlocked.", height=140)
             send_btn = st.form_submit_button("DISPATCH DIRECT ALERT 🚀")
 
             if send_btn:
@@ -1379,7 +1318,6 @@ elif nav_route == "📢 Admin Broadcast & Messaging":
                 else:
                     target_role_str = "ALL"
                     recip_str = "ALL"
-
                     if target_audience == "All Farmers":
                         target_role_str = "Farmer"
                     elif target_audience == "All Buyers":
@@ -1403,7 +1341,6 @@ elif nav_route == "📢 Admin Broadcast & Messaging":
         st.markdown("### 📥 Live Support Tickets & Dispute Feed")
         try:
             feed_tickets = supabase.table("support_messages").select("*").order("created_at", desc=True).limit(10).execute().data
-            
             if not feed_tickets:
                 st.info("No incoming support tickets.")
             else:
@@ -1415,7 +1352,6 @@ elif nav_route == "📢 Admin Broadcast & Messaging":
 
                     with st.expander(f"📩 Ticket #{ticket_id} | From: {sender} ({role})", expanded=True):
                         st.write(f"**Complaint:** {t['message']}")
-                        
                         if order_id:
                             st.markdown(f"📌 **Linked Order:** `{order_id}`")
                             order_details = supabase.table("transactions").select("*").eq("id", order_id).execute().data
@@ -1449,12 +1385,11 @@ elif nav_route == "📢 Admin Broadcast & Messaging":
                             if st.button(f"✉️ Reply to Sender Direct", key=f"reply_s_{ticket_id}"):
                                 st.session_state["admin_target_email"] = sender
                                 st.rerun()
-
         except Exception as e:
             st.error(f"Error loading live support feed: {e}")
 
 # ==============================================================================
-# 13. USER PROFILE MANAGEMENT (ADMIN ONLY)
+# 13. USER PROFILE MANAGEMENT
 # ==============================================================================
 elif nav_route == "👥 User Profile Management" and st.session_state.user_role == "Admin":
     st.subheader("👥 Admin Profile & User Management")
@@ -1480,12 +1415,10 @@ elif nav_route == "👥 User Profile Management" and st.session_state.user_role 
         st.error(f"Error managing profiles: {e}")
 
 # ==============================================================================
-# 14. FARMER LISTINGS MANAGEMENT (WITH CLEANUP REMINDER)
+# 14. FARMER LISTINGS MANAGEMENT
 # ==============================================================================
 elif nav_route == "📦 Manage Farm Listings":
     st.subheader("📦 Farm Produce Inventory")
-
-    # Important notice for farmers to delete fully bought out items
     st.warning("📢 **FARMER CLEANUP NOTICE:** Please delete fully bought or exhausted produce listings from the marketplace once stock hits zero (0) to keep the store organized for buyers.")
 
     tab_active, tab_add = st.tabs(["🟢 Active Listings", "➕ Post New Produce"])
@@ -1649,7 +1582,6 @@ elif nav_route == "💰 Farmer Sales & Escrow":
 
                         with tc3:
                             status_str = tx.get("status", "PENDING")
-                            
                             if not f_sign and status_str in ["PAID_VERIFIED", "PAYMENT_INITIATED"]:
                                 if st.button("🚚 CONFIRM DISPATCH TO CARRIER", key=f"f_sign_{tx['id']}"):
                                     supabase.table("transactions").update({
@@ -1657,27 +1589,25 @@ elif nav_route == "💰 Farmer Sales & Escrow":
                                         "status": "FARMER_DISPATCHED" if not b_sign else "DELIVERED_VERIFIED"
                                     }).eq("id", tx["id"]).execute()
                                     
+                                    # 🌟 REQUIREMENT 3: PERSONALIZE NOTIFICATIONS WITH BUYER & FARMER NAMES
                                     buyer_name = tx.get("buyer")
                                     buyer_prof = supabase.table("profiles").select("email").eq("full_name", buyer_name).execute().data
                                     if buyer_prof:
                                         b_email = buyer_prof[0].get("email")
                                         supabase.table("notifications").insert({
                                             "recipient_email": b_email,
-                                            "sender_name": "FARMER DISPATCH",
-                                            "message": f"🚚 Your produce for Order ID {tx['id']} ({tx['item']}) has been dispatched by the farmer!",
+                                            "sender_name": st.session_state.username,
+                                            "message": f"Hello {buyer_name}, your produce for Order ID {tx['id']} ({tx['item']}) has been dispatched by farmer {st.session_state.username}!",
                                             "target_role": "Buyer",
                                             "is_read": False
                                         }).execute()
 
                                     st.success("Dispatch confirmed!")
                                     st.rerun()
-
                             elif f_sign and not b_sign:
                                 st.info("🚚 Dispatched. Awaiting buyer receipt sign-off.")
-                            
                             elif f_sign and b_sign:
                                 st.success("🎉 Buyer Confirmed Receipt!")
-
             else:
                 st.info("No sales records found.")
         except Exception as e:
@@ -1685,7 +1615,6 @@ elif nav_route == "💰 Farmer Sales & Escrow":
 
     with tab_payout:
         st.markdown("### 🏦 Withdraw Unlocked Earnings to Bank")
-        
         try:
             if st.session_state.user_role == "Admin":
                 all_tx = supabase.table("transactions").select("*").execute().data
@@ -1704,7 +1633,6 @@ elif nav_route == "💰 Farmer Sales & Escrow":
                 amt = float(tx.get("amount", 0.0))
                 f_sign = tx.get("farmer_signoff", False)
                 b_sign = tx.get("buyer_signoff", False)
-                
                 if f_sign and b_sign:
                     unlocked_balance += amt
                 elif tx.get("status") in ["PAID_VERIFIED", "FARMER_DISPATCHED"]:
@@ -1750,7 +1678,6 @@ elif nav_route == "💰 Farmer Sales & Escrow":
                         except Exception:
                             pass
                         st.success(f"🎉 Payout of ₦{p_amount:,.2f} submitted!")
-
         except Exception as e:
             st.error(f"Error processing payouts: {e}")
 
@@ -1759,7 +1686,6 @@ elif nav_route == "💰 Farmer Sales & Escrow":
 # ==============================================================================
 elif nav_route == "📦 My Orders & Escrow":
     st.subheader("📦 My Purchased Orders & Delivery Sign-Off")
-
     st.error("🛑 CRITICAL SECURITY WARNING: DO NOT click delivery confirmation until you physically inspect your produce.")
 
     try:
@@ -1802,10 +1728,11 @@ elif nav_route == "📦 My Orders & Escrow":
                                     farmer_prof = supabase.table("profiles").select("email").eq("full_name", farmer_name).execute().data
                                     if farmer_prof:
                                         f_email = farmer_prof[0].get("email")
+                                        # 🌟 REQUIREMENT 3: PERSONALIZE NOTIFICATIONS WITH FARMER & BUYER NAMES
                                         supabase.table("notifications").insert({
                                             "recipient_email": f_email,
                                             "sender_name": "BUYER RECEIPT",
-                                            "message": f"🎉 Buyer {st.session_state.username} confirmed receipt for Order ID {ord_item['id']}. Funds are now unlocked!",
+                                            "message": f"Hello {farmer_name}, buyer {st.session_state.username} confirmed receipt for Order ID {ord_item['id']}. Escrow funds are now unlocked for withdrawal!",
                                             "target_role": "Farmer",
                                             "is_read": False
                                         }).execute()
@@ -1814,7 +1741,6 @@ elif nav_route == "📦 My Orders & Escrow":
                                 st.rerun()
                         else:
                             st.success("✅ Order Completed & Signed Off")
-
     except Exception as e:
         st.error(f"Error loading orders: {e}")
 
@@ -1849,7 +1775,6 @@ elif nav_route == "💬 Support & AI Helpdesk":
     st.subheader("💬 AI Dispute Support & Helpdesk Portal")
 
     col1, col2 = st.columns([1, 1], gap="large")
-
     with col1:
         st.markdown("### 📝 Submit Support Ticket")
         with st.form("support_ticket_form", clear_on_submit=True):
