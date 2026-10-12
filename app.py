@@ -678,7 +678,6 @@ if "reference" in query_params or "trxref" in query_params:
     pay_ref = query_params.get("reference") or query_params.get("trxref")
     is_success, pay_data = verify_paystack_payment(pay_ref)
     
-    # 🌟 REQUIREMENT 2 & 1: STRICT PAYSTACK PAYMENT VERIFICATION & STOCK CALCULATION / UPDATE
     if is_success:
         try:
             existing_tx = supabase.table("transactions").select("*").eq("paystack_ref", pay_ref).execute().data
@@ -690,7 +689,6 @@ if "reference" in query_params or "trxref" in query_params:
                     "buyer_signoff": False
                 }).eq("paystack_ref", pay_ref).execute()
                 
-                # Automatically calculate stock available and update or flag farm listing
                 listing_id = tx_item["listing_id"]
                 listing_res = supabase.table("listings").select("quantity, item, seller").eq("id", listing_id).execute().data
                 
@@ -705,7 +703,6 @@ if "reference" in query_params or "trxref" in query_params:
                     item_name = listing_res[0].get("item", "Produce")
                     buyer_name = tx_item.get("buyer", "Buyer")
                     
-                    # 🌟 REQUIREMENT 3: PERSONALIZE NOTIFICATIONS WITH FARMER & BUYER NAMES
                     farmer_prof = supabase.table("profiles").select("email").eq("full_name", farmer_name).execute().data
                     if farmer_prof:
                         f_email = farmer_prof[0].get("email")
@@ -756,18 +753,18 @@ if not st.session_state.authenticated:
     c_auth, _ = st.columns([1, 0.1])
     with c_auth:
         st.subheader("🔑 Access Account")
-        auth_mode = st.radio("Choose Action", ["Login", "Register Account"], horizontal=True)
+        auth_mode = st.radio("Choose Action", ["Login", "Register Account"], horizontal=True, key="auth_mode_radio")
 
-        email_input = st.text_input("Email Address").strip().lower()
-        password_input = st.text_input("Password", type="password")
+        email_input = st.text_input("Email Address", key="auth_email_input").strip().lower()
+        password_input = st.text_input("Password", type="password", key="auth_password_input")
 
         if auth_mode == "Register Account":
-            selected_role = st.selectbox("Account Role", ["Buyer (Wholesaler/Processor)", "Farmer / Producer"])
-            full_name = st.text_input("Full Name / Business Name")
-            phone_input = st.text_input("Phone Number (WhatsApp Enabled)", placeholder="+2348000000000").strip()
-            farming_cat = st.selectbox("Primary Category", AGRI_CATEGORIES) if "Farmer" in selected_role else "All Categories"
+            selected_role = st.selectbox("Account Role", ["Buyer (Wholesaler/Processor)", "Farmer / Producer"], key="reg_role_select")
+            full_name = st.text_input("Full Name / Business Name", key="reg_fullname_input")
+            phone_input = st.text_input("Phone Number (WhatsApp Enabled)", placeholder="+2348000000000", key="reg_phone_input").strip()
+            farming_cat = st.selectbox("Primary Category", AGRI_CATEGORIES, key="reg_cat_select") if "Farmer" in selected_role else "All Categories"
 
-            if st.button("CREATE ACCOUNT 🚀"):
+            if st.button("CREATE ACCOUNT 🚀", key="reg_submit_btn"):
                 if email_input and password_input and full_name and phone_input:
                     try:
                         role_str = "Farmer" if "Farmer" in selected_role else "Buyer"
@@ -789,7 +786,7 @@ if not st.session_state.authenticated:
                 else:
                     st.error("Please complete all required fields.")
         else:
-            if st.button("LOG IN ➔"):
+            if st.button("LOG IN ➔", key="login_submit_btn"):
                 if email_input and password_input:
                     if email_input == "nwokejianthony2@gmail.com" and password_input == "CHUKWUKa$7":
                         st.session_state.authenticated = True
@@ -869,7 +866,7 @@ with st.sidebar:
 
     st.divider()
 
-    if st.button("🔒 Sign Out"):
+    if st.button("🔒 Sign Out", key="sidebar_signout_btn"):
         try:
             supabase.auth.sign_out()
         except Exception:
@@ -917,7 +914,7 @@ with st.sidebar:
                 default_idx = idx
                 break
 
-    navigation = st.radio("Navigation Menu", nav_options, index=default_idx)
+    navigation = st.radio("Navigation Menu", nav_options, index=default_idx, key="sidebar_nav_radio")
     st.session_state.current_nav_route = navigation
 
 if navigation == notif_menu_label:
@@ -1062,7 +1059,6 @@ def show_product_detail_modal(product_id):
                 }
                 supabase.table("transactions").insert(tx_record).execute()
                 
-                # 🌟 REQUIREMENT 3: PERSONALIZE NOTIFICATIONS WITH FARMER & BUYER NAMES
                 farmer_name = item.get("seller")
                 farmer_prof = supabase.table("profiles").select("email").eq("full_name", farmer_name).execute().data
                 if farmer_prof:
@@ -1094,13 +1090,13 @@ if nav_route == "🛒 Produce Marketplace":
 
     f1, f2, f3, f4 = st.columns([1, 1, 1, 1])
     with f1:
-        category_filter = st.selectbox("Category Filter", ["All Categories"] + AGRI_CATEGORIES)
+        category_filter = st.selectbox("Category Filter", ["All Categories"] + AGRI_CATEGORIES, key="mkt_cat_filter")
     with f2:
-        region_filter = st.selectbox("Region / State", ["All Regions"] + NIGERIAN_STATES)
+        region_filter = st.selectbox("Region / State", ["All Regions"] + NIGERIAN_STATES, key="mkt_region_filter")
     with f3:
-        scale_filter = st.selectbox("Scale Filter", ["All Scales", "Large Scale / Commercial Wholesale", "Small Scale / Retail"])
+        scale_filter = st.selectbox("Scale Filter", ["All Scales", "Large Scale / Commercial Wholesale", "Small Scale / Retail"], key="mkt_scale_filter")
     with f4:
-        logistics_filter = st.selectbox("Logistics Support", ["All Sellers", "Only Sellers Offering Logistics/Delivery"])
+        logistics_filter = st.selectbox("Logistics Support", ["All Sellers", "Only Sellers Offering Logistics/Delivery"], key="mkt_log_filter")
 
     st.divider()
 
@@ -1174,7 +1170,8 @@ elif nav_route == "CHAT":
         selected_recipient = st.selectbox(
             "Select Farmer or Buyer to Contact",
             contact_names,
-            index=0 if st.session_state["active_chat_recipient"] not in contact_names else contact_names.index(st.session_state["active_chat_recipient"])
+            index=0 if st.session_state["active_chat_recipient"] not in contact_names else contact_names.index(st.session_state["active_chat_recipient"]),
+            key="chat_recipient_selectbox"
         )
 
         st.session_state["active_chat_recipient"] = selected_recipient
@@ -1209,7 +1206,7 @@ elif nav_route == "CHAT":
 
         st.markdown("#### ✉️ Send In-App Message")
         with st.form("send_inapp_chat", clear_on_submit=True):
-            new_msg = st.text_input("Type message...", placeholder="Ask about logistics rates, quantity discounts, or dispatch state...")
+            new_msg = st.text_input("Type message...", placeholder="Ask about logistics rates, quantity discounts, or dispatch state...", key="chat_msg_input")
             send_chat_btn = st.form_submit_button("SEND MESSAGE 🚀")
 
             if send_chat_btn:
@@ -1230,7 +1227,6 @@ elif nav_route == "CHAT":
                     try:
                         supabase.table("direct_messages").insert(msg_payload).execute()
                         
-                        # 🌟 REQUIREMENT 3: PERSONALIZE NOTIFICATIONS WITH NAMES
                         recip_prof = supabase.table("profiles").select("email").eq("full_name", selected_recipient).execute().data
                         if recip_prof:
                             r_email = recip_prof[0].get("email")
@@ -1304,10 +1300,11 @@ elif nav_route == "📢 Admin Broadcast & Messaging":
         with st.form("admin_notif_form"):
             target_audience = st.selectbox(
                 "Audience Target", 
-                ["Specific User (By Email)", "All Farmers", "All Buyers", "Everyone (Platform-Wide)"]
+                ["Specific User (By Email)", "All Farmers", "All Buyers", "Everyone (Platform-Wide)"],
+                key="admin_audience_select"
             )
-            user_target_email = st.text_input("Target User Email", value=default_target, placeholder="buyer@gmail.com").strip().lower()
-            notif_msg = st.text_area("Message Content / Action Requirement", placeholder="e.g. Please confirm receipt for Order FTN-TX-123456 so escrow funds can be unlocked.", height=140)
+            user_target_email = st.text_input("Target User Email", value=default_target, placeholder="buyer@gmail.com", key="admin_target_email_input").strip().lower()
+            notif_msg = st.text_area("Message Content / Action Requirement", placeholder="e.g. Please confirm receipt for Order FTN-TX-123456 so escrow funds can be unlocked.", height=140, key="admin_msg_textarea")
             send_btn = st.form_submit_button("DISPATCH DIRECT ALERT 🚀")
 
             if send_btn:
@@ -1403,9 +1400,9 @@ elif nav_route == "👥 User Profile Management" and st.session_state.user_role 
 
             st.divider()
             st.markdown("### 🗑️ Delete Non-Compliant Account Profile")
-            selected_user_email = st.selectbox("Select Account Email to Delete", df_profiles["email"].tolist())
+            selected_user_email = st.selectbox("Select Account Email to Delete", df_profiles["email"].tolist(), key="admin_del_user_select")
             
-            if st.button("🔴 DELETE USER PROFILE ENTIRELY", type="primary"):
+            if st.button("🔴 DELETE USER PROFILE ENTIRELY", type="primary", key="admin_del_user_btn"):
                 supabase.table("profiles").delete().eq("email", selected_user_email).execute()
                 st.success(f"Profile for {selected_user_email} deleted successfully!")
                 st.rerun()
@@ -1471,31 +1468,32 @@ elif nav_route == "📦 Manage Farm Listings":
         st.warning("⚠️ LOGISTICS NOTICE: Please input exact price, farm location address, unit count, unit weight in KG, and indicate if you offer logistics.")
 
         with st.form("add_product_form", clear_on_submit=True):
-            farming_cat = st.selectbox("Category", AGRI_CATEGORIES)
-            prod_scale = st.selectbox("Supply Scale", ["Large Scale / Commercial Wholesale", "Small Scale / Retail"])
-            title = st.text_input("Product Title")
+            farming_cat = st.selectbox("Category", AGRI_CATEGORIES, key="add_cat_select")
+            prod_scale = st.selectbox("Supply Scale", ["Large Scale / Commercial Wholesale", "Small Scale / Retail"], key="add_scale_select")
+            title = st.text_input("Product Title", key="add_title_input")
 
             c1, c2, c3 = st.columns(3)
             with c1:
-                price = st.number_input("Exact Unit Price (₦)", min_value=1000, value=50000, step=1000)
+                price = st.number_input("Exact Unit Price (₦)", min_value=1000, value=50000, step=1000, key="add_price_input")
             with c2:
-                quantity = st.number_input("Available Stock (Units)", min_value=1, value=50)
+                quantity = st.number_input("Available Stock (Units)", min_value=1, value=50, key="add_qty_input")
             with c3:
-                unit_weight = st.number_input("Weight per Unit (KG)", min_value=0.5, value=50.0, step=1.0)
+                unit_weight = st.number_input("Weight per Unit (KG)", min_value=0.5, value=50.0, step=1.0, key="add_weight_input")
 
             loc_col1, loc_col2 = st.columns([1, 2])
             with loc_col1:
-                location = st.selectbox("Farm Region / State", NIGERIAN_STATES, index=24)
+                location = st.selectbox("Farm Region / State", NIGERIAN_STATES, index=24, key="add_state_select")
             with loc_col2:
-                exact_address = st.text_input("Exact Farm Pickup Location / Landmark", placeholder="e.g. Km 12 Farm Settlement, Ogun State")
+                exact_address = st.text_input("Exact Farm Pickup Location / Landmark", placeholder="e.g. Km 12 Farm Settlement, Ogun State", key="add_address_input")
 
             has_logistics_input = st.checkbox(
                 "🚚 I have logistics capabilities and can deliver farm produce directly to buyer's location",
                 value=False,
+                key="add_logistics_checkbox",
                 help="Checking this highlights your produce on the marketplace and lets buyers know you handle direct doorstep shipping!"
             )
 
-            uploaded_file = st.file_uploader("Upload Produce Photo", type=["jpg", "jpeg", "png"])
+            uploaded_file = st.file_uploader("Upload Produce Photo", type=["jpg", "jpeg", "png"], key="add_photo_uploader")
             submit_product = st.form_submit_button("PUBLISH PRODUCT TO MARKETPLACE 🚀")
 
             if submit_product:
@@ -1589,7 +1587,6 @@ elif nav_route == "💰 Farmer Sales & Escrow":
                                         "status": "FARMER_DISPATCHED" if not b_sign else "DELIVERED_VERIFIED"
                                     }).eq("id", tx["id"]).execute()
                                     
-                                    # 🌟 REQUIREMENT 3: PERSONALIZE NOTIFICATIONS WITH BUYER & FARMER NAMES
                                     buyer_name = tx.get("buyer")
                                     buyer_prof = supabase.table("profiles").select("email").eq("full_name", buyer_name).execute().data
                                     if buyer_prof:
@@ -1648,10 +1645,10 @@ elif nav_route == "💰 Farmer Sales & Escrow":
             
             with st.form("withdrawal_form"):
                 st.markdown("#### Payout Bank Details")
-                p_bank = st.selectbox("Select Bank Name", NIGERIAN_BANKS)
-                p_acc_num = st.text_input("Account Number (10 Digits)", max_chars=10)
-                p_acc_name = st.text_input("Account Name")
-                p_amount = st.number_input("Withdrawal Amount (₦)", min_value=1000.0, max_value=max(unlocked_balance, 1000.0), value=max(unlocked_balance, 1000.0))
+                p_bank = st.selectbox("Select Bank Name", NIGERIAN_BANKS, key="payout_bank_selectbox")
+                p_acc_num = st.text_input("Account Number (10 Digits)", max_chars=10, key="payout_acc_num_input")
+                p_acc_name = st.text_input("Account Name", key="payout_acc_name_input")
+                p_amount = st.number_input("Withdrawal Amount (₦)", min_value=1000.0, max_value=max(unlocked_balance, 1000.0), value=max(unlocked_balance, 1000.0), key="payout_amount_input")
 
                 submit_withdraw = st.form_submit_button("REQUEST PAYSTACK BANK WITHDRAWAL 🏦")
 
@@ -1728,7 +1725,6 @@ elif nav_route == "📦 My Orders & Escrow":
                                     farmer_prof = supabase.table("profiles").select("email").eq("full_name", farmer_name).execute().data
                                     if farmer_prof:
                                         f_email = farmer_prof[0].get("email")
-                                        # 🌟 REQUIREMENT 3: PERSONALIZE NOTIFICATIONS WITH FARMER & BUYER NAMES
                                         supabase.table("notifications").insert({
                                             "recipient_email": f_email,
                                             "sender_name": "BUYER RECEIPT",
@@ -1778,8 +1774,8 @@ elif nav_route == "💬 Support & AI Helpdesk":
     with col1:
         st.markdown("### 📝 Submit Support Ticket")
         with st.form("support_ticket_form", clear_on_submit=True):
-            order_id_input = st.text_input("Order ID (Optional)", placeholder="e.g. FTN-TX-123456")
-            msg_input = st.text_area("Describe your issue, complaint, or order inquiry...", height=140)
+            order_id_input = st.text_input("Order ID (Optional)", placeholder="e.g. FTN-TX-123456", key="support_order_id_input")
+            msg_input = st.text_area("Describe your issue, complaint, or order inquiry...", height=140, key="support_msg_textarea")
             submit_ticket = st.form_submit_button("SEND TO SUPPORT 🚀")
 
         if submit_ticket:
